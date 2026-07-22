@@ -1,0 +1,32 @@
+name: Publish site
+
+# Pages serves the gh-pages branch. This mirrors main into it on every push,
+# so editing main is all it takes to update the live site.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Push main content to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan gh-pages-new
+          git rm -r --cached .github -q
+          rm -rf .github
+          git add -A
+          git commit -m "Publish site from ${GITHUB_SHA::7}"
+          git push origin gh-pages-new:gh-pages --force
