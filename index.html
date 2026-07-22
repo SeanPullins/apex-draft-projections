@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APEX — NFL Draft-to-Success Projections</title>
+<meta name="description" content="Calibrated, backtested projections of NFL draft pick success for every class since 2000. Built on nflverse, RAS, college production and PFF-derived data.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">APEX</span>
+    <span class="brand-sub">NFL Draft &rarr; Success Projections</span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
+    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab" data-tab="method" role="tab" aria-selected="false">Methodology</button>
+  </nav>
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+</header>
+
+<main>
+  <!-- ============ BIG BOARD ============ -->
+  <section id="tab-board" class="tab-panel is-active">
+    <div class="controls" id="boardControls">
+      <label class="control">
+        <span class="control-label">Draft class</span>
+        <select id="classSelect" aria-label="Draft class"></select>
+      </label>
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="posPills" role="group" aria-label="Position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="searchBox" type="search" placeholder="Player, college, team…" aria-label="Search players">
+      </label>
+    </div>
+
+    <div class="tiles" id="boardTiles"></div>
+    <p class="mode-note" id="modeNote"></p>
+
+    <div class="table-wrap">
+      <table class="board" id="boardTable">
+        <thead><tr id="boardHead"></tr></thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint">Click any row for the full player card. Click column headers to sort.</p>
+  </section>
+
+  <!-- ============ INSIGHTS ============ -->
+  <section id="tab-insights" class="tab-panel">
+    <div class="insight-hero" id="disagreeHero"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Model vs. market, class by class</h3>
+        <p class="card-sub">AUC for the &ldquo;top-quartile career at position&rdquo; label, each draft class scored with that class held out of training.</p>
+        <div class="chart" id="aucChart"></div>
+        <details class="chart-table"><summary>View as table</summary><div id="aucTable"></div></details>
+      </div>
+      <div class="card">
+        <h3>Do the probabilities mean what they say?</h3>
+        <p class="card-sub">Out-of-fold predicted hit probability vs. what actually happened, 2003&ndash;2021 classes. Dots on the line = perfectly calibrated.</p>
+        <div class="chart" id="calChart"></div>
+        <details class="chart-table"><summary>View as table</summary><div id="calTable"></div></details>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Late-round hits the model liked more than the league did</h3>
+        <p class="card-sub">Round 2+ picks where APEX&rsquo;s held-out hit probability beat the draft-slot prior the most &mdash; and the player hit.</p>
+        <div id="stealsList"></div>
+      </div>
+      <div class="card">
+        <h3>Early picks the model was right to doubt</h3>
+        <p class="card-sub">Top-20 picks where APEX&rsquo;s held-out probability sat furthest below the draft-slot prior &mdash; and the player never became a starter.</p>
+        <div id="skepticList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How often do players hit, by round?</h3>
+      <p class="card-sub">Actual outcomes for the 2000&ndash;2021 classes. &ldquo;Hit&rdquo; = top-quartile career value among same-class, same-position peers.</p>
+      <div class="chart" id="roundChart"></div>
+      <details class="chart-table"><summary>View as table</summary><div id="roundTable"></div></details>
+    </div>
+  </section>
+
+  <!-- ============ METHODOLOGY ============ -->
+  <section id="tab-method" class="tab-panel">
+    <div class="prose">
+      <h2>How APEX works</h2>
+      <p>APEX answers one question: <strong>given everything knowable on draft night, how likely is this player to succeed in the NFL?</strong> It is trained on every draft pick from 2000&ndash;2021 and validated the only honest way — each class is scored by a model that never saw it.</p>
+
+      <h3>Three definitions of success</h3>
+      <ul>
+        <li><strong>Hit</strong> — career weighted Approximate Value in the top 25% of the player&rsquo;s own draft class at his position group. Position- and era-relative by construction, so a 2004 guard and a 2021 quarterback are judged fairly.</li>
+        <li><strong>Starter</strong> — three or more seasons as a primary starter.</li>
+        <li><strong>Pro Bowler</strong> — at least one Pro Bowl selection.</li>
+      </ul>
+      <p>The headline <strong>APEX score</strong> blends the three calibrated probabilities (50% hit, 30% starter, 20% Pro Bowl) onto a 0&ndash;100 scale.</p>
+
+      <h3>The model, in one paragraph</h3>
+      <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
+
+      <h3>Backtest scoreboard</h3>
+      <p>Leave-one-year-out over the 2003&ndash;2021 classes (19 folds, ~4,800 players). &ldquo;Market&rdquo; is the draft-slot prior; beating it is the entire game.</p>
+      <div id="btTable"></div>
+
+      <h3>What moves the needle</h3>
+      <p>Average split gain across the bagged ensemble for the hit model, top features:</p>
+      <div id="impList"></div>
+
+      <h3>Honest limitations</h3>
+      <ul>
+        <li>Draft capital dominates. The model&rsquo;s edge over the market prior is real but measured in single AUC points — anyone claiming huge edges over draft position is fooling you or themselves.</li>
+        <li>College production and PFF grades only exist from 2014, and PFF coverage is offense-heavy. Older classes and defenders lean more on the market + athleticism blocks.</li>
+        <li>2022&ndash;2023 scores are true out-of-training projections; their listed outcomes are careers in progress, not final grades.</li>
+        <li>Probabilities are calibrated group-wise, not prophecy. A 70% hit probability misses three times in ten — that is the job description.</li>
+      </ul>
+
+      <h3>Data sources</h3>
+      <ul>
+        <li><a href="https://github.com/nflverse" rel="noopener">nflverse</a> — draft, combine, career outcome data</li>
+        <li><a href="https://ras.football" rel="noopener">RAS.football</a> (Kent Lee Platte) — Relative Athletic Scores</li>
+        <li><a href="https://github.com/JackLich10/nfl-draft-data" rel="noopener">Jack Lichtenstein / ESPN</a> — historical prospect grades</li>
+        <li>PFF-derived college grades (private overlay; not redistributed)</li>
+        <li><a href="https://github.com/nflverse/nfldata" rel="noopener">Lee Sharpe / nfldata</a> — draft pick value curves</li>
+      </ul>
+      <p class="fine">Independent research project. Not affiliated with the NFL, PFF, ESPN or any team. Approximate Value courtesy of Pro-Football-Reference via nflverse.</p>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName" id="modal"></div>
+</div>
+
+<footer class="footer">
+  <span>APEX v10 · trained 2000&ndash;2021 · <span id="genDate"></span></span>
+  <span>Built from public nflverse / RAS / prospect data + private PFF overlay</span>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
