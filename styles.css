@@ -146,6 +146,11 @@ input[type="search"] { min-width: 210px; }
 .tile-sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
 .mode-note { color: var(--ink-2); font-size: 13px; margin: 8px 2px 14px; }
 .mode-note .dot { color: var(--series-1); }
+.mode-note .dot-live {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--good); vertical-align: baseline;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent);
+}
 
 /* ---------- board table ---------- */
 .table-wrap {
@@ -195,6 +200,11 @@ td.num, th.num { text-align: right; }
 .badge-st { background: color-mix(in srgb, var(--series-1) 14%, transparent); color: var(--series-1); }
 .badge-pb { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--ink-1); }
 .badge-none { background: var(--chip); color: var(--ink-3); }
+/* outlined, not filled: a career in progress is not a verdict */
+.badge-early {
+  background: transparent; color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
 .table-hint { color: var(--ink-3); font-size: 12.5px; margin: 10px 4px; }
 
 /* ---------- cards / grids ---------- */
@@ -301,6 +311,8 @@ td.num, th.num { text-align: right; }
 .bt-table th:first-child, .bt-table td:first-child { text-align: left; }
 .bt-table th { color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
 .bt-table .win { color: var(--good-text); font-weight: 700; }
+.bt-table .loss { color: var(--critical); font-weight: 700; }
+.bt-table .total td { border-top: 2px solid var(--border); border-bottom: none; }
 .imp-row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 13px; }
 .imp-name { width: 220px; color: var(--ink-2); flex: none; }
 .imp-bar { height: 8px; border-radius: 4px; background: var(--seq-400); }
@@ -317,4 +329,11 @@ td.num, th.num { text-align: right; }
   main { padding: 14px 14px 40px; }
   .story-prob { display: none; }
   .modal-grid { grid-template-columns: 1fr; }
+  /* four stacked tiles pushed the board a full screen down */
+  .tiles { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { padding: 10px 12px; }
+  .tile-value { font-size: 19px; overflow-wrap: anywhere; }
+  .tile-label, .tile-sub { font-size: 11px; }
+  /* drop the two widest secondary columns so the board fits without a swipe */
+  .c-ras, .c-vd { display: none; }
 }

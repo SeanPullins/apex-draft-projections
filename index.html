@@ -49,12 +49,19 @@
         <tbody id="boardBody"></tbody>
       </table>
     </div>
-    <p class="table-hint">Click any row for the full player card. Click column headers to sort.</p>
+    <p class="table-hint">Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
   </section>
 
   <!-- ============ INSIGHTS ============ -->
   <section id="tab-insights" class="tab-panel">
     <div class="insight-hero" id="disagreeHero"></div>
+
+    <div class="card">
+      <h3>The forward test — classes the model was never trained on</h3>
+      <p class="card-sub">Everything above is a backtest. These four boards were frozen on draft night, after the model had been trained, before any of these players took an NFL snap. This is the scoreboard that cannot be tuned after the fact.</p>
+      <div id="fwdTable"></div>
+      <p class="fine" id="fwdNote"></p>
+    </div>
 
     <div class="grid-2">
       <div class="card">
@@ -108,6 +115,7 @@
 
       <h3>The model, in one paragraph</h3>
       <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
+      <p>One wrinkle worth naming: plain isotonic calibration is a step function, and it flattens a 250-player class onto about 25 plateaus — which would put four players in a dead heat at the top of every board. APEX keeps the isotonic fit but interpolates between the plateau centres, so the curve stays monotone and honest while every player the model actually separated keeps a distinct number. Checked leave-one-year-out, the smoothed version calibrates as well as the step version and ranks strictly better.</p>
 
       <h3>Backtest scoreboard</h3>
       <p>Leave-one-year-out over the 2003&ndash;2021 classes (19 folds, ~4,800 players). &ldquo;Market&rdquo; is the draft-slot prior; beating it is the entire game.</p>
@@ -121,7 +129,7 @@
       <ul>
         <li>Draft capital dominates. The model&rsquo;s edge over the market prior is real but measured in single AUC points — anyone claiming huge edges over draft position is fooling you or themselves.</li>
         <li>College production and PFF grades only exist from 2014, and PFF coverage is offense-heavy. Older classes and defenders lean more on the market + athleticism blocks.</li>
-        <li>2022&ndash;2023 scores are true out-of-training projections; their listed outcomes are careers in progress, not final grades.</li>
+        <li>The 2022&ndash;2025 boards are true out-of-training projections, and their listed outcomes are careers in progress, not final grades. On that forward test APEX and the draft order are running level &mdash; the backtest edge has not shown up yet, and the sample is nowhere near big enough to say whether it will. The numbers are on the Insights tab either way.</li>
         <li>Probabilities are calibrated group-wise, not prophecy. A 70% hit probability misses three times in ten — that is the job description.</li>
       </ul>
 

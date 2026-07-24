@@ -17,6 +17,11 @@ pipeline and full methodology live in a separate private research repository;
 the Methodology tab of the site documents the approach, backtest results, and
 limitations in full.
 
+The 2022–2025 boards were frozen on draft night, before those players took an NFL
+snap, and the Insights tab scores them against the draft order itself. So far the
+two are running level — pooled hit AUC 0.825 for the model vs 0.822 for draft
+position, well inside noise at n=1,016. That scoreboard is published win or lose.
+
 ## Data sources & credits
 
 - [nflverse](https://github.com/nflverse) — draft, combine, and career outcome data

@@ -7,7 +7,7 @@
 
   const POS_GROUPS = ["ALL", "QB", "RB", "WR", "TE", "OL", "EDGE", "DL", "LB", "DB"];
   const LATEST = Math.max(...D.classes);
-  const state = { tab: "board", year: LATEST, pos: "ALL", q: "", sort: "apex", dir: -1 };
+  const state = { tab: "board", year: LATEST, pos: "ALL", q: "", sort: "apex", dir: -1, pick: null };
 
   const pct = p => (p == null ? "–" : Math.round(p * 100) + "%");
   const fmt1 = v => (v == null ? "–" : (+v).toFixed(1));
@@ -22,8 +22,17 @@
     renderCharts(); // re-render SVGs against new surface
   });
 
-  /* ---------- tabs + hash ---------- */
-  function setTab(tab) {
+  /* ---------- tabs + hash ----------
+     #board/2023 selects a class, #board/2023/6 opens that pick's card, so any
+     player on the site is a shareable link and the back button works. */
+  const HASH = /^#(board|insights|method)(?:\/(\d{4}))?(?:\/(\d{1,3}))?/;
+  let ownHash = false;
+  function writeHash() {
+    const h = state.tab !== "board" ? "#" + state.tab
+      : "#board/" + state.year + (state.pick != null ? "/" + state.pick : "");
+    if (location.hash !== h) { ownHash = true; location.hash = h; }
+  }
+  function setTab(tab, skipHash) {
     state.tab = tab;
     $$(".tab").forEach(b => {
       const on = b.dataset.tab === tab;
@@ -31,16 +40,28 @@
       b.setAttribute("aria-selected", on);
     });
     $$(".tab-panel").forEach(p => p.classList.toggle("is-active", p.id === "tab-" + tab));
-    location.hash = tab === "board" ? "#board/" + state.year : "#" + tab;
+    if (!skipHash) writeHash();
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
-  (function initHash() {
-    const m = location.hash.match(/^#(board|insights|method)(?:\/(\d{4}))?/);
-    if (m) {
-      if (m[2] && D.classes.includes(+m[2])) state.year = +m[2];
-      state.tab = m[1];
-    }
-  })();
+
+  function readHash() {
+    const m = location.hash.match(HASH);
+    if (!m) return;
+    if (m[2] && D.classes.includes(+m[2])) state.year = +m[2];
+    state.tab = m[1];
+    state.pick = m[3] ? +m[3] : null;
+  }
+  readHash();
+  addEventListener("hashchange", () => {
+    if (ownHash) { ownHash = false; return; }
+    const before = state.year;
+    readHash();
+    setTab(state.tab, true);
+    if (state.year !== before) { classSelect.value = state.year; renderBoard(); }
+    const p = state.pick != null && findPick(state.year, state.pick);
+    if (p) openModal(p, true); else closeModal(true);
+  });
+  const findPick = (yr, pk) => D.players.find(x => x.yr === yr && x.pk === pk);
 
   /* ---------- board controls ---------- */
   const classSelect = $("#classSelect");
@@ -53,7 +74,8 @@
   classSelect.value = state.year;
   classSelect.addEventListener("change", () => {
     state.year = +classSelect.value;
-    location.hash = "#board/" + state.year;
+    state.pick = null;
+    writeHash();
     renderBoard();
   });
 
@@ -88,18 +110,20 @@
     { key: "pp", label: "Pro Bowl", num: true },
     { key: "ras", label: "RAS", num: true },
     { key: "vd", label: "Value", num: true },
-    { key: "out", label: "Outcome" },
+    { key: "out", label: "Outcome", sortKey: "wav" },
   ];
   const head = $("#boardHead");
   COLS.forEach(c => {
     const th = document.createElement("th");
     th.textContent = c.label;
     if (c.num) th.classList.add("num");
+    th.classList.add("c-" + c.key);
     th.dataset.key = c.key;
+    th.title = "Sort by " + c.label;
     th.addEventListener("click", () => {
-      if (c.key === "out") return;
-      if (state.sort === c.key) state.dir *= -1;
-      else { state.sort = c.key; state.dir = c.key === "pk" || c.key === "rk" ? 1 : -1; }
+      const k = c.sortKey || c.key;
+      if (state.sort === k) state.dir *= -1;
+      else { state.sort = k; state.dir = k === "pk" || k === "rk" ? 1 : -1; }
       renderBoard();
     });
     head.appendChild(th);
@@ -117,18 +141,20 @@
     }
     if (state.pos !== "ALL") rows = rows.filter(p => p.pg === state.pos);
     const k = state.sort, dir = state.dir;
+    // ties fall back to board rank, so equal values never shuffle arbitrarily
+    const byRank = (a, b) => (a.rk || 1e9) - (b.rk || 1e9) || (a.yr - b.yr);
     rows = rows.slice().sort((a, b) => {
       const av = a[k], bv = b[k];
-      if (av == null && bv == null) return 0;
+      if (av == null && bv == null) return byRank(a, b);
       if (av == null) return 1;
       if (bv == null) return -1;
-      return av < bv ? -dir : av > bv ? dir : 0;
+      return av < bv ? -dir : av > bv ? dir : byRank(a, b);
     });
     return state.q ? rows.slice(0, 250) : rows;
   }
 
   function outcomeCell(p) {
-    if (p.src === 1) {
+    if (p.src === 1) {          // career finished (or near enough): final verdict
       const b = [];
       if (p.lh) b.push('<span class="badge badge-hit">✓ HIT</span>');
       if (p.ls) b.push('<span class="badge badge-st">STARTER</span>');
@@ -136,20 +162,27 @@
       if (!b.length) b.push('<span class="badge badge-none">—</span>');
       return b.join("");
     }
-    if (p.wav != null && p.wav > 0) {
-      return '<span class="prob">AV ' + p.wav + " so far</span>";
+    if (p.ns > 0) {             // career in progress: how it is tracking so far
+      const b = [];
+      if (p.pb > 0) b.push('<span class="badge badge-pb">★ PB×' + p.pb + "</span>");
+      else if (p.fh) b.push('<span class="badge badge-early">TOP 25%</span>');
+      else if (p.fs) b.push('<span class="badge badge-early">STARTING</span>');
+      else if (!p.wav) b.push('<span class="badge badge-none">—</span>');
+      if (p.wav) b.push('<span class="prob">AV ' + p.wav + "</span>");
+      return b.join("");
     }
-    return '<span class="prob">–</span>';
+    return '<span class="prob">not yet played</span>';
   }
 
   function renderBoard() {
     const rows = rowsForState();
     // header sort indicators
-    $$("th", head).forEach(th => {
-      th.classList.toggle("sorted", th.dataset.key === state.sort);
+    $$("th", head).forEach((th, i) => {
+      const k = COLS[i].sortKey || COLS[i].key;
+      th.classList.toggle("sorted", k === state.sort);
       const a = th.querySelector(".arrow");
       if (a) a.remove();
-      if (th.dataset.key === state.sort) {
+      if (k === state.sort) {
         const s = document.createElement("span");
         s.className = "arrow";
         s.textContent = state.dir === -1 ? "▼" : "▲";
@@ -165,17 +198,18 @@
         : p.vd < -4 ? '<span class="delta-down">▼ ' + (-p.vd) + "</span>"
         : '<span class="delta-flat">·</span>';
       return "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
-        '<td class="num">' + (p.rk ?? "–") + "</td>" +
-        '<td class="num">' + (p.pk ?? "–") + "</td>" +
-        '<td class="player-cell"><div class="player-name">' + esc(p.nm) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
-        '<td><span class="pos-chip">' + p.pg + "</span></td>" +
-        '<td><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span><span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
-        '<td class="num prob">' + pct(p.ph) + "</td>" +
-        '<td class="num prob">' + pct(p.ps) + "</td>" +
-        '<td class="num prob">' + pct(p.pp) + "</td>" +
-        '<td class="num prob">' + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
-        '<td class="num">' + vd + "</td>" +
-        "<td>" + outcomeCell(p) + "</td></tr>";
+        '<td class="num c-rk">' + (p.rk ?? "–") + "</td>" +
+        '<td class="num c-pk">' + (p.pk ?? "–") + "</td>" +
+        '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
+        '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>" +
+        '<td class="c-apex"><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span><span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
+        '<td class="num prob c-ph">' + pct(p.ph) + "</td>" +
+        '<td class="num prob c-ps">' + pct(p.ps) + "</td>" +
+        '<td class="num prob c-pp">' + pct(p.pp) + "</td>" +
+        '<td class="num prob c-ras"' + (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") +
+          ">" + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
+        '<td class="num c-vd">' + vd + "</td>" +
+        '<td class="c-out">' + outcomeCell(p) + "</td></tr>";
     }).join("");
     $$("tr", body).forEach(tr => tr.addEventListener("click", () => {
       const [yr, pk] = tr.dataset.id.split(":").map(Number);
@@ -186,26 +220,45 @@
     renderTiles(rows);
   }
 
+  const fwdClass = yr => (D.forward && D.forward.head_to_head || []).find(r => r.yr === yr);
+
   function renderTiles(rows) {
     const t = $("#boardTiles");
     const scope = state.q ? rows : D.players.filter(p => p.yr === state.year);
     const hist = !state.q && state.year <= D.train_years[1];
+    const fwd = state.q ? null : fwdClass(state.year);
     const top = scope.slice().sort((a, b) => (b.apex || 0) - (a.apex || 0))[0];
     const expHits = scope.reduce((s, p) => s + (p.ph || 0), 0);
     const actHits = scope.filter(p => p.lh).length;
     const dep = D.backtest.summary.deploy.hit.auc, mkt = D.backtest.summary.market.hit.auc;
+
+    let third, fourth;
+    if (hist) {
+      third = tile("Hits delivered", actHits, "of " + expHits.toFixed(0) + " the model expected");
+      fourth = tile("Model edge", "+" + ((dep - mkt) * 100).toFixed(1), "AUC pts vs draft-slot prior, held-out");
+    } else if (fwd) {
+      const onTrack = scope.filter(p => p.fh).length;
+      third = tile("Tracking so far", onTrack,
+        "top-quartile at their position, " + fwd.seasons + " season" + (fwd.seasons > 1 ? "s" : "") + " in");
+      fourth = tile("Board vs draft order", pct(fwd.m32) + " · " + pct(fwd.d32),
+        "top-quartile rate: APEX top 32 vs picks 1–32");
+    } else {
+      third = tile("Projected hits", expHits.toFixed(0), "expected top-quartile careers");
+      fourth = tile("Model edge", "+" + ((dep - mkt) * 100).toFixed(1), "AUC pts vs draft-slot prior, held-out");
+    }
+
     t.innerHTML =
       tile(state.q ? "Search results" : state.year + " draft class", scope.length, "drafted players scored") +
       tile("Board #1", top ? esc(top.nm) : "–", top ? top.pg + " · APEX " + fmt1(top.apex) : "") +
-      (hist
-        ? tile("Hits delivered", actHits, "of " + expHits.toFixed(0) + " the model expected")
-        : tile("Projected hits", expHits.toFixed(0), "expected top-quartile careers")) +
-      tile("Model edge", "+" + ((dep - mkt) * 100).toFixed(1), "AUC pts vs draft-slot prior, held-out");
+      third + fourth;
+
     $("#modeNote").innerHTML = state.q
       ? "Searching all classes 2000–" + LATEST + ". Clear the search to return to the class board."
       : hist
         ? '<span class="dot">●</span> <strong>Receipts mode.</strong> Scores for ' + state.year + " come from a model that never saw this class (leave-one-year-out backtest). The Outcome column shows what actually happened."
-        : '<span class="dot">●</span> <strong>Projection mode.</strong> True out-of-sample predictions — the model trained only on 2000–2021 outcomes.' + (state.year <= 2025 ? " Career-so-far AV shown where it exists." : "");
+        : fwd
+          ? '<span class="dot dot-live"></span> <strong>Forward test.</strong> The ' + state.year + " board was frozen on draft night, before anyone in this class played an NFL snap. " + fwd.seasons + " season" + (fwd.seasons > 1 ? "s are" : " is") + " now in the books — Outcome shows careers to date, not final grades."
+          : '<span class="dot">●</span> <strong>Projection mode.</strong> True out-of-sample predictions — the model trained only on 2000–2021 outcomes. No NFL snaps played yet.';
   }
   const tile = (label, value, sub) =>
     '<div class="tile"><div class="tile-label">' + label + '</div><div class="tile-value">' + value + '</div><div class="tile-sub">' + sub + "</div></div>";
@@ -213,8 +266,12 @@
   /* ---------- modal ---------- */
   const backdrop = $("#modalBackdrop"), modal = $("#modal");
   let lastFocus = null;
-  function openModal(p) {
+  function openModal(p, fromHash) {
     lastFocus = document.activeElement;
+    if (!fromHash && p.yr === state.year && state.tab === "board") {
+      state.pick = p.pk;
+      writeHash();
+    }
     const probs = [
       ["Top-quartile career (Hit)", p.ph, p.mh],
       ["3+ year starter", p.ps, p.ms],
@@ -223,7 +280,8 @@
     const facts = [];
     facts.push(["Draft capital", "Pick " + p.pk + " · Round " + (p.rd || "–") + (p.tm ? " · " + esc(p.tm) : "")]);
     facts.push(["Age at draft", p.age != null ? p.age : "–"]);
-    facts.push(["RAS (0–10)", p.ras != null ? p.ras.toFixed(2) + pctlNote(p.rasp) : "no score"]);
+    facts.push(["RAS (0–10)", p.ras != null ? p.ras.toFixed(2) + pctlNote(p.rasp)
+      : '<span class="pctl">did not test — no combine/pro-day workout on record</span>']);
     facts.push(["PFF college grade", p.pffp != null ? "p" + Math.round(p.pffp) + ' <span class="pctl">percentile at position</span>' : "not covered"]);
     facts.push(["APEX rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg]);
     facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
@@ -236,8 +294,16 @@
       if (p.pb > 0) bits.push("★ " + p.pb + "× Pro Bowl" + (p.ap > 0 ? " · " + p.ap + "× All-Pro" : ""));
       const stats = ["Career AV " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
       outcome = '<div class="outcome-band"><strong>What actually happened:</strong> ' + bits.join(" · ") + '<br><span class="prob">' + stats + "</span></div>";
-    } else if (p.wav != null && p.wav > 0) {
-      outcome = '<div class="outcome-band"><strong>Career so far:</strong> AV ' + p.wav + " · " + (p.g ?? 0) + " games · " + (p.st ?? 0) + " seasons started" + (p.pb ? " · " + p.pb + "× Pro Bowl" : "") + "</div>";
+    } else if (p.ns > 0) {
+      const bits = [];
+      if (p.fh) bits.push("✓ Top-quartile value at his position so far");
+      if (p.fs) bits.push("✓ 2+ seasons started");
+      if (p.pb) bits.push("★ " + p.pb + "× Pro Bowl" + (p.ap > 0 ? " · " + p.ap + "× All-Pro" : ""));
+      if (!bits.length) bits.push("Not yet tracking as a top-quartile career");
+      const stats = ["AV " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
+      outcome = '<div class="outcome-band"><strong>' + p.ns + " season" + (p.ns > 1 ? "s" : "") +
+        " in:</strong> " + bits.join(" · ") + '<br><span class="prob">' + stats +
+        " — career to date, not a final grade</span></div>";
     }
 
     modal.innerHTML =
@@ -262,8 +328,10 @@
     $(".modal-close", modal).focus();
   }
   const pctlNote = p => (p == null ? "" : ' <span class="pctl">· p' + Math.round(p) + " at position</span>");
-  function closeModal() {
+  function closeModal(fromHash) {
+    if (backdrop.hidden) return;
     backdrop.hidden = true;
+    if (!fromHash && state.pick != null) { state.pick = null; writeHash(); }
     if (lastFocus) lastFocus.focus();
   }
   backdrop.addEventListener("click", e => { if (e.target === backdrop) closeModal(); });
@@ -443,6 +511,41 @@
       '<div class="hero-copy">In the held-out backtest, whenever APEX moved a player&rsquo;s hit probability <strong>10+ points away from the draft-slot prior</strong>, the model&rsquo;s side of the argument won <strong>' + dg.model_right + " of " + dg.n + "</strong> times. Every score on this site was produced by a model that never saw that player&rsquo;s class.</div>";
     storyList($("#stealsList"), D.insights.steals, "steal");
     storyList($("#skepticList"), D.insights.skeptic, "skeptic");
+    renderForward();
+  }
+
+  function renderForward() {
+    const F = D.forward;
+    if (!F || !F.head_to_head.length) return;
+    const rows = F.head_to_head.slice().sort((a, b) => a.yr - b.yr);
+    const cell = (a, b) => {
+      const cls = a > b ? "win" : a < b ? "loss" : "";
+      return '<td class="' + cls + '">' + a.toFixed(3) + "</td><td>" + b.toFixed(3) + "</td>";
+    };
+    $("#fwdTable").innerHTML =
+      '<table class="bt-table"><tr><th>Class</th><th>Seasons played</th><th>Players</th>' +
+      '<th>APEX AUC</th><th>Draft-slot AUC</th><th>APEX top 32</th><th>Picks 1–32</th></tr>' +
+      rows.map(r => {
+        const c = F.classes[r.yr] && F.classes[r.yr].hit;
+        return "<tr><td>" + r.yr + "</td><td>" + r.seasons + "</td><td>" + r.n + "</td>" +
+          (c ? cell(c.apex, c.market) : "<td>–</td><td>–</td>") +
+          '<td class="' + (r.m32 > r.d32 ? "win" : r.m32 < r.d32 ? "loss" : "") + '">' +
+          pct(r.m32) + "</td><td>" + pct(r.d32) + "</td></tr>";
+      }).join("") +
+      (F.pooled && F.pooled.hit
+        ? "<tr class='total'><td><strong>Pooled</strong></td><td>–</td><td>" + F.pooled.hit.n +
+          "</td>" + cell(F.pooled.hit.apex, F.pooled.hit.market) + "<td>–</td><td>–</td></tr>"
+        : "") + "</table>";
+
+    const p = F.pooled && F.pooled.hit;
+    const edge = p ? (p.apex - p.market) * 1000 / 10 : 0;
+    $("#fwdNote").innerHTML =
+      "&ldquo;Top-quartile so far&rdquo; is the career label applied to a career in progress: weighted AV in the top 25% of the same class and position group. " +
+      (p
+        ? "Pooled across " + p.n + " players, APEX is <strong>" + (edge >= 0 ? "+" : "") + edge.toFixed(1) +
+          " AUC points</strong> ahead of the draft-slot prior — the same direction as the backtest, but far too small to call a win on this sample. "
+        : "") +
+      "Two or three seasons is early: careers turn on year-four contracts, and a class this size would take a decade of drafts to resolve an edge this thin. Published as-is, win or lose.";
   }
 
   /* ---------- methodology ---------- */
@@ -494,4 +597,8 @@
   renderMethod();
   renderCharts();
   setTab(state.tab);
+  if (state.pick != null) {
+    const p = findPick(state.year, state.pick);
+    if (p) openModal(p, true); else state.pick = null;
+  }
 })();
