@@ -700,6 +700,17 @@
       1: "top 3% at the position on volume-adjusted 2025 grade",
       2: "next 7%", 3: "next 15%", 4: "next 25%",
     };
+    // why a name someone remembers is missing: he is in the NFL now
+    const sg = W.signed || {};
+    if (sg.removed) {
+      $("#watchSigned").innerHTML =
+        "Anyone on an NFL roster for " + sg.rookie_year + " is off the list, <strong>including " +
+        "the " + sg.udfa + " who signed as undrafted free agents</strong> — going undrafted is not " +
+        "the same as still being a prospect. That removed " + sg.removed + " players." +
+        (sg.ambiguous ? " " + sg.ambiguous + " more matched an NFL rookie by name only, with " +
+          "neither position nor school agreeing, and were kept: name-matching alone is wrong " +
+          "often enough that a removal needs a second signal." : "");
+    }
     const wGroups = ["ALL"].concat([...new Set(W.players.map(p => p.pg))].sort());
     const wPills = $("#watchPills");
     wGroups.forEach(pg => {
