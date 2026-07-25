@@ -155,6 +155,89 @@
       </table>
     </div>
     <p class="table-hint" id="watchNote"></p>
+
+    <div class="prose" style="max-width:none">
+      <h2>How this list is built</h2>
+      <p>Four steps: take everyone who played enough of a 2025 college season, adjust each
+      player&rsquo;s grade for how much he actually played, rank him against his own position, and cut
+      tiers on that rank. No model runs at any point. Nothing here is a forecast.</p>
+
+      <h3>1. Who is in the pool</h3>
+      <p>Every player with a 2025 college season and at least <strong id="cfgGames"></strong> games,
+      who has not signed with an NFL team. Defenders need <strong id="cfgDefSnaps"></strong>
+      defensive snaps and offensive linemen <strong id="cfgOlSnaps"></strong> offensive snaps, since
+      grades on a handful of snaps are not measuring anything. That leaves
+      <strong id="cfgPool"></strong> players.</p>
+      <p>Position groups come from where a player lined up in college, not from where an NFL team
+      might eventually play him. Pool sizes vary a lot &mdash; there are several times as many
+      defensive backs as quarterbacks &mdash; which is exactly why nothing is ranked across
+      positions.</p>
+
+      <h3>2. What each position is ranked on</h3>
+      <p>One number per player, chosen to be the thing that position is paid to do:</p>
+      <div class="table-wrap"><table class="board mini" id="basisTable">
+        <thead><tr><th>Group</th><th>Ranked on</th><th>Playing time measured as</th>
+          <th class="num">Players</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="fine">Receivers and tight ends are ranked per route run rather than per target,
+      because targets measure what the quarterback decided to do. Linemen have their pass-block and
+      run-block grades averaged: a tackle who cannot do one of them is not a prospect, and splitting
+      the two would imply a precision the percentile does not have. The underlying grades are
+      licensed and are not published &mdash; only the percentiles derived from them.</p>
+
+      <h3>3. Adjusting for how much he played</h3>
+      <p>A grade earned on sixty snaps is a claim about sixty snaps. Ranking on the raw number puts
+      part-timers with one good afternoon at the top of every position &mdash; the unadjusted list
+      had a cornerback who ranked in the 100th percentile on grade and the 1st on volume.</p>
+      <p>So each grade is pulled toward its position&rsquo;s average by how much the player actually
+      played:</p>
+      <p class="formula">
+        <span>adjusted = <em>w</em> &times; grade + <span class="atom">(1 &minus; <em>w</em>)</span>
+          &times; position average</span>
+        <span>where <span class="atom"><em>w</em> = <em>n</em> / (<em>n</em> + <em>k</em>)</span></span>
+      </p>
+      <p><em>n</em> is the player&rsquo;s playing time and <em>k</em> is the position&rsquo;s own 25th-percentile
+      volume. A full-season starter keeps nearly all of his grade; a fringe player is pulled most of
+      the way back to average. Nobody is deleted for playing little &mdash; the claim is just held to
+      the evidence behind it. This is what makes the order here differ from raw grade: it moved
+      <strong id="cfgMoved"></strong> players by more than ten percentile points, the largest by
+      <strong id="cfgMovedMax"></strong>.</p>
+      <p>Players below the <strong id="cfgThinVol"></strong>th percentile for playing time, or under
+      <strong id="cfgThinGames"></strong> games, are tagged <span class="thin-tag">thin sample</span>
+      and can be hidden with the checkbox. They are tagged rather than dropped because a good player
+      on a bad team also plays few snaps.</p>
+
+      <h3>4. Percentile, rank, and tiers</h3>
+      <p>The adjusted grade becomes a percentile <em>within the position group</em>. Tiers are cut on
+      that percentile:</p>
+      <ul id="cfgTierList"></ul>
+      <p>Roughly half of each position falls below the tier&nbsp;4 line and is not tiered at all;
+      those players stay searchable but are left out of the tiered view.</p>
+      <p>The percentile alone could not order the list. A percentile has a hundred buckets and a
+      position has hundreds of players, so the entire top of every position rounds to p100 and the
+      order inside tier&nbsp;1 would be arbitrary. Each player therefore also carries his rank at his
+      position, which never ties. With <strong>All</strong> positions selected the table sorts on that
+      rank, which interleaves fairly &mdash; every position&rsquo;s best, then every position&rsquo;s
+      second-best &mdash; rather than pretending the best cornerback and the best quarterback can be
+      separated.</p>
+
+      <h3>Why there is no projection here</h3>
+      <p>This is the part worth being blunt about. The APEX model&rsquo;s edge lives almost entirely in
+      athletic testing and draft position, and these players have neither. So the question is whether
+      running a model on what <em>is</em> known &mdash; production and grades &mdash; would beat simply
+      ranking on the grades. It was measured rather than assumed.</p>
+      <p>Trained on production and PFF grades with no athletic testing and no draft slot, and tested
+      on classes it never saw, such a model reaches <strong>0.640 AUC</strong> at predicting who
+      becomes good. Ranking on PFF grades alone gets <strong>0.628</strong>. The model is worth about
+      a single AUC point over the ranking already on this page &mdash; while a model that knows only
+      where a player was drafted, and nothing else about him, scores <strong>0.799</strong>.</p>
+      <p>Publishing a projection built on the first number, and presenting it next to a site whose
+      board is built on the third, would imply a confidence that a hundredth of an AUC point does not
+      support. The honest version of this page is a production ranking that says so. It is worth
+      revisiting after the February 2027 combine, when these players finally have the input that
+      carries the model.</p>
+    </div>
   </section>
 
   <!-- ============ METHODOLOGY ============ -->

@@ -451,6 +451,23 @@ td.num, th.num { text-align: right; }
 :root[data-theme="dark"] .tier-row.t3 .tier-name { color: #fbbf24; }
 :root[data-theme="dark"] .tier-row.t4 .tier-name { color: #a8a29e; }
 .of-pool { color: var(--muted); font-weight: 400; }
+/* The shrinkage formula: set apart so it reads as a definition, not a sentence.
+   It wraps rather than scrolls — a formula clipped at the edge of a phone reads
+   as a broken page — but the small groupings stay whole. */
+.formula { background: var(--surface-2, var(--chip)); border: 1px solid var(--border);
+           border-radius: 8px; padding: 12px 16px; font-size: 14.5px;
+           display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; }
+.formula > span { text-align: center; }
+.formula .atom { white-space: nowrap; }
+.formula em { font-style: italic; color: var(--accent); font-weight: 600; }
+/* a reference table, not a leaderboard: it does not sort, scroll or respond to
+   clicks, so it opts out of the board's min-width, sticky head and hover states */
+.board.mini { font-size: 14px; min-width: 520px; }
+.board.mini td { padding: 9px 14px; }
+.board.mini thead th { position: static; cursor: default; }
+.board.mini tbody tr:hover { background: transparent; cursor: default; }
+#cfgTierList { list-style: none; padding: 0; display: grid; gap: 7px; }
+#cfgTierList li { font-size: 14px; color: var(--ink-2); }
 .thin-tag { font: 600 10.5px/1.6 system-ui, sans-serif; text-transform: uppercase;
             letter-spacing: .05em; color: var(--muted); border: 1px solid var(--border);
             border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }

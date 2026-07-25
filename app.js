@@ -700,6 +700,36 @@
       1: "top 3% at the position on volume-adjusted 2025 grade",
       2: "next 7%", 3: "next 15%", 4: "next 25%",
     };
+    /* The "How this list is built" section describes what the build actually did,
+       so every number in it comes from the payload rather than the markup. */
+    const C = W.config || {};
+    const setTxt = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    if (C.basis) {
+      setTxt("#cfgGames", C.min_games);
+      setTxt("#cfgDefSnaps", C.min_def_snaps);
+      setTxt("#cfgOlSnaps", C.min_ol_snaps);
+      setTxt("#cfgPool", W.n.toLocaleString());
+      setTxt("#cfgMoved", W.moved10);
+      setTxt("#cfgMovedMax", W.movedmax + " points");
+      setTxt("#cfgThinVol", C.thin_vol_pctl);
+      setTxt("#cfgThinGames", C.thin_games);
+
+      $("#basisTable tbody").innerHTML = Object.keys(C.basis).sort().map(g =>
+        '<tr><td><span class="pos-chip">' + g + "</span></td><td>" + esc(C.basis[g][0]) +
+        "</td><td>" + esc(C.basis[g][1]) + '</td><td class="num prob">' +
+        ((C.pool && C.pool[g]) || "–") + "</td></tr>").join("");
+
+      // tier cuts are [tier, floor]; the ceiling is the previous tier's floor
+      $("#cfgTierList").innerHTML = C.tiers.map(([t, cut], i) => {
+        const hi = i === 0 ? 100 : C.tiers[i - 1][1];
+        const span = i === 0 ? "top " + (100 - cut) + "%"
+          : "the next " + (hi - cut) + "%";
+        return '<li><span class="tier-chip t' + t + '">' + TIER_NAME[t] + "</span> " +
+          "percentile " + cut + (i === 0 ? " and above" : "–" + (hi - 1)) +
+          " at the position — " + span + ".</li>";
+      }).join("");
+    }
+
     // why a name someone remembers is missing: he is in the NFL now
     const sg = W.signed || {};
     if (sg.removed) {
