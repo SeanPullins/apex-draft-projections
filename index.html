@@ -17,6 +17,7 @@
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
     <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab" data-tab="watch" role="tab" aria-selected="false">Watchlist</button>
     <button class="tab" data-tab="method" role="tab" aria-selected="false">Methodology</button>
   </nav>
   <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
@@ -99,6 +100,37 @@
     </div>
   </section>
 
+  <!-- ============ WATCHLIST ============ -->
+  <section id="tab-watch" class="tab-panel">
+    <div class="prose" style="max-width:none">
+      <h2>Watchlist &mdash; college players not yet drafted</h2>
+      <p class="warn-band"><strong>This is not a projection, and it is not a draft class.</strong>
+      These are players with a 2025 college season who have not been drafted. The 2026 college
+      season has not been played, nobody declares until January 2027, and no one has tested at a
+      combine. Every number elsewhere on this site leans on athletic testing and draft position &mdash;
+      the two things these players do not yet have &mdash; so there is no APEX score here and no
+      hit probability. What follows is what they <em>did</em> in 2025, and nothing more.</p>
+    </div>
+    <div class="controls">
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="watchPills" role="group" aria-label="Watchlist position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="watchSearch" type="search" placeholder="Player or school…" aria-label="Search watchlist">
+      </label>
+    </div>
+    <div class="table-wrap">
+      <table class="board" id="watchTable">
+        <thead><tr><th>#</th><th>Player</th><th>School</th><th class="num">Pos</th>
+          <th class="num">2025 grade pctl</th><th class="num">Volume pctl</th><th class="num">Games</th></tr></thead>
+        <tbody id="watchBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint" id="watchNote"></p>
+  </section>
+
   <!-- ============ METHODOLOGY ============ -->
   <section id="tab-method" class="tab-panel">
     <div class="prose">
@@ -125,6 +157,14 @@
       <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
       <p>Ablating those blocks is unflattering and worth publishing anyway. Added to the draft-slot prior on its own, athleticism is worth about <strong>+1.0 AUC points</strong>; college production is worth +0.1, PFF grades +0.1, and adding third-party scouting consensus makes the model slightly <em>worse</em>. Removing athleticism costs more than ten times what removing college production costs. Whatever this model knows that the draft order does not, it learned almost entirely from workout and size data — not from tape.</p>
       <p>One wrinkle worth naming: plain isotonic calibration is a step function, and it flattens a 250-player class onto about 25 plateaus — which would put four players in a dead heat at the top of every board. APEX keeps the isotonic fit but interpolates between the plateau centres, so the curve stays monotone and honest while every player the model actually separated keeps a distinct number. Checked leave-one-year-out, the smoothed version calibrates as well as the step version and ranks strictly better.</p>
+
+      <h3>How much of this is just the draft?</h3>
+      <p>Draft position has always been two things here at once: the baseline APEX is judged against, and one of the features APEX is built from. So it is fair to ask whether the model knows anything at all, or is simply re-ranking the league&rsquo;s own order. To find out, a third model is trained on <em>only the player</em> &mdash; athletic testing, college production, PFF grades, age, size &mdash; and told nothing about where he was picked.</p>
+      <div id="predraftTable"></div>
+      <p id="predraftNote" class="fine"></p>
+      <p>The split is the honest summary of this project. On <strong>who becomes good</strong>, the draft wins and it is not close: strip the pick number out and the model falls apart, while adding it back is worth several times more than every scouting input combined. Whatever NFL teams know by draft night &mdash; medicals, interviews, film, scheme fit &mdash; most of it never reaches a spreadsheet.</p>
+      <p>On <strong>who busts relative to his slot</strong>, it flips: the player-only model beats draft position outright, and knowing the pick adds almost nothing on top. That result comes with a caveat worth stating plainly &mdash; bust is defined <em>within</em> a draft-capital band, so the label deliberately removes most of the draft-slot signal and the comparison is not a fair fight. But the information is real: testing and production do say something about who fails to justify his selection.</p>
+      <p>One more number puts it in perspective. The rank correlation between the player-only score and actual draft position is about &minus;0.50, meaning that from the same raw material teams use, this model reconstructs roughly a quarter of the variance in draft order. The other half of what decides where a player goes is invisible from here.</p>
 
       <h3>Tiers, and how much the score is worth</h3>
       <p>Two players a tenth of a point apart are not meaningfully separated, but a ranked list implies they are. So each APEX score carries a standard error, measured by resampling the training set forty times with replacement and refitting &mdash; the spread of scores the same model would have produced had it seen a slightly different sample of draft history.</p>
@@ -171,6 +211,7 @@
 </footer>
 
 <script src="data.js"></script>
+<script src="watchlist.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

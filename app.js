@@ -25,7 +25,7 @@
   /* ---------- tabs + hash ----------
      #board/2023 selects a class, #board/2023/6 opens that pick's card, so any
      player on the site is a shareable link and the back button works. */
-  const HASH = /^#(board|insights|method)(?:\/(\d{4}))?(?:\/(\d{1,3}))?/;
+  const HASH = /^#(board|insights|watch|method)(?:\/(\d{4}))?(?:\/(\d{1,3}))?/;
   let ownHash = false;
   function writeHash() {
     const h = state.tab !== "board" ? "#" + state.tab
@@ -327,6 +327,28 @@
         (p.tierp != null ? " · " + p.pg + " tier " + p.tierp : "") + "</span>" : "")]);
     facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
 
+    // What the model said about the player alone, before knowing where he went.
+    // Worth showing per player because the gap between the two is the draft's
+    // opinion: a big drop means the league saw something the inputs did not.
+    let predraft = "";
+    if (p.qh != null) {
+      const dh = Math.round((p.ph - p.qh) * 100);
+      const db = p.qbu != null ? Math.round((p.pbu - p.qbu) * 100) : null;
+      const verdict = dh >= 8 ? "the draft raised him" : dh <= -8 ? "the draft lowered him"
+        : "the draft agreed";
+      predraft =
+        '<div class="predraft"><div class="predraft-h">Before the draft ' +
+        '<span class="predraft-tag">' + verdict + "</span></div>" +
+        '<div class="predraft-row"><span>Hit</span><b>' + pct(p.qh) + "</b>" +
+        '<span class="predraft-arrow">→ ' + pct(p.ph) + "</span></div>" +
+        (p.qbu != null ? '<div class="predraft-row"><span>Bust risk</span><b>' + pct(p.qbu) +
+          "</b><span class=\"predraft-arrow\">→ " + pct(p.pbu) + "</span></div>" : "") +
+        '<p class="fine">Left: the model given only the player — testing, production, ' +
+        'college grades, age — and no idea where he was picked. Right: the published ' +
+        'number, which also knows his draft slot. On hit the draft is worth far more than ' +
+        'everything else combined; on bust risk it adds almost nothing.</p></div>';
+    }
+
     let outcome = "";
     if (p.src === 1) {
       const bits = [];
@@ -364,7 +386,7 @@
       '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div></div>' +
       '<div class="modal-grid">' +
       facts.map(([l, v]) => '<div class="fact"><div class="fact-label">' + l + '</div><div class="fact-value">' + v + "</div></div>").join("") +
-      "</div>" + outcome;
+      "</div>" + predraft + outcome;
     backdrop.hidden = false;
     $(".modal-close", modal).addEventListener("click", closeModal);
     $(".modal-close", modal).focus();
@@ -634,6 +656,26 @@
       ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1) + ' on who becomes good. Draft position barely predicts the first question at all, which is why there is room. The exception is round one, where the model has no edge on bust at all &mdash; that skill starts at pick 33.</p>' +
       '<p class="fine">Top-decile check: among the model&rsquo;s 10% most confident players, ' + pct(D.backtest.top_decile_hit_rate.deploy) + " hit vs " + pct(D.backtest.top_decile_hit_rate.market) + " for the draft-slot prior.</p>";
 
+    // pre-draft decomposition: what the draft is worth, and what we are worth
+    const P = D.backtest.summary.predraft, M = D.backtest.summary.market,
+          Dp = D.backtest.summary.deploy;
+    if (P) {
+      const row = (k, lbl) =>
+        "<tr><td>" + lbl + "</td><td>" + M[k].auc.toFixed(4) + "</td><td><strong>" +
+        P[k].auc.toFixed(4) + "</strong></td><td>" + Dp[k].auc.toFixed(4) + "</td>" +
+        "<td class='" + (P[k].auc > M[k].auc ? "win" : "loss") + "'>" +
+        ((P[k].auc - M[k].auc) * 100).toFixed(1) + "</td></tr>";
+      $("#predraftTable").innerHTML =
+        "<table class='bt-table'><tr><th>Question</th><th>Draft slot alone</th>" +
+        "<th>Player only, no pick</th><th>Both (published)</th>" +
+        "<th>Player-only vs draft slot</th></tr>" +
+        row("hit", "Who becomes good") + row("bust", "Who busts for his slot") + "</table>";
+      $("#predraftNote").innerHTML =
+        "Held-out AUC, 2003&ndash;2021 classes. The last column is the player-only model " +
+        "minus the draft-slot prior, in AUC points: negative means the pick number knows " +
+        "more than everything we can measure about the player, positive means the reverse.";
+    }
+
     const imp = D.importance.deploy || [];
     const maxG = Math.max(...imp.map(i => i.gain));
     $("#impList").innerHTML = imp.map(i =>
@@ -644,6 +686,57 @@
     aucChart();
     calChart();
     roundChart();
+  }
+
+  /* ---------- watchlist ----------
+     A production board, not a projection. Ranked on what a player did in 2025;
+     no APEX score, because these players have neither athletic testing nor a
+     draft slot -- the two inputs the projection actually leans on. */
+  const W = window.APEX_WATCH;
+  if (W) {
+    const wState = { pos: "ALL", q: "" };
+    const wGroups = ["ALL"].concat([...new Set(W.players.map(p => p.pg))].sort());
+    const wPills = $("#watchPills");
+    wGroups.forEach(pg => {
+      const b = document.createElement("button");
+      b.className = "pill" + (pg === "ALL" ? " is-active" : "");
+      b.textContent = pg;
+      b.addEventListener("click", () => {
+        wState.pos = pg;
+        $$(".pill", wPills).forEach(x => x.classList.toggle("is-active", x.textContent === pg));
+        renderWatch();
+      });
+      wPills.appendChild(b);
+    });
+    let wTimer;
+    $("#watchSearch").addEventListener("input", e => {
+      clearTimeout(wTimer);
+      wTimer = setTimeout(() => { wState.q = e.target.value.trim().toLowerCase(); renderWatch(); }, 120);
+    });
+    function renderWatch() {
+      let rows = W.players;
+      if (wState.pos !== "ALL") rows = rows.filter(p => p.pg === wState.pos);
+      if (wState.q) rows = rows.filter(p =>
+        (p.nm || "").toLowerCase().includes(wState.q) ||
+        (p.tm || "").toLowerCase().includes(wState.q));
+      rows = rows.slice().sort((a, b) => b.p - a.p || (b.v || 0) - (a.v || 0)).slice(0, 300);
+      $("#watchBody").innerHTML = rows.map((p, i) =>
+        "<tr><td class='num'>" + (i + 1) + "</td>" +
+        '<td class="player-cell"><div class="player-name">' + esc(p.nm) + "</div></td>" +
+        "<td>" + esc(p.tm) + "</td>" +
+        '<td class="num"><span class="pos-chip">' + p.pg + "</span></td>" +
+        '<td class="num prob">p' + p.p + "</td>" +
+        '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
+        '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>").join("");
+      $("#watchNote").innerHTML =
+        "Showing " + rows.length + " of " + W.n + " undrafted players with a " + W.season +
+        " college season. <strong>Grade percentile is within position</strong>, so p90 means better " +
+        "than 90% of college players at that spot &mdash; the underlying grades are licensed and are " +
+        "not published. Read it alongside volume: a high grade on a handful of snaps is noise, and " +
+        "several players near the top have volume percentiles in single figures. Offensive line is " +
+        "absent because the 2025 blocking data is not in this dataset.";
+    }
+    renderWatch();
   }
 
   /* ---------- boot ---------- */

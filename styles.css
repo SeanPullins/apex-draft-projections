@@ -385,3 +385,27 @@ td.num, th.num { text-align: right; }
 @media (max-width: 720px) { .score-sd { display: none; } }
 .hero-sd { font-size: 15px; color: var(--muted); margin-left: 8px; align-self: flex-end;
            padding-bottom: 10px; font-variant-numeric: tabular-nums; }
+
+/* ---------- pre-draft comparison on the player card ----------
+   Left number is the model given only the player; right number also knows his
+   draft slot. The gap between them is the draft's opinion. */
+.predraft { margin-top: 14px; padding: 12px 14px; border-radius: 10px;
+            border: 1px dashed var(--line); background: var(--surface-2, transparent); }
+.predraft-h { font-size: 12px; font-weight: 700; letter-spacing: .06em;
+              text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.predraft-tag { font-weight: 600; letter-spacing: 0; text-transform: none;
+                color: var(--accent); margin-left: 6px; }
+.predraft-row { display: flex; align-items: baseline; gap: 8px; font-size: 14px;
+                margin: 3px 0; }
+.predraft-row span:first-child { min-width: 74px; color: var(--muted); }
+.predraft-row b { font-variant-numeric: tabular-nums; }
+.predraft-arrow { color: var(--muted); font-variant-numeric: tabular-nums; }
+.predraft .fine { margin-top: 8px; }
+
+/* watchlist: the caveat has to be impossible to skim past */
+.warn-band { border-left: 3px solid #b42318; background: color-mix(in srgb, #b42318 6%, transparent);
+             padding: 12px 16px; border-radius: 0 8px 8px 0; }
+@media (prefers-color-scheme: dark) { .warn-band { border-left-color: #f87171;
+  background: color-mix(in srgb, #f87171 10%, transparent); } }
+:root[data-theme="dark"] .warn-band { border-left-color: #f87171;
+  background: color-mix(in srgb, #f87171 10%, transparent); }
