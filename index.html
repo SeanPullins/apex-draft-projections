@@ -39,7 +39,13 @@
         <span class="control-label">Search</span>
         <input id="searchBox" type="search" placeholder="Player, college, team…" aria-label="Search players">
       </label>
+      <div class="control">
+        <span class="control-label">Scoring</span>
+        <div class="pills" id="lensPills" role="group" aria-label="Scoring lens"></div>
+      </div>
     </div>
+
+    <p class="warn-band lens-band" id="lensBand" hidden></p>
 
     <div class="tiles" id="boardTiles"></div>
     <p class="mode-note" id="modeNote"></p>

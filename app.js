@@ -7,7 +7,19 @@
 
   const POS_GROUPS = ["ALL", "QB", "RB", "WR", "TE", "OL", "EDGE", "DL", "LB", "DB"];
   const LATEST = Math.max(...D.classes);
-  const state = { tab: "board", year: LATEST, pos: "ALL", q: "", sort: "apex", dir: -1, pick: null };
+  const state = { tab: "board", year: LATEST, pos: "ALL", q: "", sort: "apex", dir: -1,
+                  pick: null, lens: "drafted" };
+
+  /* Two ways of scoring the same players. "drafted" is the shipped model, which
+     knows where each player went. "predraft" withholds the pick entirely --
+     the only lens that could score a class before its draft, and the only
+     honest way to read a class that has not had one. The board reads every
+     score through whichever lens is active. */
+  const LENS = {
+    drafted:  { apex: "apex", hit: "ph", starter: "ps", bust: "pbu" },
+    predraft: { apex: "qapex", hit: "qh", starter: "qs", bust: "qbu" },
+  };
+  const lens = () => LENS[state.lens];
 
   const pct = p => (p == null ? "–" : Math.round(p * 100) + "%");
   const fmt1 = v => (v == null ? "–" : (+v).toFixed(1));
@@ -140,7 +152,11 @@
       rows = D.players.filter(p => p.yr === state.year);
     }
     if (state.pos !== "ALL") rows = rows.filter(p => p.pg === state.pos);
-    const k = state.sort, dir = state.dir;
+    // the sort keys name the drafted fields; route them through the active lens
+    // so clicking "APEX" sorts the pre-draft board by its own score
+    const L = lens();
+    const remap = { apex: L.apex, ph: L.hit, ps: L.starter, pbu: L.bust };
+    const k = remap[state.sort] || state.sort, dir = state.dir;
     // ties fall back to board rank, so equal values never shuffle arbitrarily
     const byRank = (a, b) => (a.rk || 1e9) - (b.rk || 1e9) || (a.yr - b.yr);
     rows = rows.slice().sort((a, b) => {
@@ -183,11 +199,50 @@
     return '<span class="prob">not yet played</span>';
   }
 
+  const lensPills = $("#lensPills");
+  if (lensPills) {
+    [["drafted", "As drafted"], ["predraft", "Pre-draft (no pick)"]].forEach(([v, lbl]) => {
+      const b = document.createElement("button");
+      b.className = "pill" + (v === state.lens ? " is-active" : "");
+      b.textContent = lbl;
+      b.addEventListener("click", () => {
+        state.lens = v;
+        $$(".pill", lensPills).forEach(x => x.classList.toggle("is-active", x.textContent === lbl));
+        renderBoard();
+      });
+      lensPills.appendChild(b);
+    });
+  }
+
   function renderBoard() {
     const rows = rowsForState();
+    const band = $("#lensBand");
+    if (band) {
+      band.hidden = state.lens !== "predraft";
+      if (state.lens === "predraft") {
+        band.innerHTML =
+          "<strong>Scored without the draft.</strong> These are the same players run through " +
+          "a model that is never told where they were picked — only testing, college " +
+          "production, grades, age and size. It is the only version that could score a class " +
+          "before its draft, so it is what a 2027 board would look like. " +
+          "<strong>It is also markedly worse at finding hits</strong>: on classes it had never " +
+          "seen it reaches 0.691 AUC against 0.821 for draft position alone, and that gap is " +
+          "wider out of sample than in backtest. On <em>bust risk</em> it is the better of the " +
+          "two (0.627 against 0.582), which is the one place withholding the pick genuinely " +
+          "pays. Board rank, tiers and value-vs-slot are hidden here because all three are " +
+          "defined against draft position.";
+      }
+    }
     // header sort indicators
     $$("th", head).forEach((th, i) => {
       const k = COLS[i].sortKey || COLS[i].key;
+      // the score column is not APEX when the pick is withheld, and calling it
+      // APEX would claim the two numbers are the same thing
+      if (k === "apex" || k === "rk") {
+        const preLbl = { apex: "PRE-DRAFT", rk: "PRE-DRAFT RK" };
+        th.childNodes[0].nodeValue =
+          state.lens === "predraft" ? preLbl[k] : COLS[i].label;
+      }
       th.classList.toggle("sorted", k === state.sort);
       const a = th.querySelector(".arrow");
       if (a) a.remove();
@@ -207,15 +262,22 @@
     // down a list of quarterbacks read 1, 7, 12 with gaps where the other
     // positions were -- which looks broken, and implies a comparison the
     // filtered board is not making.
+    const L = lens();
+    const pre = state.lens === "predraft";
+    // Tiers, board rank and value-vs-slot are all computed from the shipped
+    // model's score against draft position. None of them describe the pre-draft
+    // score, so rather than relabel them they are stood down in that lens.
     const tierKey = state.pos === "ALL" ? "tier" : "tierp";
-    const showTiers = state.sort === "apex" && state.dir === -1 && !state.q
+    const showTiers = !pre && state.sort === "apex" && state.dir === -1 && !state.q
       && rows.some(p => p[tierKey] != null);
     const tierSize = {};
     if (showTiers) rows.forEach(p => { tierSize[p[tierKey]] = (tierSize[p[tierKey]] || 0) + 1; });
     let lastTier = null;
 
+    let preRank = 0;
     body.innerHTML = rows.map(p => {
       let sep = "";
+      if (pre) preRank++;
       if (showTiers && p[tierKey] !== lastTier) {
         lastTier = p[tierKey];
         const n = tierSize[p[tierKey]];
@@ -228,22 +290,23 @@
           (n > 1 ? " the model can’t separate" : "") + "</span></td></tr>";
       }
       const meta = [p.cl, p.tm, state.q ? p.yr : null].filter(Boolean).join(" · ");
-      const vd = p.vd == null ? '<span class="delta-flat">–</span>'
+      const vd = pre || p.vd == null ? '<span class="delta-flat">–</span>'
         : p.vd > 4 ? '<span class="delta-up">▲ ' + p.vd + "</span>"
         : p.vd < -4 ? '<span class="delta-down">▼ ' + (-p.vd) + "</span>"
         : '<span class="delta-flat">·</span>';
+      const score = p[L.apex];
       return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
-        '<td class="num c-rk">' + (p.rk ?? "–") + "</td>" +
+        '<td class="num c-rk">' + (pre ? preRank : (p.rk ?? "–")) + "</td>" +
         '<td class="num c-pk">' + (p.pk ?? "–") + "</td>" +
         '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
         '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>" +
-        '<td class="c-apex"' + (p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
-          '><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span>' +
-          (p.sd != null ? '<span class="score-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
-          '<span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
-        '<td class="num prob c-ph">' + pct(p.ph) + "</td>" +
-        '<td class="num prob c-ps">' + pct(p.ps) + "</td>" +
-        '<td class="num c-pbu">' + riskCell(p.pbu) + "</td>" +
+        '<td class="c-apex"' + (!pre && p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
+          '><div class="score-cell"><span class="score-num">' + fmt1(score) + '</span>' +
+          (!pre && p.sd != null ? '<span class="score-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
+          '<span class="meter"><i style="width:' + Math.min(100, score || 0) + '%"></i></span></div></td>' +
+        '<td class="num prob c-ph">' + pct(p[L.hit]) + "</td>" +
+        '<td class="num prob c-ps">' + pct(p[L.starter]) + "</td>" +
+        '<td class="num c-pbu">' + riskCell(p[L.bust]) + "</td>" +
         '<td class="num prob c-ras"' + (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") +
           ">" + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
         '<td class="num c-vd">' + vd + "</td>" +
@@ -265,15 +328,24 @@
     const scope = state.q ? rows : D.players.filter(p => p.yr === state.year);
     const hist = !state.q && state.year <= D.train_years[1];
     const fwd = state.q ? null : fwdClass(state.year);
-    const top = scope.slice().sort((a, b) => (b.apex || 0) - (a.apex || 0))[0];
-    const expHits = scope.reduce((s, p) => s + (p.ph || 0), 0);
+    // the tiles state facts about the score being shown, so they read through
+    // the same lens as the table -- a "Board #1" from the drafted model sitting
+    // above a pre-draft ranking would name a player who is not top of the list
+    const L = lens(), pre = state.lens === "predraft";
+    const top = scope.slice().sort((a, b) => (b[L.apex] || 0) - (a[L.apex] || 0))[0];
+    const expHits = scope.reduce((s, p) => s + (p[L.hit] || 0), 0);
     const actHits = scope.filter(p => p.lh).length;
-    const dep = D.backtest.summary.deploy.hit.auc, mkt = D.backtest.summary.market.hit.auc;
+    const S = D.backtest.summary;
+    const dep = pre ? S.predraft.hit.auc : S.deploy.hit.auc, mkt = S.market.hit.auc;
+    const edgeLabel = pre ? "Cost of hiding the pick" : "Model edge";
+    const edgeVal = ((dep - mkt) * 100).toFixed(1);
+    const edgeTile = () => tile(edgeLabel, (dep >= mkt ? "+" : "") + edgeVal,
+      pre ? "AUC pts vs draft-slot prior, held-out" : "AUC pts vs draft-slot prior, held-out");
 
     let third, fourth;
     if (hist) {
       third = tile("Hits delivered", actHits, "of " + expHits.toFixed(0) + " the model expected");
-      fourth = tile("Model edge", "+" + ((dep - mkt) * 100).toFixed(1), "AUC pts vs draft-slot prior, held-out");
+      fourth = edgeTile();
     } else if (fwd) {
       const onTrack = scope.filter(p => p.fh).length;
       third = tile("Tracking so far", onTrack,
@@ -282,12 +354,13 @@
         "top-quartile rate: APEX top 32 vs picks 1–32");
     } else {
       third = tile("Projected hits", expHits.toFixed(0), "expected top-quartile careers");
-      fourth = tile("Model edge", "+" + ((dep - mkt) * 100).toFixed(1), "AUC pts vs draft-slot prior, held-out");
+      fourth = edgeTile();
     }
 
     t.innerHTML =
       tile(state.q ? "Search results" : state.year + " draft class", scope.length, "drafted players scored") +
-      tile("Board #1", top ? esc(top.nm) : "–", top ? top.pg + " · APEX " + fmt1(top.apex) : "") +
+      tile(pre ? "Pre-draft #1" : "Board #1", top ? esc(top.nm) : "–",
+           top ? top.pg + " · " + (pre ? "score " : "APEX ") + fmt1(top[L.apex]) : "") +
       third + fourth;
 
     $("#modeNote").innerHTML = state.q

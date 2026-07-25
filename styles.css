@@ -415,6 +415,11 @@ td.num, th.num { text-align: right; }
 :root[data-theme="dark"] .warn-band { border-left-color: #f87171;
   background: color-mix(in srgb, #f87171 10%, transparent); }
 
+/* the pre-draft lens changes what every number on the board means, so the
+   caveat sits above the table rather than in a footnote under it */
+.lens-band { margin: 4px 0 12px; font-size: 13.5px; line-height: 1.55; }
+.lens-band[hidden] { display: none; }
+
 /* watchlist tiers: the legend does the explaining so the table can stay a table */
 .tier-legend { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px;
                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
