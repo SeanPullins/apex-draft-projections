@@ -306,7 +306,7 @@
       ["Top-quartile career (Hit)", p.ph, p.mh],
       ["3+ year starter", p.ps, p.ms],
       ["Pro Bowler", p.pp, p.mp],
-      ["Bust — never starts", p.pbu, p.mbu, true],
+      ["Bust — bottom 25% for his draft range", p.pbu, p.mbu, true],
     ];
     const facts = [];
     facts.push(["Draft capital", "Pick " + p.pk + " · Round " + (p.rd || "–") + (p.tm ? " · " + esc(p.tm) : "")]);
@@ -575,16 +575,18 @@
     const edge = p ? (p.apex - p.market) * 1000 / 10 : 0;
     const bedge = b ? (b.apex - b.market) * 1000 / 10 : 0;
     $("#fwdNote").innerHTML =
-      "&ldquo;Top-quartile so far&rdquo; is the career label applied to a career in progress: weighted AV in the top 25% of the same class and position group. " +
+      "&ldquo;Top-quartile so far&rdquo; is the career label applied to a career in progress: weighted AV in the top 25% of the same class and position group. Bust is the same idea inverted and judged against the same draft-capital band. " +
       (p
         ? "Pooled across " + p.n + " players, APEX is <strong>" + (edge >= 0 ? "+" : "") + edge.toFixed(1) +
           " AUC points</strong> ahead of the draft-slot prior on finding hits — the same direction as the backtest, but far too small to call a win on this sample. "
         : "") +
       (b
-        ? "<strong>Bust risk is the exception.</strong> On the " + b.n + " players from 2022–2023 whose careers " +
+        ? "<strong>Bust risk is worse, not better.</strong> On the " + b.n + " players from 2022–2023 whose careers " +
           "have had time to fail, APEX is <strong>" + (bedge >= 0 ? "+" : "") + bedge.toFixed(1) +
-          " AUC points</strong> ahead on predicting who never starts — several times its edge on finding hits, " +
-          "and the one result that has held up out of sample. "
+          " AUC points</strong> against the draft-slot prior on predicting who disappoints for his slot — so the " +
+          "large backtest edge on that label (+5.8 points) does <em>not</em> show up here either. " +
+          "There are only " + b.pos + " busts across those two classes, far too few to resolve it in " +
+          "either direction, but it is not evidence in the model’s favour and is not presented as any. "
         : "") +
       "Two or three seasons is early either way. Published as-is, win or lose.";
   }
@@ -610,7 +612,7 @@
   function renderMethod() {
     const S = D.backtest.summary;
     const rows = [["hit", "Hit (top-quartile career)"], ["starter", "3+ year starter"],
-                  ["probowl", "Pro Bowler"], ["bust", "Bust (never starts)"]];
+                  ["probowl", "Pro Bowler"], ["bust", "Bust (bottom 25% for draft range)"]];
     $("#btTable").innerHTML = '<table class="bt-table"><tr><th>Outcome</th><th>Base rate</th><th>Prior AUC</th><th>APEX AUC</th><th>Δ</th><th>APEX AUC 2015+</th><th>Brier ↓</th></tr>' +
       rows.map(([k, label]) => {
         const mkt = S.market[k], dep = S.deploy[k];
@@ -619,8 +621,8 @@
           dep.auc_2015_2021.toFixed(3) + "</td><td>" + dep.brier.toFixed(4) + " vs " + mkt.brier.toFixed(4) + "</td></tr>";
       }).join("") + "</table>" +
       '<p class="fine">The bust row is the point. Against the draft-slot prior the model gains ' +
-      ((S.deploy.bust.auc - S.market.bust.auc) * 100).toFixed(1) + ' AUC points on who never plays, versus ' +
-      ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1) + ' on who becomes good &mdash; and the bust edge is the one that survives the forward test.</p>' +
+      ((S.deploy.bust.auc - S.market.bust.auc) * 100).toFixed(1) + ' AUC points on who disappoints for his draft slot, versus ' +
+      ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1) + ' on who becomes good. Draft position barely predicts the first question at all, which is why there is room. The exception is round one, where the model has no edge on bust at all &mdash; that skill starts at pick 33.</p>' +
       '<p class="fine">Top-decile check: among the model&rsquo;s 10% most confident players, ' + pct(D.backtest.top_decile_hit_rate.deploy) + " hit vs " + pct(D.backtest.top_decile_hit_rate.market) + " for the draft-slot prior.</p>";
 
     const imp = D.importance.deploy || [];
