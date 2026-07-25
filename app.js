@@ -733,8 +733,9 @@
         " college season. <strong>Grade percentile is within position</strong>, so p90 means better " +
         "than 90% of college players at that spot &mdash; the underlying grades are licensed and are " +
         "not published. Read it alongside volume: a high grade on a handful of snaps is noise, and " +
-        "several players near the top have volume percentiles in single figures. Offensive line is " +
-        "absent because the 2025 blocking data is not in this dataset.";
+        "several players near the top have volume percentiles in single figures. Offensive line " +
+        "grades average pass blocking and run blocking, since a lineman who cannot do either is " +
+        "not a prospect.";
     }
     renderWatch();
   }
