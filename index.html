@@ -49,7 +49,7 @@
         <tbody id="boardBody"></tbody>
       </table>
     </div>
-    <p class="table-hint">Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
+    <p class="table-hint"><strong>Bust risk</strong> is the model&rsquo;s probability that a player never becomes a starter and finishes in the bottom quarter of his class at his position &mdash; the column where APEX separates itself from draft order most clearly. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
   </section>
 
   <!-- ============ INSIGHTS ============ -->
@@ -103,18 +103,25 @@
   <section id="tab-method" class="tab-panel">
     <div class="prose">
       <h2>How APEX works</h2>
-      <p>APEX answers one question: <strong>given everything knowable on draft night, how likely is this player to succeed in the NFL?</strong> It is trained on every draft pick from 2000&ndash;2021 and validated the only honest way — each class is scored by a model that never saw it.</p>
+      <p>APEX answers two questions from what was knowable on draft night: <strong>how likely is this player to succeed</strong>, and <strong>how likely is he to never play at all?</strong> They are not mirror images, and the second one is where the model has the clearer advantage over the draft order. It is trained on every pick from 2000&ndash;2021 and validated the only honest way — each class is scored by a model that never saw it.</p>
 
-      <h3>Three definitions of success</h3>
+      <h3>Four definitions of outcome</h3>
       <ul>
         <li><strong>Hit</strong> — career weighted Approximate Value in the top 25% of the player&rsquo;s own draft class at his position group. Position- and era-relative by construction, so a 2004 guard and a 2021 quarterback are judged fairly.</li>
         <li><strong>Starter</strong> — three or more seasons as a primary starter.</li>
         <li><strong>Pro Bowler</strong> — at least one Pro Bowl selection.</li>
+        <li><strong>Bust</strong> — bottom-quartile career value <em>and</em> never a primary starter. Deliberately not the opposite of &ldquo;hit&rdquo;: both halves matter, because bottom-quartile value alone catches careers cut short by injury, and never-started alone catches capable backups stuck behind someone.</li>
       </ul>
-      <p>The headline <strong>APEX score</strong> blends the three calibrated probabilities (50% hit, 30% starter, 20% Pro Bowl) onto a 0&ndash;100 scale.</p>
+      <p>The headline <strong>APEX score</strong> blends the three success probabilities (50% hit, 30% starter, 20% Pro Bowl) onto a 0&ndash;100 scale. <strong>Bust risk is kept out of it, on purpose.</strong> It is a different question rather than a penalty, and folding it in would bury the one number this model is clearly better at than the draft order.</p>
+
+      <h3>Where the model actually beats the draft order</h3>
+      <p>Draft position is consensus <em>upside</em> — it is the league agreeing about who is exciting, and it is very hard to improve on. Held out, APEX gains about one AUC point over the draft-slot prior on predicting who becomes good, and on classes it has never seen that edge shrinks to almost nothing.</p>
+      <p>Predicting who <em>never plays</em> is a different question, and the market prices it far worse. On the same held-out classes the model gains roughly two and a half times as much on bust risk as on hit — and unlike the hit edge, that advantage survives on the classes drafted after training ended. What the draft order misses is not the next star; it is the athletic red flag, the age curve, and the production that came without the workout to support it.</p>
+      <p>So: use the APEX score to see who the model likes, and the bust-risk column to see who it is worried about. The second one is the number with more evidence behind it.</p>
 
       <h3>The model, in one paragraph</h3>
       <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
+      <p>Ablating those blocks is unflattering and worth publishing anyway. Added to the draft-slot prior on its own, athleticism is worth about <strong>+1.0 AUC points</strong>; college production is worth +0.1, PFF grades +0.1, and adding third-party scouting consensus makes the model slightly <em>worse</em>. Removing athleticism costs more than ten times what removing college production costs. Whatever this model knows that the draft order does not, it learned almost entirely from workout and size data — not from tape.</p>
       <p>One wrinkle worth naming: plain isotonic calibration is a step function, and it flattens a 250-player class onto about 25 plateaus — which would put four players in a dead heat at the top of every board. APEX keeps the isotonic fit but interpolates between the plateau centres, so the curve stays monotone and honest while every player the model actually separated keeps a distinct number. Checked leave-one-year-out, the smoothed version calibrates as well as the step version and ranks strictly better.</p>
 
       <h3>Backtest scoreboard</h3>
@@ -129,7 +136,8 @@
       <ul>
         <li>Draft capital dominates. The model&rsquo;s edge over the market prior is real but measured in single AUC points — anyone claiming huge edges over draft position is fooling you or themselves.</li>
         <li>College production and PFF grades only exist from 2014, and PFF coverage is offense-heavy. Older classes and defenders lean more on the market + athleticism blocks.</li>
-        <li>The 2022&ndash;2025 boards are true out-of-training projections, and their listed outcomes are careers in progress, not final grades. On that forward test APEX and the draft order are running level &mdash; the backtest edge has not shown up yet, and the sample is nowhere near big enough to say whether it will. The numbers are on the Insights tab either way.</li>
+        <li>The 2022&ndash;2025 boards are true out-of-training projections, and their listed outcomes are careers in progress, not final grades. On that forward test APEX and the draft order are running level <em>on finding hits</em> &mdash; that backtest edge has not shown up yet. Bust risk is the exception and the only claim here with out-of-sample support behind it. Both numbers are on the Insights tab.</li>
+        <li>Bust risk is judged on players whose careers have had time to fail. A rookie who has not started yet is not a bust, so the forward-test bust figures use the 2022&ndash;2023 classes only.</li>
         <li>Probabilities are calibrated group-wise, not prophecy. A 70% hit probability misses three times in ten — that is the job description.</li>
       </ul>
 

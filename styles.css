@@ -334,6 +334,39 @@ td.num, th.num { text-align: right; }
   .tile { padding: 10px 12px; }
   .tile-value { font-size: 19px; overflow-wrap: anywhere; }
   .tile-label, .tile-sub { font-size: 11px; }
-  /* drop the two widest secondary columns so the board fits without a swipe */
+  /* drop the widest secondary columns so the board fits without a swipe;
+     bust risk stays -- it is the column with something to say */
   .c-ras, .c-vd { display: none; }
 }
+
+/* ---------- bust risk ----------
+   Reads backwards from every other column: high is bad. Given its own ramp so
+   a 55% bust risk cannot be misread as a 55% chance of something good. */
+.risk { font-variant-numeric: tabular-nums; font-weight: 650; padding: 2px 7px;
+        border-radius: 5px; font-size: 13px; }
+.risk-lo  { color: var(--good, #1a7f4b); background: color-mix(in srgb, #1a7f4b 10%, transparent); }
+.risk-mid { color: #9a6700; background: color-mix(in srgb, #9a6700 12%, transparent); }
+.risk-hi  { color: #b42318; background: color-mix(in srgb, #b42318 12%, transparent); }
+@media (prefers-color-scheme: dark) {
+  .risk-lo  { color: #4ade80; background: color-mix(in srgb, #4ade80 14%, transparent); }
+  .risk-mid { color: #fbbf24; background: color-mix(in srgb, #fbbf24 14%, transparent); }
+  .risk-hi  { color: #f87171; background: color-mix(in srgb, #f87171 16%, transparent); }
+}
+:root[data-theme="dark"] .risk-lo  { color: #4ade80; background: color-mix(in srgb, #4ade80 14%, transparent); }
+:root[data-theme="dark"] .risk-mid { color: #fbbf24; background: color-mix(in srgb, #fbbf24 14%, transparent); }
+:root[data-theme="dark"] .risk-hi  { color: #f87171; background: color-mix(in srgb, #f87171 16%, transparent); }
+:root[data-theme="light"] .risk-lo  { color: #1a7f4b; background: color-mix(in srgb, #1a7f4b 10%, transparent); }
+:root[data-theme="light"] .risk-mid { color: #9a6700; background: color-mix(in srgb, #9a6700 12%, transparent); }
+:root[data-theme="light"] .risk-hi  { color: #b42318; background: color-mix(in srgb, #b42318 12%, transparent); }
+
+.prob-row-risk { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.prob-fill-risk { background: #b42318; }
+@media (prefers-color-scheme: dark) { .prob-fill-risk { background: #f87171; } }
+:root[data-theme="dark"] .prob-fill-risk { background: #f87171; }
+:root[data-theme="light"] .prob-fill-risk { background: #b42318; }
+
+.bt-table tr.bt-hero td { background: color-mix(in srgb, var(--accent) 7%, transparent);
+                          font-weight: 600; }
+
+/* Pro Bowl left the board to make room for bust risk; it is still on the
+   player card, where there is space to show it against the draft-slot prior. */

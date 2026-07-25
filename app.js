@@ -107,7 +107,7 @@
     { key: "apex", label: "APEX", num: true },
     { key: "ph", label: "Hit", num: true },
     { key: "ps", label: "Starter", num: true },
-    { key: "pp", label: "Pro Bowl", num: true },
+    { key: "pbu", label: "Bust risk", num: true },
     { key: "ras", label: "RAS", num: true },
     { key: "vd", label: "Value", num: true },
     { key: "out", label: "Outcome", sortKey: "wav" },
@@ -151,6 +151,15 @@
       return av < bv ? -dir : av > bv ? dir : byRank(a, b);
     });
     return state.q ? rows.slice(0, 250) : rows;
+  }
+
+  // Bust risk gets its own colour ramp rather than the plain probability
+  // styling: it is the number the model beats the draft order at most clearly,
+  // and it reads backwards from every other column (high is bad).
+  function riskCell(v) {
+    if (v == null) return '<span class="prob">–</span>';
+    const cls = v >= 0.45 ? "risk-hi" : v >= 0.28 ? "risk-mid" : "risk-lo";
+    return '<span class="risk ' + cls + '">' + pct(v) + "</span>";
   }
 
   function outcomeCell(p) {
@@ -205,7 +214,7 @@
         '<td class="c-apex"><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span><span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
         '<td class="num prob c-ph">' + pct(p.ph) + "</td>" +
         '<td class="num prob c-ps">' + pct(p.ps) + "</td>" +
-        '<td class="num prob c-pp">' + pct(p.pp) + "</td>" +
+        '<td class="num c-pbu">' + riskCell(p.pbu) + "</td>" +
         '<td class="num prob c-ras"' + (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") +
           ">" + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
         '<td class="num c-vd">' + vd + "</td>" +
@@ -276,6 +285,7 @@
       ["Top-quartile career (Hit)", p.ph, p.mh],
       ["3+ year starter", p.ps, p.ms],
       ["Pro Bowler", p.pp, p.mp],
+      ["Bust — never starts", p.pbu, p.mbu, true],
     ];
     const facts = [];
     facts.push(["Draft capital", "Pick " + p.pk + " · Round " + (p.rd || "–") + (p.tm ? " · " + esc(p.tm) : "")]);
@@ -313,9 +323,9 @@
       '<div class="modal-score"><span class="hero">' + fmt1(p.apex) + '</span>' +
       '<span class="hero-sub">APEX score (0–100)<br>' + (p.src === 1 ? "held-out backtest score" : "live projection") + "</span></div>" +
       '<div class="prob-block">' +
-      probs.map(([label, v, m]) =>
-        '<div class="prob-row"><span class="prob-label">' + label + '</span>' +
-        '<span class="prob-track"><span class="prob-fill" style="width:' + Math.round((v || 0) * 100) + '%"></span>' +
+      probs.map(([label, v, m, isRisk]) =>
+        '<div class="prob-row' + (isRisk ? " prob-row-risk" : "") + '"><span class="prob-label">' + label + '</span>' +
+        '<span class="prob-track"><span class="prob-fill' + (isRisk ? " prob-fill-risk" : "") + '" style="width:' + Math.round((v || 0) * 100) + '%"></span>' +
         (m != null ? '<span class="prob-mark" style="left:' + Math.round(m * 100) + '%"></span>' : "") +
         "</span><span class=\"prob-val\">" + pct(v) + "</span></div>").join("") +
       '<div class="legend-inline"><span><span class="key" style="background:var(--series-1)"></span>APEX</span>' +
@@ -538,14 +548,22 @@
         : "") + "</table>";
 
     const p = F.pooled && F.pooled.hit;
+    const b = F.pooled && F.pooled.bust;
     const edge = p ? (p.apex - p.market) * 1000 / 10 : 0;
+    const bedge = b ? (b.apex - b.market) * 1000 / 10 : 0;
     $("#fwdNote").innerHTML =
       "&ldquo;Top-quartile so far&rdquo; is the career label applied to a career in progress: weighted AV in the top 25% of the same class and position group. " +
       (p
         ? "Pooled across " + p.n + " players, APEX is <strong>" + (edge >= 0 ? "+" : "") + edge.toFixed(1) +
-          " AUC points</strong> ahead of the draft-slot prior — the same direction as the backtest, but far too small to call a win on this sample. "
+          " AUC points</strong> ahead of the draft-slot prior on finding hits — the same direction as the backtest, but far too small to call a win on this sample. "
         : "") +
-      "Two or three seasons is early: careers turn on year-four contracts, and a class this size would take a decade of drafts to resolve an edge this thin. Published as-is, win or lose.";
+      (b
+        ? "<strong>Bust risk is the exception.</strong> On the " + b.n + " players from 2022–2023 whose careers " +
+          "have had time to fail, APEX is <strong>" + (bedge >= 0 ? "+" : "") + bedge.toFixed(1) +
+          " AUC points</strong> ahead on predicting who never starts — several times its edge on finding hits, " +
+          "and the one result that has held up out of sample. "
+        : "") +
+      "Two or three seasons is early either way. Published as-is, win or lose.";
   }
 
   /* ---------- methodology ---------- */
@@ -568,14 +586,18 @@
 
   function renderMethod() {
     const S = D.backtest.summary;
-    const rows = [["hit", "Hit (top-quartile career)"], ["starter", "3+ year starter"], ["probowl", "Pro Bowler"]];
+    const rows = [["hit", "Hit (top-quartile career)"], ["starter", "3+ year starter"],
+                  ["probowl", "Pro Bowler"], ["bust", "Bust (never starts)"]];
     $("#btTable").innerHTML = '<table class="bt-table"><tr><th>Outcome</th><th>Base rate</th><th>Prior AUC</th><th>APEX AUC</th><th>Δ</th><th>APEX AUC 2015+</th><th>Brier ↓</th></tr>' +
       rows.map(([k, label]) => {
         const mkt = S.market[k], dep = S.deploy[k];
-        return "<tr><td>" + label + "</td><td>" + pct(D.backtest.base_rates[k]) + "</td><td>" + mkt.auc.toFixed(3) +
+        return "<tr" + (k === "bust" ? " class='bt-hero'" : "") + "><td>" + label + "</td><td>" + pct(D.backtest.base_rates[k]) + "</td><td>" + mkt.auc.toFixed(3) +
           "</td><td><strong>" + dep.auc.toFixed(3) + "</strong></td><td class='win'>+" + ((dep.auc - mkt.auc) * 1000 / 10).toFixed(1) + "</td><td>" +
           dep.auc_2015_2021.toFixed(3) + "</td><td>" + dep.brier.toFixed(4) + " vs " + mkt.brier.toFixed(4) + "</td></tr>";
       }).join("") + "</table>" +
+      '<p class="fine">The bust row is the point. Against the draft-slot prior the model gains ' +
+      ((S.deploy.bust.auc - S.market.bust.auc) * 100).toFixed(1) + ' AUC points on who never plays, versus ' +
+      ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1) + ' on who becomes good &mdash; and the bust edge is the one that survives the forward test.</p>' +
       '<p class="fine">Top-decile check: among the model&rsquo;s 10% most confident players, ' + pct(D.backtest.top_decile_hit_rate.deploy) + " hit vs " + pct(D.backtest.top_decile_hit_rate.market) + " for the draft-slot prior.</p>";
 
     const imp = D.importance.deploy || [];
