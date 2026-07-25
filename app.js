@@ -200,18 +200,39 @@
     });
 
     const body = $("#boardBody");
+    // Tier bands only mean something on a board ordered by APEX. Sort by pick or
+    // by RAS and the tiers would still be numbered 1,2,3 down the page while no
+    // longer describing anything, so they are dropped outside that ordering.
+    const showTiers = state.sort === "apex" && state.dir === -1 && !state.q
+      && rows.some(p => p.tier != null);
+    const tierSize = {};
+    if (showTiers) rows.forEach(p => { tierSize[p.tier] = (tierSize[p.tier] || 0) + 1; });
+    let lastTier = null;
+
     body.innerHTML = rows.map(p => {
+      let sep = "";
+      if (showTiers && p.tier !== lastTier) {
+        lastTier = p.tier;
+        const n = tierSize[p.tier];
+        sep = '<tr class="tier-row"><td colspan="' + COLS.length + '">' +
+          '<span class="tier-name">Tier ' + p.tier + "</span>" +
+          '<span class="tier-meta">' + n + (n === 1 ? " player" : " players") +
+          (n > 1 ? " the model can’t separate" : "") + "</span></td></tr>";
+      }
       const meta = [p.cl, p.tm, state.q ? p.yr : null].filter(Boolean).join(" · ");
       const vd = p.vd == null ? '<span class="delta-flat">–</span>'
         : p.vd > 4 ? '<span class="delta-up">▲ ' + p.vd + "</span>"
         : p.vd < -4 ? '<span class="delta-down">▼ ' + (-p.vd) + "</span>"
         : '<span class="delta-flat">·</span>';
-      return "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
+      return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
         '<td class="num c-rk">' + (p.rk ?? "–") + "</td>" +
         '<td class="num c-pk">' + (p.pk ?? "–") + "</td>" +
         '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
         '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>" +
-        '<td class="c-apex"><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span><span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
+        '<td class="c-apex"' + (p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
+          '><div class="score-cell"><span class="score-num">' + fmt1(p.apex) + '</span>' +
+          (p.sd != null ? '<span class="score-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
+          '<span class="meter"><i style="width:' + Math.min(100, p.apex || 0) + '%"></i></span></div></td>' +
         '<td class="num prob c-ph">' + pct(p.ph) + "</td>" +
         '<td class="num prob c-ps">' + pct(p.ps) + "</td>" +
         '<td class="num c-pbu">' + riskCell(p.pbu) + "</td>" +
@@ -220,7 +241,7 @@
         '<td class="num c-vd">' + vd + "</td>" +
         '<td class="c-out">' + outcomeCell(p) + "</td></tr>";
     }).join("");
-    $$("tr", body).forEach(tr => tr.addEventListener("click", () => {
+    $$("tr[data-id]", body).forEach(tr => tr.addEventListener("click", () => {
       const [yr, pk] = tr.dataset.id.split(":").map(Number);
       const p = D.players.find(x => x.yr === yr && x.pk === pk);
       if (p) openModal(p);
@@ -293,7 +314,8 @@
     facts.push(["RAS (0–10)", p.ras != null ? p.ras.toFixed(2) + pctlNote(p.rasp)
       : '<span class="pctl">did not test — no combine/pro-day workout on record</span>']);
     facts.push(["PFF college grade", p.pffp != null ? "p" + Math.round(p.pffp) + ' <span class="pctl">percentile at position</span>' : "not covered"]);
-    facts.push(["APEX rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg]);
+    facts.push(["APEX rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg +
+      (p.tier != null ? ' <span class="pctl">tier ' + p.tier + "</span>" : "")]);
     facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
 
     let outcome = "";
@@ -321,6 +343,7 @@
       '<div class="modal-meta">' + p.pos + " · " + esc(p.cl || "") + " · " + p.yr + " class" + '</div></div>' +
       '<button class="modal-close" aria-label="Close">✕</button></div>' +
       '<div class="modal-score"><span class="hero">' + fmt1(p.apex) + '</span>' +
+      (p.sd != null ? '<span class="hero-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
       '<span class="hero-sub">APEX score (0–100)<br>' + (p.src === 1 ? "held-out backtest score" : "live projection") + "</span></div>" +
       '<div class="prob-block">' +
       probs.map(([label, v, m, isRisk]) =>
