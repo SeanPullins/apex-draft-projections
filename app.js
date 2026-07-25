@@ -557,7 +557,7 @@
   }
 
   function renderForward() {
-    const F = D.forward;
+    const F = D.forward, S2 = D.backtest.summary;
     if (!F || !F.head_to_head.length) return;
     const rows = F.head_to_head.slice().sort((a, b) => a.yr - b.yr);
     const cell = (a, b) => {
@@ -593,7 +593,7 @@
         ? "<strong>Bust risk is worse, not better.</strong> On the " + b.n + " players from 2022–2023 whose careers " +
           "have had time to fail, APEX is <strong>" + (bedge >= 0 ? "+" : "") + bedge.toFixed(1) +
           " AUC points</strong> against the draft-slot prior on predicting who disappoints for his slot — so the " +
-          "large backtest edge on that label (+5.8 points) does <em>not</em> show up here either. " +
+          "large backtest edge on that label (+" + ((S2.deploy.bust.auc - S2.market.bust.auc) * 100).toFixed(1) + " points) does <em>not</em> show up here either. " +
           "There are only " + b.pos + " busts across those two classes, far too few to resolve it in " +
           "either direction, but it is not evidence in the model’s favour and is not presented as any. "
         : "") +
