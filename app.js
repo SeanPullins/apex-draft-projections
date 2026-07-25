@@ -694,7 +694,12 @@
      draft slot -- the two inputs the projection actually leans on. */
   const W = window.APEX_WATCH;
   if (W) {
-    const wState = { pos: "ALL", q: "" };
+    const wState = { pos: "ALL", q: "", tier: 0, hideThin: false };
+    const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
+    const TIER_SUB = {
+      1: "top 3% at the position on volume-adjusted 2025 grade",
+      2: "next 7%", 3: "next 15%", 4: "next 25%",
+    };
     const wGroups = ["ALL"].concat([...new Set(W.players.map(p => p.pg))].sort());
     const wPills = $("#watchPills");
     wGroups.forEach(pg => {
@@ -708,34 +713,75 @@
       });
       wPills.appendChild(b);
     });
+    const tPills = $("#watchTierPills");
+    [[0, "All tiers"], [1, "Blue chip"], [2, "Early watch"], [3, "On the radar"], [4, "Depth"]]
+      .forEach(([t, lbl]) => {
+        const b = document.createElement("button");
+        b.className = "pill" + (t === 0 ? " is-active" : "");
+        b.textContent = lbl;
+        b.addEventListener("click", () => {
+          wState.tier = t;
+          $$(".pill", tPills).forEach(x => x.classList.toggle("is-active", x.textContent === lbl));
+          renderWatch();
+        });
+        tPills.appendChild(b);
+      });
+    $("#watchThin").addEventListener("change", e => {
+      wState.hideThin = e.target.checked; renderWatch();
+    });
     let wTimer;
     $("#watchSearch").addEventListener("input", e => {
       clearTimeout(wTimer);
       wTimer = setTimeout(() => { wState.q = e.target.value.trim().toLowerCase(); renderWatch(); }, 120);
     });
+
     function renderWatch() {
-      let rows = W.players;
+      let rows = W.players.filter(p => p.t > 0);
       if (wState.pos !== "ALL") rows = rows.filter(p => p.pg === wState.pos);
+      if (wState.tier) rows = rows.filter(p => p.t === wState.tier);
+      if (wState.hideThin) rows = rows.filter(p => !p.thin);
       if (wState.q) rows = rows.filter(p =>
         (p.nm || "").toLowerCase().includes(wState.q) ||
         (p.tm || "").toLowerCase().includes(wState.q));
-      rows = rows.slice().sort((a, b) => b.p - a.p || (b.v || 0) - (a.v || 0)).slice(0, 300);
-      $("#watchBody").innerHTML = rows.map((p, i) =>
-        "<tr><td class='num'>" + (i + 1) + "</td>" +
-        '<td class="player-cell"><div class="player-name">' + esc(p.nm) + "</div></td>" +
-        "<td>" + esc(p.tm) + "</td>" +
-        '<td class="num"><span class="pos-chip">' + p.pg + "</span></td>" +
-        '<td class="num prob">p' + p.p + "</td>" +
-        '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
-        '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>").join("");
+      // rank, not percentile: the top of every position rounds to p100, so sorting
+      // on the percentile leaves the head of each tier in arbitrary order
+      rows = rows.slice().sort((a, b) => a.t - b.t || a.r - b.r || b.p - a.p);
+
+      let last = null, n = 0;
+      const sizes = {};
+      rows.forEach(p => { sizes[p.t] = (sizes[p.t] || 0) + 1; });
+      $("#watchBody").innerHTML = rows.slice(0, 400).map(p => {
+        let sep = "";
+        if (p.t !== last) {
+          last = p.t; n = 0;
+          sep = '<tr class="tier-row t' + p.t + '"><td colspan="8">' +
+            '<span class="tier-name">' + TIER_NAME[p.t] + "</span>" +
+            '<span class="tier-meta">' + sizes[p.t] + " shown · " + TIER_SUB[p.t] + "</span></td></tr>";
+        }
+        n++;
+        return sep + "<tr><td class='num'>" + n + "</td>" +
+          '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
+          (p.thin ? ' <span class="thin-tag" title="few snaps or games — the grade is a small sample">thin sample</span>' : "") +
+          "</div></td>" +
+          "<td>" + esc(p.tm) + "</td>" +
+          '<td class="num"><span class="pos-chip">' + p.pg + "</span></td>" +
+          '<td class="num prob">' + p.r + '<span class="of-pool"> / ' + p.pn + "</span></td>" +
+          '<td class="num prob">p' + p.p + "</td>" +
+          '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
+          '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>";
+      }).join("");
+
       $("#watchNote").innerHTML =
-        "Showing " + rows.length + " of " + W.n + " undrafted players with a " + W.season +
-        " college season. <strong>Grade percentile is within position</strong>, so p90 means better " +
-        "than 90% of college players at that spot &mdash; the underlying grades are licensed and are " +
-        "not published. Read it alongside volume: a high grade on a handful of snaps is noise, and " +
-        "several players near the top have volume percentiles in single figures. Offensive line " +
-        "grades average pass blocking and run blocking, since a lineman who cannot do either is " +
-        "not a prospect.";
+        "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
+        W.n + " on the full list). <strong>Grade percentile is within position and adjusted for " +
+        "volume</strong>: a grade earned on 60 snaps is a claim about 60 snaps, so it is pulled " +
+        "back toward the position average, while one earned across a season is left alone. That " +
+        "is why the order here differs from raw grade &mdash; it moved " + (W.moved10 || 0) +
+        " players by more than ten percentile points. " +
+        "The underlying grades are licensed and are not published. " +
+        "&ldquo;Thin sample&rdquo; marks players below the 25th percentile for volume or under " +
+        "eight games; they are kept on the list rather than hidden, because a good player on a " +
+        "bad team plays few snaps too.";
     }
     renderWatch();
   }

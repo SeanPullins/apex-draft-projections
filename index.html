@@ -110,21 +110,46 @@
       combine. Every number elsewhere on this site leans on athletic testing and draft position &mdash;
       the two things these players do not yet have &mdash; so there is no APEX score here and no
       hit probability. What follows is what they <em>did</em> in 2025, and nothing more.</p>
+
+      <h3>What the tiers mean</h3>
+      <p>Tiers are cut inside each position, on a volume-adjusted 2025 grade &mdash; so a tier&nbsp;1
+      corner is being compared with other corners, never with quarterbacks. They rank
+      <em>production</em>, which is the only thing on the record right now. Plenty of tier&nbsp;3
+      players will out-draft tier&nbsp;1 players once testing numbers exist.</p>
+      <ul class="tier-legend">
+        <li><span class="tier-chip t1">Blue chip</span> Top 3% at the position. Already producing at
+          a level that usually shows up on draft boards.</li>
+        <li><span class="tier-chip t2">Early watch</span> Next 7%. Clear starters worth tracking
+          through the 2026 season.</li>
+        <li><span class="tier-chip t3">On the radar</span> Next 15%. Solid, unfinished, one good
+          year from moving up.</li>
+        <li><span class="tier-chip t4">Depth</span> Next 25%. Above the position median &mdash;
+          on the list, not on a board.</li>
+      </ul>
     </div>
     <div class="controls">
       <div class="control grow">
         <span class="control-label">Position</span>
         <div class="pills" id="watchPills" role="group" aria-label="Watchlist position filter"></div>
       </div>
+      <div class="control grow">
+        <span class="control-label">Tier</span>
+        <div class="pills" id="watchTierPills" role="group" aria-label="Watchlist tier filter"></div>
+      </div>
       <label class="control">
         <span class="control-label">Search</span>
         <input id="watchSearch" type="search" placeholder="Player or school…" aria-label="Search watchlist">
+      </label>
+      <label class="control check">
+        <input id="watchThin" type="checkbox">
+        <span>Hide thin samples</span>
       </label>
     </div>
     <div class="table-wrap">
       <table class="board" id="watchTable">
         <thead><tr><th>#</th><th>Player</th><th>School</th><th class="num">Pos</th>
-          <th class="num">2025 grade pctl</th><th class="num">Volume pctl</th><th class="num">Games</th></tr></thead>
+          <th class="num">Rank at position</th><th class="num">2025 grade pctl</th>
+          <th class="num">Volume pctl</th><th class="num">Games</th></tr></thead>
         <tbody id="watchBody"></tbody>
       </table>
     </div>
