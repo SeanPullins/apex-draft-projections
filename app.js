@@ -203,20 +203,28 @@
     // Tier bands only mean something on a board ordered by APEX. Sort by pick or
     // by RAS and the tiers would still be numbered 1,2,3 down the page while no
     // longer describing anything, so they are dropped outside that ordering.
+    // Filtered to a position, tier by that position's own peers. Class tiers
+    // down a list of quarterbacks read 1, 7, 12 with gaps where the other
+    // positions were -- which looks broken, and implies a comparison the
+    // filtered board is not making.
+    const tierKey = state.pos === "ALL" ? "tier" : "tierp";
     const showTiers = state.sort === "apex" && state.dir === -1 && !state.q
-      && rows.some(p => p.tier != null);
+      && rows.some(p => p[tierKey] != null);
     const tierSize = {};
-    if (showTiers) rows.forEach(p => { tierSize[p.tier] = (tierSize[p.tier] || 0) + 1; });
+    if (showTiers) rows.forEach(p => { tierSize[p[tierKey]] = (tierSize[p[tierKey]] || 0) + 1; });
     let lastTier = null;
 
     body.innerHTML = rows.map(p => {
       let sep = "";
-      if (showTiers && p.tier !== lastTier) {
-        lastTier = p.tier;
-        const n = tierSize[p.tier];
+      if (showTiers && p[tierKey] !== lastTier) {
+        lastTier = p[tierKey];
+        const n = tierSize[p[tierKey]];
+        const what = state.pos === "ALL" ? (n === 1 ? "player" : "players")
+          : (n === 1 ? state.pos : state.pos + "s");
         sep = '<tr class="tier-row"><td colspan="' + COLS.length + '">' +
-          '<span class="tier-name">Tier ' + p.tier + "</span>" +
-          '<span class="tier-meta">' + n + (n === 1 ? " player" : " players") +
+          '<span class="tier-name">' + (state.pos === "ALL" ? "" : state.pos + " ") +
+          "Tier " + p[tierKey] + "</span>" +
+          '<span class="tier-meta">' + n + " " + what +
           (n > 1 ? " the model can’t separate" : "") + "</span></td></tr>";
       }
       const meta = [p.cl, p.tm, state.q ? p.yr : null].filter(Boolean).join(" · ");
@@ -315,7 +323,8 @@
       : '<span class="pctl">did not test — no combine/pro-day workout on record</span>']);
     facts.push(["PFF college grade", p.pffp != null ? "p" + Math.round(p.pffp) + ' <span class="pctl">percentile at position</span>' : "not covered"]);
     facts.push(["APEX rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg +
-      (p.tier != null ? ' <span class="pctl">tier ' + p.tier + "</span>" : "")]);
+      (p.tier != null ? ' <span class="pctl">class tier ' + p.tier +
+        (p.tierp != null ? " · " + p.pg + " tier " + p.tierp : "") + "</span>" : "")]);
     facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
 
     let outcome = "";
