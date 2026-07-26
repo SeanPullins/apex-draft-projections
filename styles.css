@@ -460,6 +460,23 @@ td.num, th.num { text-align: right; }
 :root[data-theme="dark"] .tier-row.t4 .tier-name { color: #a8a29e; }
 /* the pre-draft score sits beside APEX and must read as the secondary of the
    two, or the eye treats a withheld-pick number as the headline */
+/* what a season is worth, one lever at a time */
+.levers { margin-top: 14px; }
+.levers h3 { font-size: 15px; margin: 0 0 4px; }
+.lever { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+         padding: 9px 0; border-bottom: 1px solid var(--border); }
+.lever:last-child { border-bottom: 0; }
+.lever-k { font-size: 13.5px; color: var(--ink-1); font-weight: 600; }
+.lever-sub { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.lever-v { font-size: 13.5px; color: var(--muted); white-space: nowrap;
+           font-variant-numeric: tabular-nums; }
+.lever-v b { color: var(--ink-1); font-size: 15px; }
+.lever-d { color: #15803d; font-weight: 700; margin-left: 8px; }
+@media (prefers-color-scheme: dark) { .lever-d { color: #4ade80; } }
+:root[data-theme="dark"] .lever-d { color: #4ade80; }
+.hero-lbl { font-size: 13px; color: var(--muted); margin-left: 10px; align-self: flex-end; }
+.board tbody tr.clickable { cursor: pointer; }
+
 /* the per-player explanation: prose inside the card, so it needs to read as
    prose rather than as another row of stats */
 .gap-story { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);

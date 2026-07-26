@@ -578,6 +578,117 @@
     $(".modal-close", modal).focus();
   }
   const pctlNote = p => (p == null ? "" : ' <span class="pctl">· p' + Math.round(p) + " at position</span>");
+
+  /* ---------- watchlist card ----------
+     Why a college player sits where he does, and what a 2026 season would have
+     to look like to move him. The second half is not written advice, which would
+     be unfalsifiable; it is the model re-scored with one lever moved to what a
+     good season at the position actually looks like. */
+  function openWatchCard(p, W) {
+    lastFocus = document.activeElement;
+    const C = (W && W.config) || {};
+    const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
+    const has = p.nfl != null;
+
+    const facts = [];
+    facts.push(["Rank at position", "#" + p.r + " of " + p.pn + " " + p.pg +
+      (p.t ? ' <span class="pctl">· ' + TIER_NAME[p.t] + "</span>" : "")]);
+    facts.push(["2025 grade", "p" + p.p + ' <span class="pctl">within position, volume-adjusted' +
+      (p.rp != null && Math.abs(p.rp - p.p) > 5 ? " · p" + p.rp + " unadjusted" : "") + "</span>"]);
+    facts.push(["Playing time", (p.v != null ? "p" + p.v + " for snaps" : "–") +
+      (p.g != null ? " · " + p.g + " games" : "") +
+      (p.thin ? ' <span class="pctl">· thin sample</span>' : "")]);
+    facts.push(["Career peak", p.cb != null ? "p" + p.cb +
+      ' <span class="pctl">best season so far</span>' : "–"]);
+    facts.push(["Seasons on tape", p.ns != null ? p.ns : "–"]);
+    facts.push(["Level", p.pw === 1 ? "Power conference" : p.pw === 0 ? "Outside the power conferences" : "–"]);
+
+    // why he sits where he does
+    const why = [];
+    if (has) {
+      if (p.p >= 90) why.push("He graded <strong>near the top of his position</strong> (p" + p.p +
+        "), which is the single strongest thing on his record.");
+      else if (p.p <= 40) why.push("His grade sat <strong>below the position median</strong> (p" +
+        p.p + "), which is most of what is holding the projection down.");
+      if (p.thin) why.push("The grade rests on a <strong>thin sample</strong> — " +
+        (p.v != null ? "p" + p.v + " for playing time" : "few snaps") +
+        (p.g != null ? " across " + p.g + " games" : "") +
+        ". The model discounts a small sample rather than trusting it, so more of the same " +
+        "football would raise him even at the same level of play.");
+      else if (p.v != null && p.v >= 75) why.push("He played a <strong>full workload</strong> (p" +
+        p.v + " for snaps), so the grade is a claim about a season rather than a handful of games.");
+      if (p.cb != null && p.p != null && p.cb - p.p >= 15)
+        why.push("He has been <strong>better before</strong> — his best season sits at p" + p.cb +
+          " against p" + p.p + " last year, and the model can see the peak as well as the present.");
+      if (p.tr === 1) why.push("His grade <strong>moved up</strong> from the previous season.");
+      else if (p.tr === -1) why.push("His grade <strong>slipped</strong> from the previous season.");
+      if (p.pw === 0) why.push("He plays <strong>outside the power conferences</strong>, which the " +
+        "model treats as a discount on the same grade — level of competition is the one thing a " +
+        "grade cannot tell you.");
+      if (p.ns != null && p.ns >= 4) why.push("There are <strong>" + p.ns + " seasons of tape</strong> " +
+        "on him, so the record is unusually well established for a college player.");
+    }
+
+    // what a 2026 season would be worth
+    let levers = "";
+    if (p.cf) {
+      const LBL = {
+        snaps: ["Play a starter's snaps", "reaching the position's 75th percentile for volume"],
+        health: ["Finish the season", "playing all 13 games"],
+        grade: ["Play to a top-10% level", "grading at the position's 90th percentile"],
+        all: ["All three together", "the best realistic version of a 2026 season"],
+      };
+      const base = p.cf.base;
+      const rows = ["snaps", "health", "grade", "all"].filter(k => p.cf[k] != null)
+        .map(k => {
+          const lift = p.cf[k] - base;
+          return '<div class="lever"><div class="lever-k">' + LBL[k][0] +
+            '<span class="lever-sub">' + LBL[k][1] + "</span></div>" +
+            '<div class="lever-v">' + Math.round(base * 100) + "% → <b>" +
+            Math.round(p.cf[k] * 100) + "%</b>" +
+            '<span class="lever-d">+' + Math.round(lift * 100) + "</span></div></div>";
+        });
+      levers = rows.length
+        ? '<div class="levers"><h3>What a 2026 season is worth</h3>' +
+          '<p class="fine">Not advice — the model re-scored with one thing changed and everything ' +
+          'else held where it is. Levers he has already met are left out.</p>' +
+          rows.join("") + "</div>"
+        : '<div class="levers"><h3>What a 2026 season is worth</h3>' +
+          '<p class="fine">He already meets every lever the model responds to — a full workload, ' +
+          'a full season, and a top-decile grade. There is no ordinary improvement left for it to ' +
+          'reward; from here the gain comes from things this model cannot see, chiefly a workout ' +
+          'number in the spring.</p></div>';
+    }
+
+    modal.innerHTML =
+      '<div class="modal-head"><div><h2 class="modal-name" id="modalName">' + esc(p.nm) + "</h2>" +
+      '<div class="modal-meta">' + p.pg + " · " + esc(p.tm) + " · 2025 season</div></div>" +
+      '<button class="modal-close" aria-label="Close">✕</button></div>' +
+      (has
+        ? '<div class="modal-score"><span class="hero">' + Math.round(p.nfl * 100) + "%</span>" +
+          '<span class="hero-lbl">to reach an NFL roster' +
+          (p.drf != null ? " · " + Math.round(p.drf * 100) + "% to be drafted" : "") + "</span></div>"
+        : '<div class="warn-band" style="margin:12px 0"><strong>No projection for this position.</strong> ' +
+          'This dataset has no historical college grading for the offensive line, so there is nothing ' +
+          'to train on and no probability is shown. His tier comes from production alone.</div>') +
+      '<div class="modal-grid">' +
+      facts.map(([k, v]) => '<div class="fact"><div class="fact-k">' + k +
+        '</div><div class="fact-v">' + v + "</div></div>").join("") +
+      "</div>" +
+      (why.length
+        ? '<div class="gap-story"><p><strong>Why he sits here.</strong></p><ul class="gap-why"><li>' +
+          why.join("</li><li>") + "</li></ul></div>"
+        : "") +
+      levers +
+      (has
+        ? '<p class="fine" style="margin-top:12px">This is a projection of whether he <em>arrives</em> ' +
+          'in the NFL, not whether he is any good once there. Measured walk-forward at ' +
+          (C.auc_nfl ? C.auc_nfl.toFixed(3) : "0.924") + ' AUC across six cohorts.</p>'
+        : "");
+    backdrop.hidden = false;
+    $(".modal-close", modal).addEventListener("click", closeModal);
+    $(".modal-close", modal).focus();
+  }
   function closeModal(fromHash) {
     if (backdrop.hidden) return;
     backdrop.hidden = true;
@@ -1212,6 +1323,9 @@
       let last = null, n = 0;
       const sizes = {};
       rows.forEach(p => { sizes[p.t] = (sizes[p.t] || 0) + 1; });
+      // rows are filtered and re-sorted, so the card is looked up by render
+      // position rather than by name — two players can share a name
+      const shown = [];
       $("#watchBody").innerHTML = rows.slice(0, 400).map(p => {
         let sep = "";
         if (p.t !== last) {
@@ -1221,7 +1335,7 @@
             '<span class="tier-meta">' + sizes[p.t] + " shown · " + TIER_SUB[p.t] + "</span></td></tr>";
         }
         n++;
-        return sep + "<tr><td class='num'>" + n + "</td>" +
+        return sep + "<tr class='clickable' data-w='" + shown.push(p) + "'><td class='num'>" + n + "</td>" +
           '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
           (p.thin ? ' <span class="thin-tag" title="few snaps or games — the grade is a small sample">thin sample</span>' : "") +
           "</div></td>" +
@@ -1235,6 +1349,11 @@
           '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
           '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>";
       }).join("");
+
+      $$("tr[data-w]", $("#watchBody")).forEach(tr => tr.addEventListener("click", () => {
+        const p = shown[+tr.dataset.w - 1];      // push() returns the new length
+        if (p) openWatchCard(p, W);
+      }));
 
       $("#watchNote").innerHTML =
         "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
