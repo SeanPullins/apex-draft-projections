@@ -340,7 +340,29 @@
 
       <h3>The model, in one paragraph</h3>
       <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
-      <p>Ablating those blocks is unflattering and worth publishing anyway. Added to the draft-slot prior on its own, athleticism is worth about <strong>+1.0 AUC points</strong>; college production is worth +0.1, PFF grades +0.1, and adding third-party scouting consensus makes the model slightly <em>worse</em>. Removing athleticism costs more than ten times what removing college production costs. Whatever this model knows that the draft order does not, it learned almost entirely from workout and size data — not from tape.</p>
+      <p>Ablating those blocks is unflattering and worth publishing anyway &mdash; but it has to be
+      done in the right era. PFF college grades exist only from 2015, so an ablation pooled across
+      2003&ndash;2021 averages a live modern signal against a decade of rows where the column is
+      simply blank. Across the whole window PFF is present for <strong>29%</strong> of training
+      rows; from 2015 it is present for <strong>90%</strong>.</p>
+      <p>Measured on the 2018&ndash;2021 folds, where the coverage is real, each block added to the
+      draft-slot prior is worth:</p>
+      <table class="bt-table"><tr><th>Block added</th><th>Hit AUC</th><th>Gain</th><th>Bust AUC</th><th>Gain</th></tr>
+        <tr><td>draft slot alone</td><td>0.8065</td><td>—</td><td>0.5672</td><td>—</td></tr>
+        <tr><td>+ athletic &amp; college production</td><td>0.8094</td><td class="win">+0.3</td><td>0.6080</td><td class="win">+4.1</td></tr>
+        <tr class="bt-hero"><td>+ PFF college grades</td><td>0.8162</td><td class="win">+0.7</td><td>0.6187</td><td class="win">+1.1</td></tr>
+        <tr><td>+ PFF blocking (offensive line)</td><td>0.8168</td><td class="win">+0.1</td><td>0.6272</td><td class="win">+0.9</td></tr>
+      </table>
+      <p><strong>The grades are the largest single contributor to finding hits</strong> &mdash; more
+      than twice what athleticism and production add together &mdash; which is the opposite of what
+      the pooled number suggested and much closer to what anyone who watches football would expect.
+      An earlier version of this page reported PFF at +0.1 AUC points, and that figure was an
+      artefact of measuring a feature over years in which it did not exist.</p>
+      <p class="fine">Training only on the 2015&ndash;2021 classes, where PFF is nearly complete, was
+      tried and is <em>worse</em>: 0.8120 on hit against 0.8168, and 0.6231 on bust against 0.6272.
+      Dropping three quarters of the rows costs more than the dilution does, and the gradient booster
+      handles the missing years without help. The fix was to measure the ablation honestly, not to
+      shrink the training window.</p>
       <p>One wrinkle worth naming: plain isotonic calibration is a step function, and it flattens a 250-player class onto about 25 plateaus — which would put four players in a dead heat at the top of every board. APEX keeps the isotonic fit but interpolates between the plateau centres, so the curve stays monotone and honest while every player the model actually separated keeps a distinct number. Checked leave-one-year-out, the smoothed version calibrates as well as the step version and ranks strictly better.</p>
 
       <h3>How much of this is just the draft?</h3>

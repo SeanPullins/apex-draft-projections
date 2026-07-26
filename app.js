@@ -535,6 +535,9 @@
         story + "</div>";
     }
 
+    const signals = signalsPanel(p);
+    const comps = compsPanel(p);
+
     let outcome = "";
     if (p.src === 1) {
       const bits = [];
@@ -572,12 +575,130 @@
       '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div></div>' +
       '<div class="modal-grid">' +
       facts.map(([l, v]) => '<div class="fact"><div class="fact-label">' + l + '</div><div class="fact-value">' + v + "</div></div>").join("") +
-      "</div>" + predraft + outcome;
+      "</div>" + predraft + signals + comps + outcome;
     backdrop.hidden = false;
     $(".modal-close", modal).addEventListener("click", closeModal);
     $(".modal-close", modal).focus();
   }
   const pctlNote = p => (p == null ? "" : ' <span class="pctl">· p' + Math.round(p) + " at position</span>");
+
+  /* ---------- what matters at this position ----------
+     Every PFF grade and rate the file carries was screened, per position,
+     against whether the player became a top-quartile career. Only a handful
+     survived, because the bar was set by shuffling the outcome and re-running
+     the whole screen: with hundreds of correlated columns and a hundred-odd
+     quarterbacks, noise alone reaches AUC 0.80, and most of what looked like
+     signal was under that. Receivers and tight ends produced nothing that
+     cleared, and the card says so instead of showing them a number. */
+  const POS_NO_SIGNAL = {
+    WR: "335 measurements were screened for receivers and none separated hits " +
+        "from misses by more than chance does at this sample size. The deep and " +
+        "slot splits that looked strongest were the kind of thing hundreds of " +
+        "correlated columns throw up on their own.",
+    TE: "307 measurements were screened for tight ends and none survived. The " +
+        "strongest candidate showed up on one side of the field and not the " +
+        "mirrored other, which is a small sample cut many ways rather than a " +
+        "finding.",
+  };
+
+  function signalsPanel(p) {
+    if (!p.sig || !p.sig.length) {
+      const why = POS_NO_SIGNAL[p.pg];
+      return why
+        ? '<div class="sig"><div class="sig-h">What matters at this position</div>' +
+          '<p class="fine">' + why + "</p></div>"
+        : "";
+    }
+    const rows = p.sig.map(s => {
+      const band = s.p >= 75 ? "sg-hi" : s.p >= 40 ? "sg-mid" : "sg-lo";
+      return '<li class="sig-row">' +
+        '<span class="sig-label">' + esc(s.l) +
+          (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") + "</span>" +
+        '<span class="sig-track"><span class="sig-fill ' + band +
+          '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
+        '<span class="sig-val ' + band + '">p' + Math.round(s.p) + "</span>" +
+        '<span class="sig-auc" title="AUC separating hits from misses at this position">' +
+          s.auc.toFixed(2) + "</span></li>";
+    }).join("");
+    return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
+      '<p class="fine">Percentile among drafted ' + p.pg + "s since 2014 on the " +
+      "measurements that survived the screen. The last column is how well each one " +
+      "separates hits from misses on its own — for scale, his draft slot alone " +
+      "does that at " + (D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : "—") +
+      ".</p>" +
+      '<ul class="sig-list">' + rows + "</ul></div>";
+  }
+
+  /* ---------- historical comparables ----------
+     The players a prospect most resembles on measurables, college production and
+     PFF grades, and what became of them. Deliberately not an input: stacked onto
+     the model these are negative out of sample, and standalone they reach 0.65
+     against the pre-draft model's 0.69, so they are here to make a projection
+     legible rather than to move it. Similarity is reported honestly — a player
+     with no real match in eight drafted classes is told so rather than handed
+     six strangers. */
+  const COMP_WEAK = 0.45;      // roughly the 10th percentile of top similarity
+  // Verdicts are decided in the pipeline, where the bust label is in scope, and
+  // arrive as codes. Reconstructing them here from the payload would silently
+  // grade every bust as rotational, since lbl_bust is not shipped.
+  const COMP_OUT = [
+    ["never played", "co-bad"], ["bust", "co-bad"], ["rotational", "co-mid"],
+    ["starter", "co-ok"], ["hit", "co-hit"],
+  ];
+
+  function compsPanel(p) {
+    if (!p.cmp || !p.cmp.length) {
+      // pre-2014 players have no college grades, so the only comparables
+      // available would be the weaker traits-only kind. Better to say nothing.
+      return p.yr < 2014
+        ? '<div class="comps"><div class="comps-h">Historical comparables</div>' +
+          '<p class="fine">Not shown for classes before 2014. College grades only ' +
+          'begin that year, and matching on measurables alone is a measurably ' +
+          'worse comparison — presenting it in the same frame would imply a ' +
+          'confidence it does not have.</p></div>'
+        : "";
+    }
+    const best = p.cmp[0][1];
+    const lift = p.cmpr != null && p.cmpb != null ? p.cmpr - p.cmpb : null;
+    const tag = lift == null ? ""
+      : lift >= 0.05 ? '<span class="comps-tag comps-tag-up">comps outperformed</span>'
+      : lift <= -0.05 ? '<span class="comps-tag comps-tag-down">comps underperformed</span>'
+      : '<span class="comps-tag">comps ran typical</span>';
+
+    const rows = p.cmp.map(([i, sim, code]) => {
+      const c = D.players[i];
+      if (!c) return "";
+      const [label, cls] = COMP_OUT[code] || COMP_OUT[2];
+      return '<li class="comp-row">' +
+        '<span class="comp-bar"><span class="comp-bar-fill" style="width:' +
+          Math.round(Math.min(1, sim / 0.9) * 100) + '%"></span></span>' +
+        '<span class="comp-name">' + esc(c.nm) + "</span>" +
+        '<span class="comp-meta">' + c.pos + " · " + c.yr + " pk" + c.pk + "</span>" +
+        '<span class="comp-out ' + cls + '">' + label + "</span></li>";
+    }).join("");
+
+    const weak = best < COMP_WEAK
+      ? '<p class="fine comps-weak"><strong>No close match.</strong> His nearest ' +
+        'comparable is further away than nine out of ten players’ are, which is ' +
+        'itself the finding: nothing in eight drafted classes looks much like him, ' +
+        'so read the names below as the closest available rather than as ' +
+        'genuine analogues.</p>'
+      : "";
+
+    return '<div class="comps"><div class="comps-h">Closest historical comparables ' +
+      tag + "</div>" +
+      '<p class="comps-lead">' + p.cmph + " of the " + p.cmpn + " players from 2014–21 " +
+      "whose testing, college production and PFF grades most resemble his became hits — " +
+      "<b>" + pct(p.cmpr) + "</b> once shrunk toward the " + pct(p.cmpb) +
+      " base rate at his position.</p>" +
+      weak +
+      '<ul class="comp-list">' + rows + "</ul>" +
+      '<p class="fine">Distance is measured within position on standardised testing, ' +
+      'production and grade columns, over the features both players actually have. ' +
+      'These comparables are shown, not used: adding them to the model is negative ' +
+      'out of sample, and on their own they reach 0.65 AUC against the pre-draft ' +
+      'model’s 0.69. They explain a projection; they do not make one.</p></div>';
+  }
 
   /* ---------- watchlist card ----------
      Why a college player sits where he does, and what a 2026 season would have
