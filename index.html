@@ -345,9 +345,34 @@
       <p>One more number puts it in perspective. The rank correlation between the player-only score and actual draft position is about &minus;0.50, meaning that from the same raw material teams use, this model reconstructs roughly a quarter of the variance in draft order. The other half of what decides where a player goes is invisible from here.</p>
 
       <h3>Tiers, and how much the score is worth</h3>
-      <p>Two players a tenth of a point apart are not meaningfully separated, but a ranked list implies they are. So each APEX score carries a standard error, measured by resampling the training set forty times with replacement and refitting &mdash; the spread of scores the same model would have produced had it seen a slightly different sample of draft history.</p>
+      <p>Two players a tenth of a point apart are not meaningfully separated, but a ranked list implies they are. So each APEX score carries a standard error, measured by refitting the model two hundred times on resampled draft history &mdash; the spread of scores it would have produced had it seen a slightly different sample. The resampling draws whole <em>draft classes</em> rather than individual players: men in the same class share an era, a rule set, a testing regime and one labelling pass, so treating five thousand players as five thousand independent observations would understate how much the score could have moved.</p>
       <p>Tiers follow from that. Reading down the board, a player joins the current tier while his score sits within one standard error of the tier leader&rsquo;s, and opens a new tier once he is clearly below. The comparison is always against the tier leader rather than the previous player: chaining neighbour to neighbour would swallow the entire board into a single tier, because every player is close to the one below him.</p>
       <p>Read tiers as the real resolution of the board. Order <em>within</em> a tier is noise; order <em>between</em> tiers is the model actually saying something.</p>
+
+      <h3>Would using it have produced better players?</h3>
+      <p>Every other number here is a classification metric. AUC says the model orders players
+      better than the draft does; it does not say a team using it would have ended up with more
+      football. So: at each historical pick, compare the player the team actually took against the
+      best APEX player among those who <em>demonstrably went</em> within the next twenty selections
+      &mdash; men who were provably available at that moment, using only the score a model that never
+      saw that class would have produced.</p>
+      <p>In the 2003&ndash;2021 backtest it works. A team drafting for a specific position gains
+      <strong>+1.0 career AV per pick</strong> (CI +0.4 to +1.6), about a 5% improvement. Ignoring
+      position entirely gains +4.0, but no team drafts that way, so the smaller number is the honest
+      one.</p>
+      <p class="warn-band"><strong>It does not survive out of sample.</strong> On the 2022&ndash;2023
+      classes &mdash; the ones the model never saw &mdash; the same simulation returns
+      <strong>&minus;0.01 AV</strong>, confidence interval &minus;0.34 to +0.30. Careers are shorter
+      there, so a real effect would show up smaller: scaling the backtest gain by mean career length
+      predicts about +0.5 AV. The observed interval <em>excludes</em> that. This is not merely a
+      small sample failing to reach significance &mdash; the forward data actively contradicts the
+      backtest. On the evidence available, <strong>there is no demonstrated decision value.</strong></p>
+      <p>The swaps it would have made are worth seeing, because they explain the pattern. Its
+      biggest wins are all avoided busts near the top of round one &mdash; Terrell Suggs over
+      Johnathan Sullivan, J.J. Watt over Blaine Gabbert, Luke Kuechly over Justin Blackmon. Its worst
+      mistakes are passing on late superstars &mdash; Aaron Rodgers, Bobby Wagner, Matthew Stafford.
+      That asymmetry is the same one the AUC shows: this model knows more about who fails than about
+      who becomes great.</p>
 
       <h3>Backtest scoreboard</h3>
       <p>Leave-one-year-out over the 2003&ndash;2021 classes (19 folds, ~4,800 players). &ldquo;Market&rdquo; is the draft-slot prior; beating it is the entire game.</p>
