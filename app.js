@@ -770,14 +770,45 @@
     const wState = { pos: "ALL", q: "", tier: 0, hideThin: false };
     const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
     const TIER_SUB = {
-      1: "top 3% at the position on volume-adjusted 2025 grade",
-      2: "next 7%", 3: "next 15%", 4: "next 25%",
+      1: "85%+ likely to reach an NFL roster",
+      2: "65–85% likely", 3: "40–65% likely", 4: "20–40% likely",
     };
     /* The "How this list is built" section describes what the build actually did,
        so every number in it comes from the payload rather than the markup. */
     const C = W.config || {};
     const setTxt = (id, v) => { const el = $(id); if (el) el.textContent = v; };
     if (C.basis) {
+      const TIER_BLURB = {
+        1: "Already producing like a player who makes it.",
+        2: "Clear starters worth tracking through the 2026 season.",
+        3: "Solid, unfinished, one good year from moving up.",
+        4: "On the list, not yet on a board.",
+      };
+      const legend = $("#tierLegend");
+      if (legend) {
+        legend.innerHTML = C.tiers.map(([t, cut], i) => {
+          const hi = i === 0 ? 1 : C.tiers[i - 1][1];
+          const lo = Math.round(cut * 100), up = Math.round(hi * 100);
+          return '<li><span class="tier-chip t' + t + '">' + TIER_NAME[t] + "</span> " +
+            "<strong>" + (i === 0 ? lo + "%+" : lo + "–" + up + "%") + "</strong> to reach an " +
+            "NFL roster. " + TIER_BLURB[t] + "</li>";
+        }).join("");
+      }
+      setTxt("#tierAuc", "");
+      const auc = $("#tierAuc");
+      if (auc && C.auc_nfl) {
+        auc.innerHTML =
+          "Measured walk-forward — trained on players whose college careers ended by one year, " +
+          "scored on the next, six cohorts running: <strong>" + C.auc_nfl.toFixed(3) + " AUC</strong> " +
+          "for reaching a roster and <strong>" + C.auc_draft.toFixed(3) + "</strong> for being " +
+          "drafted, against " + C.auc_nfl_grade_only.toFixed(3) + " and " +
+          C.auc_draft_grade_only.toFixed(3) + " for ranking on the grade percentile alone. " +
+          (C.prod_only && C.prod_only.length
+            ? "<strong>" + C.prod_only.join(", ") + " is the exception</strong>: this dataset has no " +
+              "historical college grading for the position, so those players have no projection and " +
+              "keep the older production-percentile tiers."
+            : "");
+      }
       setTxt("#cfgGames", C.min_games);
       setTxt("#cfgDefSnaps", C.min_def_snaps);
       setTxt("#cfgOlSnaps", C.min_ol_snaps);
@@ -794,12 +825,11 @@
 
       // tier cuts are [tier, floor]; the ceiling is the previous tier's floor
       $("#cfgTierList").innerHTML = C.tiers.map(([t, cut], i) => {
-        const hi = i === 0 ? 100 : C.tiers[i - 1][1];
-        const span = i === 0 ? "top " + (100 - cut) + "%"
-          : "the next " + (hi - cut) + "%";
+        const hi = i === 0 ? 1 : C.tiers[i - 1][1];
+        const lo = Math.round(cut * 100), up = Math.round(hi * 100);
         return '<li><span class="tier-chip t' + t + '">' + TIER_NAME[t] + "</span> " +
-          "percentile " + cut + (i === 0 ? " and above" : "–" + (hi - 1)) +
-          " at the position — " + span + ".</li>";
+          (i === 0 ? lo + "% or better" : lo + "–" + up + "%") +
+          " chance of reaching an NFL roster.</li>";
       }).join("");
     }
 
@@ -868,7 +898,7 @@
         let sep = "";
         if (p.t !== last) {
           last = p.t; n = 0;
-          sep = '<tr class="tier-row t' + p.t + '"><td colspan="8">' +
+          sep = '<tr class="tier-row t' + p.t + '"><td colspan="10">' +
             '<span class="tier-name">' + TIER_NAME[p.t] + "</span>" +
             '<span class="tier-meta">' + sizes[p.t] + " shown · " + TIER_SUB[p.t] + "</span></td></tr>";
         }
@@ -879,6 +909,9 @@
           "</div></td>" +
           "<td>" + esc(p.tm) + "</td>" +
           '<td class="num"><span class="pos-chip">' + p.pg + "</span></td>" +
+          '<td class="num prob">' + (p.nfl != null ? Math.round(p.nfl * 100) + "%"
+            : '<span class="no-proj" title="no historical college grading for this position, so no projection">–</span>') + "</td>" +
+          '<td class="num prob">' + (p.drf != null ? Math.round(p.drf * 100) + "%" : "–") + "</td>" +
           '<td class="num prob">' + p.r + '<span class="of-pool"> / ' + p.pn + "</span></td>" +
           '<td class="num prob">p' + p.p + "</td>" +
           '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
@@ -887,7 +920,10 @@
 
       $("#watchNote").innerHTML =
         "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
-        W.n + " on the full list). <strong>Grade percentile is within position and adjusted for " +
+        W.n + " on the full list). <strong>Reaches NFL</strong> and <strong>Drafted</strong> are " +
+        "modelled probabilities, calibrated so they can be read literally; they are blank for " +
+        "offensive linemen, who have no historical college grading in this dataset. " +
+        "<strong>Grade percentile is within position and adjusted for " +
         "volume</strong>: a grade earned on 60 snaps is a claim about 60 snaps, so it is pulled " +
         "back toward the position average, while one earned across a season is left alone. That " +
         "is why the order here differs from raw grade &mdash; it moved " + (W.moved10 || 0) +

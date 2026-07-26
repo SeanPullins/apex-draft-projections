@@ -110,29 +110,27 @@
   <section id="tab-watch" class="tab-panel">
     <div class="prose" style="max-width:none">
       <h2>Watchlist &mdash; college players who haven&rsquo;t reached the NFL</h2>
-      <p class="warn-band"><strong>This is not a projection, and it is not a draft class.</strong>
+      <p class="warn-band"><strong>This is not a draft class, and these are not APEX scores.</strong>
       These are players with a 2025 college season who have not signed with an NFL team. The 2026
-      college season has not been played, nobody declares until January 2027, and no one has tested
-      at a combine. Every number elsewhere on this site leans on athletic testing and draft position
-      &mdash; the two things these players do not yet have &mdash; so there is no APEX score here and
-      no hit probability. What follows is what they <em>did</em> in 2025, and nothing more.</p>
+      season has not been played, nobody declares until January 2027, and no one has tested at a
+      combine. The projection here answers a deliberately narrow question &mdash; <strong>how often
+      players who produced like this have reached an NFL roster at all</strong> &mdash; and says
+      nothing about whether a player becomes any good once he gets there. That second question needs
+      athletic testing and draft position, which these players do not yet have, and it is the
+      question the rest of this site is about.</p>
       <p class="fine" id="watchSigned"></p>
 
       <h3>What the tiers mean</h3>
-      <p>Tiers are cut inside each position, on a volume-adjusted 2025 grade &mdash; so a tier&nbsp;1
-      corner is being compared with other corners, never with quarterbacks. They rank
-      <em>production</em>, which is the only thing on the record right now. Plenty of tier&nbsp;3
-      players will out-draft tier&nbsp;1 players once testing numbers exist.</p>
-      <ul class="tier-legend">
-        <li><span class="tier-chip t1">Blue chip</span> Top 3% at the position. Already producing at
-          a level that usually shows up on draft boards.</li>
-        <li><span class="tier-chip t2">Early watch</span> Next 7%. Clear starters worth tracking
-          through the 2026 season.</li>
-        <li><span class="tier-chip t3">On the radar</span> Next 15%. Solid, unfinished, one good
-          year from moving up.</li>
-        <li><span class="tier-chip t4">Depth</span> Next 25%. Above the position median &mdash;
-          on the list, not on a board.</li>
-      </ul>
+      <p>Tiers are cut on <strong>how often players who produced like this have gone on to reach an
+      NFL roster</strong>. That is a different and much more answerable question than the one the
+      rest of this site asks. It is trained on <em>every</em> college player rather than only the
+      drafted ones &mdash; nearly 35,000 of them since 2014, about one in five of whom made it &mdash;
+      which is the population this page actually contains.</p>
+      <p>Because the tiers are probabilities rather than percentiles, they mean the same thing across
+      positions, and a thin position is allowed to have few players in the top band instead of being
+      forced to fill a quota.</p>
+      <ul class="tier-legend" id="tierLegend"></ul>
+      <p class="fine" id="tierAuc"></p>
     </div>
     <div class="controls">
       <div class="control grow">
@@ -155,6 +153,7 @@
     <div class="table-wrap">
       <table class="board" id="watchTable">
         <thead><tr><th>#</th><th>Player</th><th>School</th><th class="num">Pos</th>
+          <th class="num">Reaches NFL</th><th class="num">Drafted</th>
           <th class="num">Rank at position</th><th class="num">2025 grade pctl</th>
           <th class="num">Volume pctl</th><th class="num">Games</th></tr></thead>
         <tbody id="watchBody"></tbody>
@@ -214,12 +213,19 @@
       and can be hidden with the checkbox. They are tagged rather than dropped because a good player
       on a bad team also plays few snaps.</p>
 
-      <h3>4. Percentile, rank, and tiers</h3>
-      <p>The adjusted grade becomes a percentile <em>within the position group</em>. Tiers are cut on
-      that percentile:</p>
+      <h3>4. From production to a projection</h3>
+      <p>The adjusted grade becomes a percentile <em>within the position group</em>, and that
+      percentile &mdash; along with playing time, career shape, how a player&rsquo;s grade moved
+      year over year, and whether he played in a power conference &mdash; feeds a model trained on
+      what happened next to <strong>every</strong> college player since 2014, not just the drafted
+      ones. Roughly one in five reaches an NFL roster, so this is an ordinary prediction problem
+      rather than a needle in a haystack.</p>
+      <p>It outputs two probabilities, and the tiers are cut on the first:</p>
       <ul id="cfgTierList"></ul>
-      <p>Roughly half of each position falls below the tier&nbsp;4 line and is not tiered at all;
-      those players stay searchable but are left out of the tiered view.</p>
+      <p>Players below the tier&nbsp;4 line are not tiered; they stay searchable but are left out of
+      the tiered view. Probabilities are calibrated on out-of-fold predictions rather than on the
+      training fit, so &ldquo;70%&rdquo; is meant literally: of the players given that number in the
+      backtest, about seven in ten made it.</p>
       <p>The percentile alone could not order the list. A percentile has a hundred buckets and a
       position has hundreds of players, so the entire top of every position rounds to p100 and the
       order inside tier&nbsp;1 would be arbitrary. Each player therefore also carries his rank at his
@@ -228,21 +234,27 @@
       second-best &mdash; rather than pretending the best cornerback and the best quarterback can be
       separated.</p>
 
-      <h3>Why there is no projection here</h3>
-      <p>This is the part worth being blunt about. The APEX model&rsquo;s edge lives almost entirely in
-      athletic testing and draft position, and these players have neither. So the question is whether
-      running a model on what <em>is</em> known &mdash; production and grades &mdash; would beat simply
-      ranking on the grades. It was measured rather than assumed.</p>
-      <p>Trained on production and PFF grades with no athletic testing and no draft slot, and tested
-      on classes it never saw, such a model reaches <strong>0.640 AUC</strong> at predicting who
-      becomes good. Ranking on PFF grades alone gets <strong>0.628</strong>. The model is worth about
-      a single AUC point over the ranking already on this page &mdash; while a model that knows only
-      where a player was drafted, and nothing else about him, scores <strong>0.799</strong>.</p>
-      <p>Publishing a projection built on the first number, and presenting it next to a site whose
-      board is built on the third, would imply a confidence that a hundredth of an AUC point does not
-      support. The honest version of this page is a production ranking that says so. It is worth
-      revisiting after the February 2027 combine, when these players finally have the input that
-      carries the model.</p>
+      <h3>What this page still will not tell you</h3>
+      <p>It projects whether a player <em>arrives</em>, not whether he is any <em>good</em>. Those
+      are different questions and only the first one is answerable from here.</p>
+      <p>Asking the second was tried and measured rather than assumed. A model given production and
+      PFF grades but no athletic testing and no draft slot, tested on classes it never saw, reaches
+      <strong>0.640 AUC</strong> at predicting who becomes good; ranking on the grades alone gets
+      <strong>0.628</strong>. The whole model is worth about one AUC point over a list this page
+      already publishes &mdash; while a model that knows nothing but where a player was drafted
+      scores <strong>0.799</strong>. There is no honest way to dress that up as a projection of NFL
+      quality, so it is not published as one. It is worth revisiting after the February 2027 combine,
+      when these players finally have the input that carries the model.</p>
+      <p>A projected <em>draft position</em> was tried too, and dropped for the same reason. Scored
+      walk-forward it lands about <strong>60 picks</strong> from the truth on average and inside the
+      right round only half the time &mdash; close to two rounds of error. &ldquo;Drafted&rdquo; as a
+      probability answers the same question at 0.931, so that is what the column shows.</p>
+      <p class="fine">One caveat on the headline numbers: 0.924 looks far better than anything else
+      on this site, and part of that is simply an easier question. The pool includes thousands of
+      players who were never NFL prospects at all, and separating them from the ones who were is not
+      hard. The figure worth reading is the gap over ranking on the grade percentile &mdash; about
+      eleven AUC points &mdash; because that is what the model adds to what the page could already
+      have told you.</p>
     </div>
   </section>
 
