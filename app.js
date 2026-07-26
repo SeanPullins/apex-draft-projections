@@ -599,6 +599,12 @@
         "strongest candidate showed up on one side of the field and not the " +
         "mirrored other, which is a small sample cut many ways rather than a " +
         "finding.",
+    QB: "One measurement cleared the screen for quarterbacks — how he grades " +
+        "holding the ball past 2.5 seconds — but it is recorded for only five " +
+        "of the thirteen draft classes and almost none of the recent ones, so " +
+        "it cannot be computed for current prospects and its evidence came from " +
+        "too narrow a slice of years to lean on. Nothing else separated hits by " +
+        "more than chance does across 587 columns and 93 quarterbacks.",
   };
 
   function signalsPanel(p) {
