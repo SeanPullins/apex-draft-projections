@@ -323,6 +323,13 @@
         <li><strong>Bust</strong> — bottom-quartile career value <em>among the players taken in the same draft-capital band</em>. Judged against his own neighbourhood of the draft, not the class as a whole, so the question stays meaningful at pick 5 and at pick 205 alike.</li>
       </ul>
       <p>The headline <strong>APEX score</strong> blends the three success probabilities (50% hit, 30% starter, 20% Pro Bowl) onto a 0&ndash;100 scale. <strong>Bust risk is kept out of it, on purpose.</strong> It is a different question rather than a penalty, and folding it in would bury the one number this model is clearly better at than the draft order.</p>
+      <p class="warn-band"><strong>Those three weights are a value judgement, not a finding.</strong>
+      Nothing in the data says a top-quartile career is worth five times a Pro Bowl; that ratio
+      encodes a preference for durable starters over rare stars, and a team building differently
+      would be right to choose differently. The weights were never tuned against outcomes &mdash;
+      doing so would have made the composite look better while telling you less. The three
+      probabilities underneath are published separately on every player card precisely so you can
+      apply your own weighting, and the model would not need retraining if you did.</p>
 
       <h3>Where the model actually beats the draft order</h3>
       <p>Draft position is consensus <em>upside</em> — it is the league agreeing about who is exciting, and it is very hard to improve on. Held out, APEX gains about one AUC point over the draft-slot prior on predicting who becomes good, and on classes it has never seen that edge shrinks to almost nothing.</p>
@@ -377,6 +384,14 @@
       <h3>Backtest scoreboard</h3>
       <p>Leave-one-year-out over the 2003&ndash;2021 classes (19 folds, ~4,800 players). &ldquo;Market&rdquo; is the draft-slot prior; beating it is the entire game.</p>
       <div id="btTable"></div>
+
+      <h3>What ROC AUC leaves out</h3>
+      <p>The two numbers above &mdash; ROC AUC and Brier &mdash; are the most forgiving pair
+      available. AUC ignores whether a probability is <em>correct</em> and only asks whether the
+      ordering is right; Brier is dominated by the base rate whenever an outcome is rare. Here is
+      the fuller picture, on the same leave-one-year-out predictions.</p>
+      <div id="fullMetrics"></div>
+      <p class="fine" id="fullMetricsNote"></p>
 
       <h3>What moves the needle</h3>
       <p>Average split gain across the bagged ensemble for the hit model, top features:</p>

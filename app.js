@@ -953,6 +953,42 @@
       ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1) + ' on who becomes good. Draft position barely predicts the first question at all, which is why there is room. The exception is round one, where the model has no edge on bust at all &mdash; that skill starts at pick 33.</p>' +
       '<p class="fine">Top-decile check: among the model&rsquo;s 10% most confident players, ' + pct(D.backtest.top_decile_hit_rate.deploy) + " hit vs " + pct(D.backtest.top_decile_hit_rate.market) + " for the draft-slot prior.</p>";
 
+    /* The fuller metric suite. PR-AUC is the one that changes the picture:
+       ROC AUC is computed against a base rate it ignores, so a rare outcome can
+       post a healthy 0.80 while the precision-recall curve shows what finding
+       one actually costs. Calibration slope and intercept say whether a
+       published probability can be read literally. */
+    const MF = D.metrics_full;
+    if (MF && MF.models && MF.models.deploy) {
+        const lbls = [["hit", "Hit"], ["starter", "Starter"],
+                      ["probowl", "Pro Bowler"], ["bust", "Bust"]];
+        const dep = MF.models.deploy;
+        $("#fullMetrics").innerHTML =
+          '<table class="bt-table"><tr><th>Outcome</th><th>Base rate</th>' +
+          "<th>ROC AUC</th><th>PR AUC</th><th>Log loss ↓</th>" +
+          "<th>Calib. slope</th><th>Intercept</th><th>ECE ↓</th></tr>" +
+          lbls.filter(([k]) => dep[k]).map(([k, lbl]) => {
+            const r = dep[k];
+            const gap = r.roc_auc - r.pr_auc;
+            return "<tr" + (gap > 0.3 ? " class='bt-hero'" : "") + "><td>" + lbl + "</td><td>" +
+              pct(r.base_rate) + "</td><td>" + r.roc_auc.toFixed(3) + "</td><td><strong>" +
+              r.pr_auc.toFixed(3) + "</strong></td><td>" + r.logloss.toFixed(3) + "</td><td>" +
+              r.cal_slope.toFixed(2) + "</td><td>" + r.cal_intercept.toFixed(2) + "</td><td>" +
+              r.ece.toFixed(4) + "</td></tr>";
+          }).join("") + "</table>";
+        const pb = dep.probowl;
+        $("#fullMetricsNote").innerHTML =
+          "<strong>Read the Pro Bowler row.</strong> Its ROC AUC of " + pb.roc_auc.toFixed(3) +
+          " looks like the model&rsquo;s best work; its PR AUC of " + pb.pr_auc.toFixed(3) +
+          " says otherwise. Pro Bowlers are only " + pct(pb.base_rate) + " of the field, and " +
+          "ROC AUC is generous about rare outcomes in a way precision-recall is not. The gap of " +
+          (pb.roc_auc - pb.pr_auc).toFixed(2) + " is the honest cost of going looking for one. " +
+          "<strong>The calibration columns are the good news</strong>: slopes near 1.00 and " +
+          "intercepts near 0.00 mean a published probability can be taken at face value — when " +
+          "this model says 30%, about 30% of those players get there. That is a separate and " +
+          "weaker claim than being able to tell which 30%.";
+    }
+
     // pre-draft decomposition: what the draft is worth, and what we are worth
     const P = D.backtest.summary.predraft, M = D.backtest.summary.market,
           Dp = D.backtest.summary.deploy;
