@@ -377,6 +377,116 @@
   /* ---------- modal ---------- */
   const backdrop = $("#modalBackdrop"), modal = $("#modal");
   let lastFocus = null;
+  /* Why a player's two scores disagree, in words, from his own numbers.
+
+     The model is a three-way decomposition and the card can just say so: what
+     draft slot alone implies (mh), what the player's own profile alone implies
+     (qh), and where the published number landed between them. The "why" is then
+     whichever inputs are actually extreme for this player, not a template.
+
+     The one thing this must not do is let a missing workout read as a bad one.
+     Players with no testing on record score low pre-draft because the block
+     carrying nearly all of the model's edge is empty, and they average a +5.7
+     gap against -0.9 for tested players. That is absence, not evidence, and it
+     gets said first when it applies. */
+  function gapStory(p) {
+    if (p.qh == null || p.qapex == null || p.apex == null) return "";
+    const gap = p.apex - p.qapex;
+    const rose = gap >= 8, fell = gap <= -8;
+    const bits = [];
+
+    // 1. the decomposition, in the player's own numbers
+    let lead = "<p><strong>Where the two numbers come from.</strong> ";
+    if (p.mh != null) {
+      const lo = Math.min(p.mh, p.qh), hi = Math.max(p.mh, p.qh);
+      // The published figure is not a weighted average of the other two: the
+      // three tiers are calibrated separately and blended in log-odds, so it can
+      // and does land outside both. Say which actually happened rather than
+      // asserting "between" and being wrong for a third of the board.
+      let where;
+      if (p.ph >= lo && p.ph <= hi) {
+        where = "sits between the two" + (Math.abs(p.ph - p.mh) < Math.abs(p.ph - p.qh)
+          ? ", nearer the draft — the ordering the backtest supports, since on this question a " +
+            "pick number is worth several times every scouting input combined"
+          : ", nearer his own profile");
+      } else {
+        where = "lands " + (p.ph > hi ? "above" : "below") + " both, which a blend is allowed to " +
+          "do here: the three are separate models with separate calibrations, combined in " +
+          "log-odds rather than averaged";
+      }
+      lead += "Draft position alone puts his odds of a top-quartile career at <b>" + pct(p.mh) +
+        "</b>. Everything known about the player and nothing about his pick puts them at <b>" +
+        pct(p.qh) + "</b>. The published figure, <b>" + pct(p.ph) + "</b>, " + where + ".";
+    } else {
+      lead += "His profile alone implies <b>" + pct(p.qh) + "</b>; the published figure is <b>" +
+        pct(p.ph) + "</b>.";
+    }
+    bits.push(lead + "</p>");
+
+    // 2. why they disagree — only reasons this player actually has
+    const why = [];
+    const untested = p.ras == null;
+    if (untested) {
+      why.push("<strong>He has no workout on record.</strong> No combine or pro-day numbers means " +
+        "the athletic block — where essentially the model's whole edge over the draft order lives — " +
+        "is empty for him, so his pre-draft score is closer to <em>unknown</em> than to <em>poor</em>. " +
+        "Untested players average a gap of +5.7 points against −0.9 for tested ones, so a good part " +
+        "of the distance between his two numbers is missing data rather than disagreement.");
+    } else if (p.rasp != null && p.rasp >= 70) {
+      why.push("He <strong>tested well</strong> — RAS " + p.ras.toFixed(2) + ", around the " +
+        Math.round(p.rasp) + "th percentile for his position. Athleticism is the input the pre-draft " +
+        "model leans on hardest, so this is most of what is holding that number up.");
+    } else if (p.rasp != null && p.rasp <= 30) {
+      why.push("He <strong>tested poorly</strong> — RAS " + p.ras.toFixed(2) + ", about the " +
+        Math.round(p.rasp) + "th percentile at his position — and athleticism is the block the " +
+        "pre-draft model weights most heavily, so it pulls his profile score down hard.");
+    }
+    if (p.pffp != null && p.pffp >= 80) {
+      why.push("His college grades were <strong>strong</strong> (p" + Math.round(p.pffp) +
+        " at his position), which helps, though production is worth roughly a tenth of what " +
+        "testing is worth to this model.");
+    } else if (p.pffp != null && p.pffp <= 25) {
+      why.push("His college grades sat <strong>low for the position</strong> (p" +
+        Math.round(p.pffp) + "), a modest drag on the profile score.");
+    }
+    if (p.age != null && p.age <= 21) {
+      why.push("He was <strong>young for the class</strong> at " + p.age + ", which the model treats as a plus.");
+    } else if (p.age != null && p.age >= 24) {
+      why.push("He was <strong>old for a rookie</strong> at " + p.age + ", which counts against him.");
+    }
+
+    if (why.length) {
+      bits.push("<p><strong>" + (rose ? "Why the draft rated him higher"
+        : fell ? "Why the draft rated him lower" : "What is driving each number") +
+        ".</strong></p><ul class=\"gap-why\"><li>" + why.join("</li><li>") + "</li></ul>");
+    }
+
+    // 3. what to take from it, including the case where the two agree
+    let close;
+    if (rose) {
+      close = "The league spent pick " + p.pk + " on him and the model's own inputs did not see " +
+        "why — a gap of " + gap.toFixed(1) + " points. That is not evidence the draft was wrong. " +
+        "Teams hold medicals, interviews and film that never reach a spreadsheet, and historically " +
+        "the pick has been the better predictor of who becomes good.";
+    } else if (fell) {
+      close = "His own profile rated him " + Math.abs(gap).toFixed(1) + " points above where he was " +
+        "picked — the model saw more than the league paid for. Read it with care: on finding hits " +
+        "the draft order still beats the player-only model by a wide margin, so this is a flag " +
+        "rather than a verdict.";
+    } else {
+      close = "The two agree to within " + Math.abs(gap).toFixed(1) + " points, so the draft and " +
+        "this model are telling the same story about him — the published number is not leaning on " +
+        "his pick to get there.";
+    }
+    if (p.qbu != null && p.pbu != null) {
+      close += " On <strong>bust risk</strong> the ordering reverses: there the player-only model " +
+        "is the better of the two, so his pre-draft figure of " + pct(p.qbu) + " carries more " +
+        "weight than the " + pct(p.pbu) + " next to it.";
+    }
+    bits.push('<p class="gap-close">' + close + "</p>");
+    return '<div class="gap-story">' + bits.join("") + "</div>";
+  }
+
   function openModal(p, fromHash) {
     lastFocus = document.activeElement;
     if (!fromHash && p.yr === state.year && state.tab === "board") {
@@ -400,6 +510,8 @@
         (p.tierp != null ? " · " + p.pg + " tier " + p.tierp : "") + "</span>" : "")]);
     facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
 
+    const story = gapStory(p);
+
     // What the model said about the player alone, before knowing where he went.
     // Worth showing per player because the gap between the two is the draft's
     // opinion: a big drop means the league saw something the inputs did not.
@@ -419,7 +531,8 @@
         '<p class="fine">Left: the model given only the player — testing, production, ' +
         'college grades, age — and no idea where he was picked. Right: the published ' +
         'number, which also knows his draft slot. On hit the draft is worth far more than ' +
-        'everything else combined; on bust risk it adds almost nothing.</p></div>';
+        'everything else combined; on bust risk it adds almost nothing.</p>' +
+        story + "</div>";
     }
 
     let outcome = "";
