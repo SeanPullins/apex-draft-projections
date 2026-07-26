@@ -17,6 +17,7 @@
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
     <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab" data-tab="proj" role="tab" aria-selected="false">Projections</button>
     <button class="tab" data-tab="watch" role="tab" aria-selected="false">Watchlist</button>
     <button class="tab" data-tab="method" role="tab" aria-selected="false">Methodology</button>
   </nav>
@@ -104,6 +105,56 @@
       <div class="chart" id="roundChart"></div>
       <details class="chart-table"><summary>View as table</summary><div id="roundTable"></div></details>
     </div>
+  </section>
+
+  <!-- ============ PROJECTIONS ============ -->
+  <section id="tab-proj" class="tab-panel">
+    <div class="prose" style="max-width:none">
+      <h2>Projections &mdash; every class the model has never seen</h2>
+      <p>The big board shows one class at a time. This is all of them at once: every class drafted
+      after the training window closed in 2021, ranked together. These are the predictions that
+      count, because none of these players existed in the data the model learned from.</p>
+      <p>Both scores are shown side by side. <strong>APEX</strong> knows where a player was picked.
+      <strong>Pre-draft</strong> is the same model with the pick withheld &mdash; what it would have
+      said in February. <strong>Gap</strong> is the difference, and it is the most interesting column
+      on the page: a large positive gap means the league liked a player far more than his own
+      testing and production did, and a large negative gap means the reverse.</p>
+    </div>
+
+    <div class="controls">
+      <div class="control grow">
+        <span class="control-label">Class</span>
+        <div class="pills" id="projYearPills" role="group" aria-label="Draft class filter"></div>
+      </div>
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="projPosPills" role="group" aria-label="Position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Round</span>
+        <select id="projRound" aria-label="Round filter">
+          <option value="0">All rounds</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+          <option value="d3">Day 3 (4&ndash;7)</option>
+        </select>
+      </label>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="projSearch" type="search" placeholder="Player, college, team…" aria-label="Search projections">
+      </label>
+    </div>
+
+    <div class="tiles" id="projTiles"></div>
+
+    <div class="table-wrap">
+      <table class="board" id="projTable">
+        <thead><tr id="projHead"></tr></thead>
+        <tbody id="projBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint" id="projNote"></p>
   </section>
 
   <!-- ============ WATCHLIST ============ -->

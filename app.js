@@ -37,7 +37,7 @@
   /* ---------- tabs + hash ----------
      #board/2023 selects a class, #board/2023/6 opens that pick's card, so any
      player on the site is a shareable link and the back button works. */
-  const HASH = /^#(board|insights|watch|method)(?:\/(\d{4}))?(?:\/(\d{1,3}))?/;
+  const HASH = /^#(board|proj|insights|watch|method)(?:\/(\d{4}))?(?:\/(\d{1,3}))?/;
   let ownHash = false;
   function writeHash() {
     const h = state.tab !== "board" ? "#" + state.tab
@@ -761,6 +761,211 @@
     roundChart();
   }
 
+  /* ---------- projections ----------
+     Every class drafted after the training window, ranked together rather than
+     one at a time. Both scores are shown side by side instead of behind a
+     toggle: the gap between what the model says with the pick and without it is
+     the point of the page, and you cannot read a difference one column at a
+     time. */
+  const PROJ_YEARS = D.classes.filter(y => y > D.train_years[1]).sort((a, b) => a - b);
+  const pState = { years: new Set(PROJ_YEARS), pos: "ALL", round: "0", q: "",
+                   sort: "apex", dir: -1 };
+
+  const P_COLS = [
+    { key: "yr", label: "Class", num: true },
+    { key: "pk", label: "Pick", num: true },
+    { key: "nm", label: "Player" },
+    { key: "pg", label: "Pos" },
+    { key: "apex", label: "APEX", num: true },
+    { key: "qapex", label: "Pre-draft", num: true },
+    { key: "gap", label: "Gap", num: true },
+    { key: "ph", label: "Hit", num: true },
+    { key: "pbu", label: "Bust risk", num: true },
+    { key: "ras", label: "RAS", num: true },
+    { key: "out", label: "So far", sortKey: "wav" },
+  ];
+
+  const gapOf = p => (p.apex == null || p.qapex == null ? null : p.apex - p.qapex);
+
+  function projRows() {
+    let rows = D.players.filter(p => p.yr > D.train_years[1]);
+    if (pState.years.size) rows = rows.filter(p => pState.years.has(p.yr));
+    if (pState.pos !== "ALL") rows = rows.filter(p => p.pg === pState.pos);
+    if (pState.round === "d3") rows = rows.filter(p => p.rd >= 4);
+    else if (pState.round !== "0") rows = rows.filter(p => p.rd === +pState.round);
+    if (pState.q) rows = rows.filter(p =>
+      (p.nm || "").toLowerCase().includes(pState.q) ||
+      (p.cl || "").toLowerCase().includes(pState.q) ||
+      (p.tm || "").toLowerCase().includes(pState.q));
+
+    const k = pState.sort, dir = pState.dir;
+    const val = p => (k === "gap" ? gapOf(p) : p[k]);
+    const byPick = (a, b) => (a.yr - b.yr) || ((a.pk ?? 999) - (b.pk ?? 999));
+    return rows.slice().sort((a, b) => {
+      const x = val(a), y = val(b);
+      if (x == null && y == null) return byPick(a, b);
+      if (x == null) return 1;              // missing always sorts last
+      if (y == null) return -1;
+      // dir -1 is descending, +1 ascending; ties fall back to class then pick
+      const c = typeof x === "string" ? x.localeCompare(y) : x - y;
+      return dir * c || byPick(a, b);
+    });
+  }
+
+  const projHead = $("#projHead");
+  if (projHead) {
+    P_COLS.forEach(c => {
+      const th = document.createElement("th");
+      th.textContent = c.label;
+      if (c.num) th.classList.add("num");
+      th.dataset.key = c.key;
+      th.title = "Sort by " + c.label;
+      th.addEventListener("click", () => {
+        const k = c.sortKey || c.key;
+        if (pState.sort === k) pState.dir *= -1;
+        else { pState.sort = k; pState.dir = (k === "pk" || k === "yr") ? 1 : -1; }
+        renderProj();
+      });
+      projHead.appendChild(th);
+    });
+
+    const yp = $("#projYearPills");
+    const mkYearPill = (label, on, fn) => {
+      const b = document.createElement("button");
+      b.className = "pill" + (on ? " is-active" : "");
+      b.textContent = label;
+      b.addEventListener("click", () => { fn(); renderProj(); syncYearPills(); });
+      yp.appendChild(b);
+      return b;
+    };
+    mkYearPill("All", true, () => { pState.years = new Set(PROJ_YEARS); });
+    PROJ_YEARS.forEach(y => mkYearPill(String(y), false, () => {
+      pState.years = new Set([y]);
+    }));
+    function syncYearPills() {
+      const all = pState.years.size === PROJ_YEARS.length;
+      $$(".pill", yp).forEach((b, i) => b.classList.toggle(
+        "is-active", i === 0 ? all : !all && pState.years.has(+b.textContent)));
+    }
+
+    const pp = $("#projPosPills");
+    POS_GROUPS.forEach(pg => {
+      const b = document.createElement("button");
+      b.className = "pill" + (pg === "ALL" ? " is-active" : "");
+      b.textContent = pg;
+      b.addEventListener("click", () => {
+        pState.pos = pg;
+        $$(".pill", pp).forEach(x => x.classList.toggle("is-active", x.textContent === pg));
+        renderProj();
+      });
+      pp.appendChild(b);
+    });
+
+    $("#projRound").addEventListener("change", e => {
+      pState.round = e.target.value; renderProj();
+    });
+    let pTimer;
+    $("#projSearch").addEventListener("input", e => {
+      clearTimeout(pTimer);
+      pTimer = setTimeout(() => {
+        pState.q = e.target.value.trim().toLowerCase(); renderProj();
+      }, 120);
+    });
+  }
+
+  function renderProj() {
+    if (!projHead) return;
+    const rows = projRows();
+
+    $$("th", projHead).forEach((th, i) => {
+      const k = P_COLS[i].sortKey || P_COLS[i].key;
+      th.classList.toggle("sorted", k === pState.sort);
+      const a = th.querySelector(".arrow");
+      if (a) a.remove();
+      if (k === pState.sort) {
+        const s = document.createElement("span");
+        s.className = "arrow";
+        s.textContent = pState.dir === -1 ? "▼" : "▲";
+        th.appendChild(s);
+      }
+    });
+
+    $("#projBody").innerHTML = rows.slice(0, 500).map(p => {
+      const g = gapOf(p);
+      // A player with no workout on record scores low pre-draft because the
+      // block carrying the model's edge is simply absent, which inflates his
+      // gap. Untested players average +5.7 against −0.9 for tested ones and are
+      // three times over-represented at the top of this column, so the cell says
+      // so rather than letting the number be read as disagreement.
+      const untested = p.ras == null;
+      const gapCell = (g == null ? '<span class="delta-flat">–</span>'
+        : g > 8 ? '<span class="delta-up">▲ ' + g.toFixed(1) + "</span>"
+        : g < -8 ? '<span class="delta-down">▼ ' + Math.abs(g).toFixed(1) + "</span>"
+        : '<span class="delta-flat">' + (g >= 0 ? "+" : "−") + Math.abs(g).toFixed(1) + "</span>")
+        + (untested && g != null
+          ? ' <span class="untested" title="no combine or pro-day workout on record — the pre-draft score is low partly because the data is missing, so this gap is inflated">no test</span>'
+          : "");
+      const meta = [p.cl, p.tm].filter(Boolean).join(" · ");
+      return "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
+        '<td class="num">' + p.yr + "</td>" +
+        '<td class="num">' + (p.pk ?? "–") + "</td>" +
+        '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
+          '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
+        '<td><span class="pos-chip">' + p.pg + "</span></td>" +
+        '<td class="num"><span class="score-num">' + fmt1(p.apex) + "</span></td>" +
+        '<td class="num"><span class="score-num dim">' + fmt1(p.qapex) + "</span></td>" +
+        '<td class="num">' + gapCell + "</td>" +
+        '<td class="num prob">' + pct(p.ph) + "</td>" +
+        '<td class="num">' + riskCell(p.pbu) + "</td>" +
+        '<td class="num prob">' + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
+        '<td>' + outcomeCell(p) + "</td></tr>";
+    }).join("");
+
+    $$("tr[data-id]", $("#projBody")).forEach(tr => tr.addEventListener("click", () => {
+      const [yr, pk] = tr.dataset.id.split(":").map(Number);
+      const pl = D.players.find(x => x.yr === yr && x.pk === pk);
+      if (pl) openModal(pl);
+    }));
+
+    // tiles describe the current filter, not the whole file
+    const withGap = rows.filter(p => gapOf(p) != null);
+    const meanGap = withGap.length
+      ? withGap.reduce((s, p) => s + gapOf(p), 0) / withGap.length : null;
+    const over = withGap.slice().sort((a, b) => gapOf(b) - gapOf(a))[0];
+    const under = withGap.slice().sort((a, b) => gapOf(a) - gapOf(b))[0];
+    $("#projTiles").innerHTML =
+      tile("Players shown", rows.length,
+           pState.years.size === PROJ_YEARS.length
+             ? PROJ_YEARS[0] + "–" + PROJ_YEARS[PROJ_YEARS.length - 1] + ", never seen in training"
+             : [...pState.years].join(", ") + " class") +
+      tile("Median APEX", fmt1(median(rows.map(p => p.apex))), "on the 0–100 scale") +
+      tile("Biggest draft-day premium", over ? esc(over.nm) : "–",
+           over ? over.pg + " · " + fmt1(gapOf(over)) + " above his pre-draft score" : "") +
+      tile("Biggest fall", under ? esc(under.nm) : "–",
+           under ? under.pg + " · " + fmt1(-gapOf(under)) + " below his pre-draft score" : "");
+
+    $("#projNote").innerHTML =
+      "Showing " + Math.min(rows.length, 500) + " of " + rows.length + " players. " +
+      "<strong>Gap</strong> is APEX minus the pre-draft score" +
+      (meanGap != null ? ", averaging " + (meanGap >= 0 ? "+" : "−") +
+        Math.abs(meanGap).toFixed(1) + " across this selection" : "") +
+      ". A positive gap means the draft rated a player above what his own testing and production " +
+      "support; it is not a claim that either number is right. <strong>Read the gap with the " +
+      "&ldquo;no test&rdquo; tag in mind</strong>: a player with no workout on record scores low " +
+      "pre-draft partly because the athletic block the model leans on is missing, not because the " +
+      "model dislikes him. Untested players average a +5.7 gap against −0.9 for tested ones, and " +
+      "make up about 45% of the largest gaps while being 16% of the field. " +
+      "<strong>So far</strong> shows career value to date, which for the newest class is nothing " +
+      "yet — these are the classes the model is being judged on, not the ones it learned from.";
+  }
+
+  function median(a) {
+    const v = a.filter(x => x != null).sort((x, y) => x - y);
+    if (!v.length) return null;
+    const m = v.length >> 1;
+    return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  }
+
   /* ---------- watchlist ----------
      A production board, not a projection. Ranked on what a player did in 2025;
      no APEX score, because these players have neither athletic testing nor a
@@ -939,6 +1144,7 @@
   /* ---------- boot ---------- */
   $("#genDate").textContent = "generated " + D.generated;
   renderBoard();
+  renderProj();
   renderInsights();
   renderMethod();
   renderCharts();

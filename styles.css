@@ -328,8 +328,11 @@ td.num, th.num { text-align: right; }
   /* four tab labels plus the brand do not fit 390px, and the overflow scrolled the
      whole page sideways. Give the tabs their own row instead of a swipe. */
   .topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
-  .tabs { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
-  .tab { padding: 8px 6px; font-size: 13px; white-space: nowrap; }
+  /* five labels no longer fit one 390px row, so the strip wraps rather than
+     pushing the whole page sideways again */
+  .tabs { order: 3; width: 100%; margin-left: 0; justify-content: center;
+          flex-wrap: wrap; gap: 2px 4px; }
+  .tab { padding: 7px 8px; font-size: 12.5px; white-space: nowrap; }
   .theme-toggle { margin-left: auto; }
   main { padding: 14px 14px 40px; }
   .story-prob { display: none; }
@@ -455,6 +458,13 @@ td.num, th.num { text-align: right; }
 :root[data-theme="dark"] .tier-row.t2 .tier-name { color: #38bdf8; }
 :root[data-theme="dark"] .tier-row.t3 .tier-name { color: #fbbf24; }
 :root[data-theme="dark"] .tier-row.t4 .tier-name { color: #a8a29e; }
+/* the pre-draft score sits beside APEX and must read as the secondary of the
+   two, or the eye treats a withheld-pick number as the headline */
+.score-num.dim { color: var(--ink-2); font-weight: 600; }
+.untested { font: 600 9.5px/1.6 system-ui, sans-serif; text-transform: uppercase;
+            letter-spacing: .04em; color: var(--muted); border: 1px solid var(--border);
+            border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+#projTable { min-width: 1040px; }
 .of-pool { color: var(--muted); font-weight: 400; }
 /* The shrinkage formula: set apart so it reads as a definition, not a sentence.
    It wraps rather than scrolls — a formula clipped at the edge of a phone reads
