@@ -668,9 +668,9 @@
         ? '<div class="modal-score"><span class="hero">' + Math.round(p.nfl * 100) + "%</span>" +
           '<span class="hero-lbl">to reach an NFL roster' +
           (p.drf != null ? " · " + Math.round(p.drf * 100) + "% to be drafted" : "") + "</span></div>"
-        : '<div class="warn-band" style="margin:12px 0"><strong>No projection for this position.</strong> ' +
-          'This dataset has no historical college grading for the offensive line, so there is nothing ' +
-          'to train on and no probability is shown. His tier comes from production alone.</div>') +
+        : '<div class="warn-band" style="margin:12px 0"><strong>No projection for this player.</strong> ' +
+          'The model has no historical grading it can train on for his position, so no probability ' +
+          'is shown and his tier comes from production alone.</div>') +
       '<div class="modal-grid">' +
       facts.map(([k, v]) => '<div class="fact"><div class="fact-k">' + k +
         '</div><div class="fact-v">' + v + "</div></div>").join("") +
@@ -1394,8 +1394,7 @@
       $("#watchNote").innerHTML =
         "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
         W.n + " on the full list). <strong>Reaches NFL</strong> and <strong>Drafted</strong> are " +
-        "modelled probabilities, calibrated so they can be read literally; they are blank for " +
-        "offensive linemen, who have no historical college grading in this dataset. " +
+        "modelled probabilities, calibrated so they can be read literally. " +
         "<strong>Grade percentile is within position and adjusted for " +
         "volume</strong>: a grade earned on 60 snaps is a claim about 60 snaps, so it is pulled " +
         "back toward the position average, while one earned across a season is left alone. That " +
