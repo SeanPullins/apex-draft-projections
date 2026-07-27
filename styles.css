@@ -624,3 +624,7 @@ td.num, th.num { text-align: right; }
            border-left: 3px solid var(--good);
            background: color-mix(in srgb, var(--good) 7%, transparent); }
 .mk-band strong { color: var(--good-text); }
+
+/* not-applicable cell: the measurement exists only at one position, and a blank
+   says that where a zero would read as a bad score */
+.na { color: var(--ink-3); }

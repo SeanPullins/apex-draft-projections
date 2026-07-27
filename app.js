@@ -111,6 +111,15 @@
   });
 
   /* ---------- board table ---------- */
+  // Quarterbacks only. Off the position the measurement does not exist, and a
+  // blank is the honest cell -- a 0 would read as a terrible score rather than
+  // as "not applicable here".
+  const holdCell = p => (p.qbp == null
+    ? '<span class="na" title="only measured for quarterbacks">–</span>'
+    // "p93", matching the percentile convention the rest of the site uses. The
+    // first version wrote an ordinal suffix and produced "93th".
+    : '<b>p' + Math.round(p.qbp) + "</b>");
+
   const COLS = [
     { key: "rk", label: "APEX RK", num: true },
     { key: "pk", label: "Pick", num: true },
@@ -121,6 +130,9 @@
     { key: "ps", label: "Starter", num: true },
     { key: "pbu", label: "Bust risk", num: true },
     { key: "ras", label: "RAS", num: true },
+    // quarterbacks only; blank for everyone else, since the measurement does not
+    // exist off the position and a zero would read as a bad score
+    { key: "qbp", label: "Stands in", num: true, qbOnly: true },
     { key: "vd", label: "Value", num: true },
     { key: "out", label: "Outcome", sortKey: "wav" },
   ];
@@ -309,6 +321,7 @@
         '<td class="num c-pbu">' + riskCell(p[L.bust]) + "</td>" +
         '<td class="num prob c-ras"' + (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") +
           ">" + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
+        '<td class="num c-qbp">' + holdCell(p) + "</td>" +
         '<td class="num c-vd">' + vd + "</td>" +
         '<td class="c-out">' + outcomeCell(p) + "</td></tr>";
     }).join("");
@@ -1222,6 +1235,7 @@
     { key: "ph", label: "Hit", num: true },
     { key: "pbu", label: "Bust risk", num: true },
     { key: "ras", label: "RAS", num: true },
+    { key: "qbp", label: "Stands in", num: true, qbOnly: true },
     { key: "out", label: "So far", sortKey: "wav" },
   ];
 
@@ -1358,6 +1372,7 @@
         '<td class="num prob">' + pct(p.ph) + "</td>" +
         '<td class="num">' + riskCell(p.pbu) + "</td>" +
         '<td class="num prob">' + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
+        '<td class="num">' + holdCell(p) + "</td>" +
         '<td>' + outcomeCell(p) + "</td></tr>";
     }).join("");
 
@@ -1569,6 +1584,7 @@
           '<td class="num prob">' + (p.drf != null ? Math.round(p.drf * 100) + "%" : "–") + "</td>" +
           '<td class="num prob">' + p.r + '<span class="of-pool"> / ' + p.pn + "</span></td>" +
           '<td class="num prob">p' + p.p + "</td>" +
+          '<td class="num">' + holdCell(p) + "</td>" +
           '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
           '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>";
       }).join("");
