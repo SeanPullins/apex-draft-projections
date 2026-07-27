@@ -425,7 +425,7 @@ td.num, th.num { text-align: right; }
          text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .sig .fine { margin: 0 0 10px; }
 .sig-list { list-style: none; margin: 0; padding: 0; }
-.sig-row { display: grid; grid-template-columns: 1fr 90px 38px 34px;
+.sig-row { display: grid; grid-template-columns: 1fr 78px auto auto;
            align-items: center; gap: 10px; padding: 5px 0; font-size: 13.5px; }
 .sig-label { display: flex; flex-direction: column; line-height: 1.25; }
 .sig-note { color: var(--muted); font-size: 11.5px; }
@@ -443,8 +443,8 @@ td.num, th.num { text-align: right; }
 .sig-val.sg-mid { background: none; }
 .sig-val.sg-lo { background: none; }
 @media (max-width: 520px) {
-  .sig-row { grid-template-columns: 1fr 60px 34px; }
-  .sig-auc { display: none; }
+  .sig-row { grid-template-columns: 1fr auto auto; }
+  .sig-track { display: none; }
 }
 
 /* ---------- historical comparables on the player card ----------
@@ -597,3 +597,12 @@ td.num, th.num { text-align: right; }
            text-transform: uppercase; color: var(--muted);
            background: var(--chip); border-radius: 999px; padding: 1px 6px;
            vertical-align: 1px; }
+
+/* strength in words: a reader should not need to know what an AUC is */
+.sig-str { font-size: 11px; font-weight: 700; letter-spacing: .03em;
+           text-transform: uppercase; text-align: right; white-space: nowrap; }
+.sg-strong { color: var(--good-text); }
+.sg-useful { color: var(--series-1); }
+.sg-slight { color: var(--ink-3); }
+.sig-val { font-weight: 400; color: var(--ink-2); font-size: 12.5px; }
+.sig-val b { font-weight: 700; color: var(--ink-1); }

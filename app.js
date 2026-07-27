@@ -619,50 +619,49 @@
           '<p class="fine">' + why + "</p></div>"
         : "";
     }
+    // Plain words, not statistics. A reader should not have to know what a
+    // percentile or an AUC is to use this panel: the first says how he compares,
+    // the second says how much that comparison is worth. The numbers stay in the
+    // tooltip for anyone who wants them.
+    const strength = a => (a >= 0.70 ? ["strong", "sg-strong"]
+                        : a >= 0.62 ? ["useful", "sg-useful"]
+                        : ["slight", "sg-slight"]);
+    // "better than 100%" is not a thing anyone can be. At the ends of the scale
+    // the honest phrasing is that he beat everybody, or nobody.
+    const compareWord = v => {
+      const n = Math.round(v);
+      if (n >= 100) return "<b>best</b> of any of them";
+      if (n <= 0) return "<b>last</b> of any of them";
+      return "better than <b>" + n + "%</b>";
+    };
     const rows = p.sig.map(s => {
       const band = s.p >= 75 ? "sg-hi" : s.p >= 40 ? "sg-mid" : "sg-lo";
+      const [word, wcls] = strength(s.auc);
       return '<li class="sig-row">' +
         '<span class="sig-label">' + esc(s.l) +
           (FAMILY_TAG[s.f] ? ' <span class="sig-fam">' + FAMILY_TAG[s.f] + "</span>" : "") +
           (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") + "</span>" +
-        '<span class="sig-track"><span class="sig-fill ' + band +
-          '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
-        '<span class="sig-val ' + band + '">p' + Math.round(s.p) + "</span>" +
-        '<span class="sig-auc" title="AUC separating hits from misses at this position">' +
-          s.auc.toFixed(2) + "</span></li>";
+        '<span class="sig-track" title="' + Math.round(s.p) + 'th percentile"><span class="sig-fill ' +
+          band + '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
+        '<span class="sig-val">' + compareWord(s.p) + "</span>" +
+        '<span class="sig-str ' + wcls + '" title="AUC ' + s.auc.toFixed(2) +
+          ' — 0.50 would be a coin flip">' + word + "</span></li>";
     }).join("");
-    // A watchlist player has no pick, so the draft-slot comparison that gives the
-    // AUC column its scale on the board is meaningless on his card — he has not
-    // been drafted. Say what the number is instead of quoting a slot he lacks.
+
     const drafted = p.pk != null;
-    const slot = D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : null;
-    const anyGrade = p.sig.some(s => s.f === "PFF");
-    // What the bar means. A percentile against *drafted* players is a harder
-    // scale than it looks: p50 is the median man who got picked, not the median
-    // prospect, so a college player scoring p30 is not a bad player.
-    const lead = "<b>The bar</b> is where he ranks among drafted " + p.pg +
-      "s since 2014. p50 is the median player who was actually drafted at his " +
-      "position — not the median prospect — so the middle of this scale is " +
-      "already a real player.";
-    // What a PFF grade is. Nobody can read "coverage grade 0.68" without it.
-    const gradeNote = anyGrade
-      ? " <b>PFF grades</b> score every player on every snap and roll the season " +
-        "into one number, so they measure how he played rather than how much."
-      : "";
-    // What the trailing figure is.
-    const aucNote = " <b>The trailing figure</b> is how well that one measurement " +
-      "sorted hits from misses on its own, where 0.50 is a coin flip and 1.00 is " +
-      "perfect" +
-      (drafted && slot
-        ? " — his draft slot alone manages " + slot + " at this position, which is "
-          + "why none of these is a substitute for where he went."
-        : ". He has not been drafted, so there is no slot to compare against.");
+    const who = "drafted " + p.pg + "s since 2014";
     return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
-      '<p class="fine">' + lead + gradeNote + aucNote + "</p>" +
+      '<p class="fine">Of everything we can measure about a ' + p.pg +
+      ", these are the only things that told us in advance who would make it. " +
+      "Each bar compares him with " + who + " — so half of them sit below the " +
+      "middle, and those are all players good enough to be picked." +
+      (drafted ? "" : " He has not been drafted yet, so he is being held to the " +
+                      "standard of players who were.") + "</p>" +
       '<ul class="sig-list">' + rows + "</ul>" +
-      '<p class="fine">These are the measurements that separated hits from misses ' +
-      'at this position and survived being checked against chance. Everything else ' +
-      'the data carries did not.</p></div>';
+      '<p class="fine"><b>Strong</b>, <b>useful</b> and <b>slight</b> say how much ' +
+      "each one has actually been worth for picking out the players who lasted. " +
+      "Even a strong one is only part of the picture — where a player gets drafted " +
+      "still tells you more than any of these." + "</p></div>";
   }
 
   /* ---------- historical comparables ----------
