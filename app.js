@@ -591,21 +591,24 @@
      signal was under that. Receivers and tight ends produced nothing that
      cleared, and the card says so instead of showing them a number. */
   const POS_NO_SIGNAL = {
-    WR: "335 measurements were screened for receivers and none separated hits " +
-        "from misses by more than chance does at this sample size. The deep and " +
-        "slot splits that looked strongest were the kind of thing hundreds of " +
-        "correlated columns throw up on their own.",
-    TE: "307 measurements were screened for tight ends and none survived. The " +
-        "strongest candidate showed up on one side of the field and not the " +
-        "mirrored other, which is a small sample cut many ways rather than a " +
-        "finding.",
+    WR: "359 measurements were screened for receivers — grades, athletic " +
+        "testing and college production — and not one separated hits from " +
+        "misses by more than chance does at this sample size. The deep and slot " +
+        "splits that looked strongest were the kind of thing hundreds of " +
+        "correlated columns throw up on their own. Receivers are the position " +
+        "this model has least to say about beyond where they were drafted.",
+    TE: "331 measurements were screened for tight ends across grades, testing " +
+        "and production, and none survived. The strongest candidate showed up " +
+        "on one side of the field and not the mirrored other, which is a small " +
+        "sample cut many ways rather than a finding.",
     QB: "One measurement cleared the screen for quarterbacks — how he grades " +
         "holding the ball past 2.5 seconds — but it is recorded for only five " +
         "of the thirteen draft classes and almost none of the recent ones, so " +
         "it cannot be computed for current prospects and its evidence came from " +
         "too narrow a slice of years to lean on. Nothing else separated hits by " +
-        "more than chance does across 587 columns and 93 quarterbacks.",
+        "more than chance does across 608 columns and 93 quarterbacks.",
   };
+  const FAMILY_TAG = { Athletic: "testing", Production: "college production" };
 
   function signalsPanel(p) {
     if (!p.sig || !p.sig.length) {
@@ -619,6 +622,7 @@
       const band = s.p >= 75 ? "sg-hi" : s.p >= 40 ? "sg-mid" : "sg-lo";
       return '<li class="sig-row">' +
         '<span class="sig-label">' + esc(s.l) +
+          (FAMILY_TAG[s.f] ? ' <span class="sig-fam">' + FAMILY_TAG[s.f] + "</span>" : "") +
           (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") + "</span>" +
         '<span class="sig-track"><span class="sig-fill ' + band +
           '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
@@ -806,6 +810,10 @@
         ? '<div class="gap-story"><p><strong>Why he sits here.</strong></p><ul class="gap-why"><li>' +
           why.join("</li><li>") + "</li></ul></div>"
         : "") +
+      // The same panel the drafted board shows, and deliberately the same
+      // ruler: his percentile is against drafted players since 2014, not
+      // against the college pool, so a number here means what it means there.
+      signalsPanel(p) +
       levers +
       (has
         ? '<p class="fine" style="margin-top:12px">This is a projection of whether he <em>arrives</em> ' +
