@@ -613,3 +613,14 @@ td.num, th.num { text-align: right; }
 .sig-why { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45;
            color: var(--ink-2); border-left: 2px solid var(--series-1);
            padding-left: 8px; }
+
+/* players who clear every marker that predicts at their position */
+.mk-tag { display: inline-block; font-size: 10.5px; font-weight: 700;
+          letter-spacing: .03em; text-transform: uppercase; padding: 1px 7px;
+          border-radius: 999px; vertical-align: 1px; white-space: nowrap;
+          background: color-mix(in srgb, var(--good) 16%, transparent);
+          color: var(--good-text); }
+.mk-band { margin: 12px 0; padding: 12px 14px; border-radius: 0 8px 8px 0;
+           border-left: 3px solid var(--good);
+           background: color-mix(in srgb, var(--good) 7%, transparent); }
+.mk-band strong { color: var(--good-text); }

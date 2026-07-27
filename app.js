@@ -845,6 +845,19 @@
       // The same panel the drafted board shows, and deliberately the same
       // ruler: his percentile is against drafted players since 2014, not
       // against the college pool, so a number here means what it means there.
+      // What the badge is worth, in the terms the watchlist is actually about:
+      // reaching a roster and being drafted, measured on college players rather
+      // than borrowed from a drafted population this player is not in.
+      (p.mk
+        ? '<div class="mk-band"><strong>Hits every marker at his position.</strong> ' +
+          "He is top 30% among college " + p.pg + "s on each measurement that " +
+          "predicted success. Of the " + p.mk.n.toLocaleString() + " college " +
+          p.pg + "s since 2014 who did the same, <b>" + Math.round(p.mk.nfl * 100) +
+          "%</b> reached an NFL roster against <b>" + Math.round(p.mk.base * 100) +
+          "%</b> of all of them, and " + Math.round(p.mk.drf * 100) + "% were " +
+          "drafted against " + Math.round(p.mk.dbase * 100) + "%. That is a " +
+          "record for players who looked like this, not a forecast for him.</div>"
+        : "") +
       signalsPanel(p) +
       levers +
       (has
@@ -1399,7 +1412,7 @@
      draft slot -- the two inputs the projection actually leans on. */
   const W = window.APEX_WATCH;
   if (W) {
-    const wState = { pos: "ALL", q: "", tier: 0, hideThin: false };
+    const wState = { pos: "ALL", q: "", tier: 0, hideThin: false, markers: false };
     const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
     const TIER_SUB = {
       1: "85%+ likely to reach an NFL roster",
@@ -1505,6 +1518,9 @@
     $("#watchThin").addEventListener("change", e => {
       wState.hideThin = e.target.checked; renderWatch();
     });
+    $("#watchMarkers").addEventListener("change", e => {
+      wState.markers = e.target.checked; renderWatch();
+    });
     let wTimer;
     $("#watchSearch").addEventListener("input", e => {
       clearTimeout(wTimer);
@@ -1516,6 +1532,7 @@
       if (wState.pos !== "ALL") rows = rows.filter(p => p.pg === wState.pos);
       if (wState.tier) rows = rows.filter(p => p.t === wState.tier);
       if (wState.hideThin) rows = rows.filter(p => !p.thin);
+      if (wState.markers) rows = rows.filter(p => p.mk);
       if (wState.q) rows = rows.filter(p =>
         (p.nm || "").toLowerCase().includes(wState.q) ||
         (p.tm || "").toLowerCase().includes(wState.q));
@@ -1540,6 +1557,9 @@
         n++;
         return sep + "<tr class='clickable' data-w='" + shown.push(p) + "'><td class='num'>" + n + "</td>" +
           '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
+          (p.mk ? ' <span class="mk-tag" title="Top 30% at his position on every measurement that predicts. ' +
+                  Math.round(p.mk.nfl * 100) + '% of college players who did this reached an NFL roster, against ' +
+                  Math.round(p.mk.base * 100) + '% overall.">hits the markers</span>' : "") +
           (p.thin ? ' <span class="thin-tag" title="few snaps or games — the grade is a small sample">thin sample</span>' : "") +
           "</div></td>" +
           "<td>" + esc(p.tm) + "</td>" +
