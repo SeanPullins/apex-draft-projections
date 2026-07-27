@@ -635,20 +635,34 @@
     // AUC column its scale on the board is meaningless on his card — he has not
     // been drafted. Say what the number is instead of quoting a slot he lacks.
     const drafted = p.pk != null;
-    const scale = drafted
-      ? "separates hits from misses on its own — for scale, his draft slot alone " +
-        "does that at " +
-        (D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : "—") + "."
-      : "separated hits from misses among drafted players at his position, where " +
-        "0.50 is a coin flip. He has not been drafted, so there is no slot to " +
-        "compare it against.";
+    const slot = D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : null;
+    const anyGrade = p.sig.some(s => s.f === "PFF");
+    // What the bar means. A percentile against *drafted* players is a harder
+    // scale than it looks: p50 is the median man who got picked, not the median
+    // prospect, so a college player scoring p30 is not a bad player.
+    const lead = "<b>The bar</b> is where he ranks among drafted " + p.pg +
+      "s since 2014. p50 is the median player who was actually drafted at his " +
+      "position — not the median prospect — so the middle of this scale is " +
+      "already a real player.";
+    // What a PFF grade is. Nobody can read "coverage grade 0.68" without it.
+    const gradeNote = anyGrade
+      ? " <b>PFF grades</b> score every player on every snap and roll the season " +
+        "into one number, so they measure how he played rather than how much."
+      : "";
+    // What the trailing figure is.
+    const aucNote = " <b>The trailing figure</b> is how well that one measurement " +
+      "sorted hits from misses on its own, where 0.50 is a coin flip and 1.00 is " +
+      "perfect" +
+      (drafted && slot
+        ? " — his draft slot alone manages " + slot + " at this position, which is "
+          + "why none of these is a substitute for where he went."
+        : ". He has not been drafted, so there is no slot to compare against.");
     return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
-      '<p class="fine">Percentile among drafted ' + p.pg + "s since 2014 on the " +
-      "measurements that hold up — found by screening every column at the position, " +
-      "except at quarterback where the one that holds up was tested on its own " +
-      "terms rather than found by search. The last column is how well each one " +
-      scale + "</p>" +
-      '<ul class="sig-list">' + rows + "</ul></div>";
+      '<p class="fine">' + lead + gradeNote + aucNote + "</p>" +
+      '<ul class="sig-list">' + rows + "</ul>" +
+      '<p class="fine">These are the measurements that separated hits from misses ' +
+      'at this position and survived being checked against chance. Everything else ' +
+      'the data carries did not.</p></div>';
   }
 
   /* ---------- historical comparables ----------
