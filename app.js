@@ -601,12 +601,13 @@
         "and production, and none survived. The strongest candidate showed up " +
         "on one side of the field and not the mirrored other, which is a small " +
         "sample cut many ways rather than a finding.",
-    QB: "One measurement cleared the screen for quarterbacks — how he grades " +
-        "holding the ball past 2.5 seconds — but it is recorded for only five " +
-        "of the thirteen draft classes and almost none of the recent ones, so " +
-        "it cannot be computed for current prospects and its evidence came from " +
-        "too narrow a slice of years to lean on. Nothing else separated hits by " +
-        "more than chance does across 608 columns and 93 quarterbacks.",
+    // Shown only to quarterbacks the measurement is missing for; the rest get
+    // the panel. It is a different statement from the receiver and tight end
+    // notes, which say nothing was found at all.
+    QB: "The one quarterback measurement that holds up — how much longer he " +
+        "holds the ball under pressure than in a clean pocket — is not recorded " +
+        "for him. Nothing else separated hits by more than chance does across " +
+        "608 columns and 93 quarterbacks, so there is nothing to show in its place.",
   };
   const FAMILY_TAG = { Athletic: "testing", Production: "college production" };
 
@@ -632,7 +633,9 @@
     }).join("");
     return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
       '<p class="fine">Percentile among drafted ' + p.pg + "s since 2014 on the " +
-      "measurements that survived the screen. The last column is how well each one " +
+      "measurements that hold up — found by screening every column at the position, " +
+      "except at quarterback where the one that holds up was tested on its own " +
+      "terms rather than found by search. The last column is how well each one " +
       "separates hits from misses on its own — for scale, his draft slot alone " +
       "does that at " + (D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : "—") +
       ".</p>" +
