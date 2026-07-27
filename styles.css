@@ -606,3 +606,10 @@ td.num, th.num { text-align: right; }
 .sg-slight { color: var(--ink-3); }
 .sig-val { font-weight: 400; color: var(--ink-2); font-size: 12.5px; }
 .sig-val b { font-weight: 700; color: var(--ink-1); }
+
+/* why a counterintuitive signal points the way it does — without this, a card
+   that says a quarterback leads the league at holding the ball has told a
+   casual reader he has a flaw */
+.sig-why { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45;
+           color: var(--ink-2); border-left: 2px solid var(--series-1);
+           padding-left: 8px; }

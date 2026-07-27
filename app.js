@@ -626,12 +626,17 @@
     const strength = a => (a >= 0.70 ? ["strong", "sg-strong"]
                         : a >= 0.62 ? ["useful", "sg-useful"]
                         : ["slight", "sg-slight"]);
-    // "better than 100%" is not a thing anyone can be. At the ends of the scale
-    // the honest phrasing is that he beat everybody, or nobody.
+    // Two traps at the ends of this scale. "Better than 100%" is impossible, and
+    // "best of any of them" -- which replaced it -- reads as a claim of being
+    // number one when it is not: the comparison is against a fixed group of past
+    // drafted players, so any number of current prospects can clear all of them
+    // at once. Roughly one row in three hundred does, which is rare overall and
+    // common at the top of the board, exactly where people look. Capping with a
+    // "+" keeps it true and takes the uniqueness out of it.
     const compareWord = v => {
       const n = Math.round(v);
-      if (n >= 100) return "<b>best</b> of any of them";
-      if (n <= 0) return "<b>last</b> of any of them";
+      if (n >= 100) return "better than <b>99%+</b>";
+      if (n <= 0) return "better than <b>under 1%</b>";
       return "better than <b>" + n + "%</b>";
     };
     const rows = p.sig.map(s => {
@@ -640,7 +645,8 @@
       return '<li class="sig-row">' +
         '<span class="sig-label">' + esc(s.l) +
           (FAMILY_TAG[s.f] ? ' <span class="sig-fam">' + FAMILY_TAG[s.f] + "</span>" : "") +
-          (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") + "</span>" +
+          (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") +
+          (s.w ? '<span class="sig-why">' + esc(s.w) + "</span>" : "") + "</span>" +
         '<span class="sig-track" title="' + Math.round(s.p) + 'th percentile"><span class="sig-fill ' +
           band + '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
         '<span class="sig-val">' + compareWord(s.p) + "</span>" +
@@ -652,7 +658,8 @@
     const who = "drafted " + p.pg + "s since 2014";
     return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
       '<p class="fine">Of everything we can measure about a ' + p.pg +
-      ", these are the only things that told us in advance who would make it. " +
+      ", " + (p.sig.length === 1 ? "this is the only thing" : "these are the only things") +
+      " that told us in advance who would make it. " +
       "Each bar compares him with " + who + " — so half of them sit below the " +
       "middle, and those are all players good enough to be picked." +
       (drafted ? "" : " He has not been drafted yet, so he is being held to the " +
