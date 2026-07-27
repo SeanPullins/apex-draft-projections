@@ -631,14 +631,23 @@
         '<span class="sig-auc" title="AUC separating hits from misses at this position">' +
           s.auc.toFixed(2) + "</span></li>";
     }).join("");
+    // A watchlist player has no pick, so the draft-slot comparison that gives the
+    // AUC column its scale on the board is meaningless on his card — he has not
+    // been drafted. Say what the number is instead of quoting a slot he lacks.
+    const drafted = p.pk != null;
+    const scale = drafted
+      ? "separates hits from misses on its own — for scale, his draft slot alone " +
+        "does that at " +
+        (D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : "—") + "."
+      : "separated hits from misses among drafted players at his position, where " +
+        "0.50 is a coin flip. He has not been drafted, so there is no slot to " +
+        "compare it against.";
     return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
       '<p class="fine">Percentile among drafted ' + p.pg + "s since 2014 on the " +
       "measurements that hold up — found by screening every column at the position, " +
       "except at quarterback where the one that holds up was tested on its own " +
       "terms rather than found by search. The last column is how well each one " +
-      "separates hits from misses on its own — for scale, his draft slot alone " +
-      "does that at " + (D.sigSlot && D.sigSlot[p.pg] ? D.sigSlot[p.pg].toFixed(2) : "—") +
-      ".</p>" +
+      scale + "</p>" +
       '<ul class="sig-list">' + rows + "</ul></div>";
   }
 
