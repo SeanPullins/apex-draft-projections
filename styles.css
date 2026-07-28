@@ -662,3 +662,11 @@ td.num, th.num { text-align: right; }
 .film-dn::before { content: "\2212"; color: var(--bad-text, #b55); }
 .film-note { margin: 8px 0 0; font-size: 11.5px; line-height: 1.5;
              color: var(--muted); }
+/* Film label. Same neutral grey as the film panel it points at, deliberately
+   not the good/bad palette the marker badge uses: having film charted is not a
+   verdict on the player, it is a statement about what the card contains. */
+.film-tag { font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+            text-transform: uppercase; padding: 1px 6px; margin-left: 4px;
+            border-radius: 999px; vertical-align: 1px; white-space: nowrap;
+            background: color-mix(in srgb, var(--ink-3, #888) 20%, transparent);
+            color: var(--ink-2, inherit); cursor: help; }

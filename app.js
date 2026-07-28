@@ -310,7 +310,7 @@
       return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
         '<td class="num c-rk">' + (pre ? preRank : (p.rk ?? "–")) + "</td>" +
         '<td class="num c-pk">' + (p.pk ?? "–") + "</td>" +
-        '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
+        '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + filmTag(p) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
         '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>" +
         '<td class="c-apex"' + (!pre && p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
           '><div class="score-cell"><span class="score-num">' + fmt1(score) + '</span>' +
@@ -706,6 +706,18 @@
   // this site and attributed on its face. It is the only panel on a card that
   // was not screened against an outcome, and a reader weighing a scouting note
   // is entitled to know a model wrote it.
+  // One definition for all three tables. The label says a card carries charted
+  // film and who charted it; it deliberately claims nothing about whether the
+  // player is good, because the notes underneath are judgement rather than a
+  // measurement and a tag that implied a verdict would misread them.
+  function filmTag(p) {
+    if (!p.film) return "";
+    const who = p.film.by || "film";
+    return ' <span class="film-tag" title="' + esc(who) +
+      " charted this player from all-22 cutups — open the card for the notes. " +
+      'Judgement, not a measurement: it feeds no score on this site.">film</span>';
+  }
+
   function filmPanel(p) {
     const f = p.film;
     if (!f) return "";
@@ -1404,7 +1416,7 @@
       return "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
         '<td class="num">' + p.yr + "</td>" +
         '<td class="num">' + (p.pk ?? "–") + "</td>" +
-        '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
+        '<td class="player-cell"><div class="player-name">' + esc(p.nm) + filmTag(p) +
           '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
         '<td><span class="pos-chip">' + p.pg + "</span></td>" +
         '<td class="num"><span class="score-num">' + fmt1(p.apex) + "</span></td>" +
@@ -1708,6 +1720,7 @@
           (p.mk ? ' <span class="mk-tag" title="His weakest measurement is still top 5% at his position. ' +
                   Math.round(p.mk.nfl * 100) + '% of college players who did this reached an NFL roster, against ' +
                   Math.round(p.mk.base * 100) + '% overall.">no weak spot</span>' : "") +
+          filmTag(p) +
           (p.thin ? ' <span class="thin-tag" title="few snaps or games — the grade is a small sample">thin sample</span>' : "") +
           "</div></td>" +
           "<td>" + esc(p.tm) + "</td>" +
