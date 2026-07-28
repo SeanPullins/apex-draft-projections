@@ -1157,6 +1157,10 @@
     }
 
     // what a 2026 season would be worth
+    // built up front so the card can put film high and the position
+    // evidence behind a disclosure, as the drafted card does
+    const film = filmPanel(p);
+    const sig = signalsPanel(p, true);
     let levers = "";
     if (p.cf) {
       const LBL = {
@@ -1189,8 +1193,12 @@
 
     modal.innerHTML =
       '<div class="modal-head"><div><h2 class="modal-name" id="modalName">' + esc(p.nm) + "</h2>" +
-      '<div class="modal-meta">' + p.pg + " · " + esc(p.tm) + " · 2025 season</div></div>" +
+      '<div class="modal-meta">' + p.pg + " · " + esc(p.tm) + " · 2025 season" +
+      '<span class="status-chip" title="A returning college player. This is a ' +
+      'projection of whether he reaches an NFL roster at all, not of how good he ' +
+      'would be.">current watchlist projection</span></div></div>' +
       '<button class="modal-close" aria-label="Close">✕</button></div>' +
+      '<div class="modal-body">' +
       (has
         ? '<div class="modal-score"><span class="hero">' + Math.round(p.nfl * 100) + "%</span>" +
           '<span class="hero-lbl">to reach an NFL roster' +
@@ -1212,6 +1220,7 @@
       // What the badge is worth, in the terms the watchlist is actually about:
       // reaching a roster and being drafted, measured on college players rather
       // than borrowed from a drafted population this player is not in.
+      film +
       (p.mk
         ? '<div class="mk-band"><strong>No weak spot in his measurements.</strong> ' +
           "Ranked against college " + p.pg + "s who played a full season, his " +
@@ -1235,14 +1244,17 @@
               "reads, so it mostly agrees with the number it sits beside."
             : "") + "</div>"
         : "") +
-      signalsPanel(p) +
-      filmPanel(p) +
       levers +
       (has
         ? '<p class="fine" style="margin-top:12px">This is a projection of whether he <em>arrives</em> ' +
           'in the NFL, not whether he is any good once there. Measured walk-forward at ' +
           C.auc_nfl.toFixed(3) + ' AUC across six cohorts.</p>'
-        : "");
+        : "") +
+      (sig
+        ? '<details class="card-more card-more-lg"><summary>College traits linked to ' +
+          "NFL success at this position</summary>" + sig + "</details>"
+        : "") +
+      "</div>";
     backdrop.hidden = false;
     $(".modal-close", modal).addEventListener("click", closeModal);
     $(".modal-close", modal).focus();
