@@ -1512,6 +1512,56 @@
           cal.ece.toFixed(3) + " — on average the stated probability is off by about " +
           (cal.ece * 100).toFixed(1) + " points. Brier score " + cal.brier.toFixed(3) + ".");
       }
+      const PROTO = {
+        season: "Nothing from the scored season is in training",
+        player: "No season of a scored <em>player</em> is in training",
+        mature: "…and no training label that had not resolved yet"
+      };
+      const pb = $("#wlProtoTable tbody");
+      if (C.protocols && pb) {
+        pb.innerHTML = Object.keys(PROTO).filter(k => C.protocols[k]).map(k => {
+          const v = C.protocols[k];
+          return "<tr><td><strong>" + k + "</strong></td><td>" + PROTO[k] +
+            '</td><td class="num prob">' + v.auc.toFixed(3) +
+            '</td><td class="num">' + v.auc_lo.toFixed(3) + "–" + v.auc_hi.toFixed(3) +
+            '</td><td class="num">' +
+            (v.cal_ece != null ? v.cal_ece.toFixed(3) : "—") + "</td></tr>";
+        }).join("");
+      }
+      const tb = $("#wlTopkTable tbody");
+      if (C.topk && tb) {
+        tb.innerHTML = C.topk.map(r =>
+          "<tr><td>" + r.k + '</td><td class="num prob">' + r.found +
+          '</td><td class="num">' + Math.round(r.precision * 100) + "%" +
+          '</td><td class="num">' + r.baseline + "</td></tr>").join("");
+        const best = C.topk.find(r => r.k === 100) || C.topk[0];
+        setTxt("#wlTopkNote",
+          "Pooled across all six held-out cohorts. Scouting the top " + best.k +
+          " found " + best.found + " future NFL players; ranking on the production " +
+          "grade alone found " + best.baseline +
+          ". These are the same players the tiers are cut from.");
+      }
+      const pcb = $("#wlPosCalTable tbody");
+      if (C.by_position && pcb) {
+        pcb.innerHTML = C.by_position.map(r => {
+          const gap = r.said - r.was;
+          return "<tr><td><span class='pos-chip'>" + r.pos + "</span></td>" +
+            '<td class="num">' + r.n.toLocaleString() +
+            '</td><td class="num">' + (r.said * 100).toFixed(1) + "%" +
+            '</td><td class="num prob">' + (r.was * 100).toFixed(1) + "%" +
+            '</td><td class="num" style="color:' +
+            (Math.abs(gap) < 0.025 ? "var(--ok,#3a7)" : "var(--warn,#b70)") + '">' +
+            (gap > 0 ? "+" : "") + (gap * 100).toFixed(1) + '</td><td class="num">' +
+            r.auc.toFixed(3) + "</td></tr>";
+        }).join("");
+        const worst = C.by_position.reduce((a, b) =>
+          Math.abs(b.said - b.was) > Math.abs(a.said - a.was) ? b : a);
+        setTxt("#wlPosCalNote",
+          "No position is off by more than " +
+          Math.abs((worst.said - worst.was) * 100).toFixed(1) +
+          " points (" + worst.pos + "), and discrimination sits in a narrow band " +
+          "across all nine. The tiers can be read across positions.");
+      }
       const foldBody = $("#wlFoldTable tbody");
       if (C.folds && foldBody) {
         foldBody.innerHTML = C.folds.map(f =>

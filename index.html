@@ -285,8 +285,11 @@
       <ul id="cfgTierList"></ul>
       <p>Players below the tier&nbsp;4 line are not tiered; they stay searchable but are left out of
       the tiered view. Probabilities are calibrated on out-of-fold predictions rather than on the
-      training fit, so &ldquo;70%&rdquo; is meant literally: of the players given that number in the
-      backtest, about seven in ten made it.</p>
+      training fit, so &ldquo;70%&rdquo; is close to literal: of the players given that number in the
+      backtest, roughly seven in ten made it, within about three points. These are historically
+      calibrated estimates rather than guarantees, and the most recent cohorts are not fully
+      resolved &mdash; some of the players counted as failures simply have not arrived
+      <em>yet</em>. Sections 5 to 8 are the evidence, including where it is weakest.</p>
       <p>The percentile alone could not order the list. A percentile has a hundred buckets and a
       position has hundreds of players, so the entire top of every position rounds to p100 and the
       order inside tier&nbsp;1 would be arbitrary. Each player therefore also carries his rank at his
@@ -324,7 +327,49 @@
       90% rest on a few hundred historical players, which is why the highest figure on this page is
       in the low nineties rather than the 98% an uncapped model would happily print.</p>
 
-      <h3>6. The mistake this model made, and what fixing it cost</h3>
+      <h3>6. Three ways of marking the same homework</h3>
+      <p>One protocol cannot rule out the two things a sceptic should suspect first about a model
+      trained on repeated observations of the same athlete. So here are three, hardest last.</p>
+      <div class="table-wrap"><table class="board mini" id="wlProtoTable">
+        <thead><tr><th>Protocol</th><th>What it forbids</th><th class="num">AUC</th>
+          <th class="num">95% CI</th><th class="num">Calibration error</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p><strong>Player</strong> is the check on whether the same player appeared on both sides of a
+      fold, carrying his eventual outcome with him. It comes out identical to <strong>season</strong>
+      because the folds already forbade it: training is restricted to players whose college careers
+      were <em>over</em> before the scored season, which excludes every row of anyone being scored.
+      Zero overlap in all six folds.</p>
+      <p><strong>Mature</strong> is the one that found something. A training row's inputs were always
+      knowable at the time, but its <em>label</em> was not: a player whose last college season was
+      2019 and who first turned up on a roster in 2023 was being counted as a success in the 2020
+      fold, using three years of future knowledge. Forbidding that &mdash; a row may only train once
+      its outcome had actually resolved &mdash; costs about two points of AUC. That is the honest
+      size of the effect, and it is why the number is quoted with the protocol attached.</p>
+      <p class="fine">Every interval resamples <em>players</em>, not rows. Roughly 52,000
+      player-seasons come from about 23,000 people, and treating them as 52,000 independent
+      observations would make these intervals too narrow.</p>
+
+      <h3>7. What it is worth to scout the top of the list</h3>
+      <p>AUC over tens of thousands of players is a hard number to feel. Scouting is a top-of-list
+      problem, so this is the same model measured the way it would be used: work down the ranking,
+      and count how many of the players you looked at reached the NFL.</p>
+      <div class="table-wrap"><table class="board mini" id="wlTopkTable">
+        <thead><tr><th>Scout the top</th><th class="num">Future NFL players found</th>
+          <th class="num">Hit rate</th><th class="num">Ranking on the grade alone</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="wlTopkNote"></p>
+
+      <h3>8. Does 70% mean the same thing at every position?</h3>
+      <p>Overall calibration cannot answer this. Quarterbacks could be overstated by ten points and
+      corners understated by ten and the combined table would still look immaculate. Since the tiers
+      are meant to be read across positions, the claim has to be checked position by position.</p>
+      <div class="table-wrap"><table class="board mini" id="wlPosCalTable">
+        <thead><tr><th>Position</th><th class="num">Player-seasons</th><th class="num">Said</th>
+          <th class="num">Actually</th><th class="num">Gap</th><th class="num">AUC</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="wlPosCalNote"></p>
+
+      <h3>9. The mistake this model made, and what fixing it cost</h3>
       <p>Until recently the model was trained on one row per player &mdash; his <em>last</em> college
       season, with career shape measured across the whole career. That is a sound description of a
       player who is finished. It is the wrong description of most of this list: roughly
@@ -508,7 +553,7 @@
 </footer>
 
 <script src="data.js?v=a53c33b836"></script>
-<script src="watchlist.js?v=d22ecbc874"></script>
-<script src="app.js?v=1d747d703b"></script>
+<script src="watchlist.js?v=fdbadd3fcd"></script>
+<script src="app.js?v=b5eb04f48e"></script>
 </body>
 </html>
