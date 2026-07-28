@@ -670,3 +670,6 @@ td.num, th.num { text-align: right; }
             border-radius: 999px; vertical-align: 1px; white-space: nowrap;
             background: color-mix(in srgb, var(--ink-3, #888) 20%, transparent);
             color: var(--ink-2, inherit); cursor: help; }
+.film-verdict { margin: 10px 0 0; font-size: 13px; line-height: 1.5;
+                padding-top: 8px; border-top: 1px solid var(--line);
+                font-style: italic; }

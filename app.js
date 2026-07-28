@@ -757,9 +757,13 @@
       '<p class="film-arch">' + esc(f.arch || "") +
       (f.rk ? ' <span class="film-rank">#' + f.rk + " of " + f.of +
         " for how the traits project" + (f.grp ? ", " + esc(f.grp) : "") +
-        "</span>" : "") + "</p>" +
+        "</span>"
+        : f.xpos ? ' <span class="film-rank">charted alongside ' + (f.of - 1) +
+          " players at other positions, so no ranking is shown</span>"
+        : "") + "</p>" +
       (metrics ? '<dl class="film-metrics">' + metrics + "</dl>" : "") +
       traits +
+      (f.vd ? '<p class="film-verdict">' + esc(f.vd) + "</p>" : "") +
       '<p class="film-note">' + esc(f.note || "") + "</p></div>";
   }
 
