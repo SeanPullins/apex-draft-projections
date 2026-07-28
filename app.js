@@ -756,8 +756,9 @@
       (f.by ? ' <span class="film-by">' + esc(f.by) + "</span>" : "") + "</div>" +
       '<p class="film-arch">' + esc(f.arch || "") +
       (f.rk
-        ? ' <span class="film-rank">#' + f.rk + " of " + f.of + " at his position" +
-          (f.grp ? " in " + esc(f.grp) : "") + "</span>"
+        ? ' <span class="film-rank">#' + f.rk + " of " + f.of +
+          (f.scope === "board" ? "" : " at his position") +
+          (f.grp ? " " + esc(f.grp) : "") + "</span>"
         : f.solo
           ? ' <span class="film-rank">the only one at his position in this pass, ' +
             "so no ranking is shown</span>"
