@@ -262,14 +262,87 @@ td.num, th.num { text-align: right; }
   position: fixed; inset: 0; z-index: 50;
   background: rgba(0, 0, 0, 0.45);
   display: flex; align-items: flex-start; justify-content: center;
-  padding: 6vh 16px; overflow-y: auto;
+  padding: 5vh 16px; overflow: hidden;
 }
+/* Wider and bounded, with the scroll inside the card rather than on the page.
+   The head stays put while the body moves, so the player's name and the close
+   button are reachable from anywhere in a long card. */
 .modal {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 16px; box-shadow: var(--shadow);
-  width: min(660px, 100%); padding: 24px 26px;
+  width: min(800px, 100%); max-height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.modal-head { display: flex; align-items: flex-start; gap: 14px; }
+.modal-body {
+  overflow-y: auto; padding: 0 26px 24px;
+  overscroll-behavior: contain;
+}
+.modal-head {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 22px 26px 14px; border-bottom: 1px solid var(--border);
+  background: var(--surface-1); position: sticky; top: 0; z-index: 2;
+}
+.status-chip {
+  display: inline-block; margin-left: 8px; padding: 1px 8px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  letter-spacing: .02em; white-space: nowrap; cursor: help;
+  background: color-mix(in srgb, var(--ink-3, #888) 18%, transparent);
+  color: var(--ink-2);
+}
+/* section rhythm: the card is a stack of blocks, not one column of prose */
+.card-sec { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.card-sec:first-of-type { border-top: 0; }
+.sec-h {
+  margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.card-summary {
+  margin: 14px 0 0; font-size: 15px; line-height: 1.55;
+}
+.why-list { margin: 0; padding-left: 18px; }
+.why-list li { font-size: 14px; line-height: 1.5; padding: 3px 0; }
+.prob-note { margin-top: 10px; }
+.info-dot {
+  display: inline-block; width: 13px; height: 13px; line-height: 13px;
+  margin-left: 5px; border-radius: 50%; font-size: 9px; font-weight: 700;
+  text-align: center; vertical-align: 1px; cursor: help;
+  background: color-mix(in srgb, var(--ink-3, #888) 22%, transparent);
+  color: var(--ink-2);
+}
+.prob-label { cursor: help; }
+.outcome-live { border-left-color: var(--series-2, #888); }
+/* expandable blocks */
+.card-more { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+.card-more > summary {
+  cursor: pointer; font-size: 13px; font-weight: 650; color: var(--ink-2);
+  list-style: none; padding: 4px 0;
+}
+.card-more > summary::-webkit-details-marker { display: none; }
+.card-more > summary::before { content: "▸ "; color: var(--muted); }
+.card-more[open] > summary::before { content: "▾ "; }
+.card-more > summary:hover { color: var(--ink-1, inherit); }
+.card-more-lg > summary { font-size: 13.5px; }
+.sig-bare, .comps-bare { margin-top: 10px; }
+/* film: the one section that should read as a scouting report, not a table */
+.film-quick { margin: 6px 0 12px; font-size: 14.5px; line-height: 1.5; font-style: italic; }
+.film-col { margin-bottom: 10px; }
+.film-col-h {
+  margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.film-col-up { color: var(--good-text, #3a7); }
+.film-col-dn { color: var(--bad-text, #b55); }
+.film-col ul { list-style: none; margin: 0; padding: 0; }
+.film-col li { font-size: 13.5px; line-height: 1.45; padding: 2px 0 2px 16px; position: relative; }
+.film-col-up + ul li::before, .film-col ul li::before {
+  content: "•"; position: absolute; left: 2px; color: var(--muted);
+}
+/* board: plain-language outlook cell */
+.outlook { font-weight: 650; font-size: 13px; cursor: help; }
+.o-hi { color: var(--good-text, #3a7); }
+.o-mid { color: var(--ink-1, inherit); }
+.o-lo, .o-vlo { color: var(--ink-2); }
+.control.is-off { opacity: .45; }
 .modal-name { font-size: 24px; font-weight: 750; margin: 0; }
 .modal-meta { color: var(--ink-2); font-size: 13.5px; margin-top: 3px; }
 .modal-close {
@@ -646,11 +719,17 @@ td.num, th.num { text-align: right; }
            color: var(--ink-2, inherit); }
 .film-arch { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
 .film-rank { font-size: 12px; font-weight: 400; color: var(--muted); }
-.film-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-                gap: 6px 16px; margin: 0 0 12px; }
-.film-m dt { font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
-             color: var(--muted); }
-.film-m dd { margin: 0; font-size: 13px; }
+/* One line per trait instead of a stacked label-over-value grid: same content,
+   roughly half the height, which matters on a section that is meant to be read
+   before anything technical. */
+.film-metrics { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 12px; }
+.film-m {
+  display: flex; align-items: baseline; gap: 5px;
+  padding: 2px 9px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-3, #888) 9%, transparent);
+}
+.film-m dt { font-size: 11px; letter-spacing: .02em; color: var(--muted); }
+.film-m dd { margin: 0; font-size: 12.5px; font-weight: 600; }
 .film-area { margin-bottom: 10px; }
 .film-area h5 { margin: 0 0 4px; font-size: 12px; font-weight: 700;
                 letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
@@ -673,3 +752,18 @@ td.num, th.num { text-align: right; }
 .film-verdict { margin: 10px 0 0; font-size: 13px; line-height: 1.5;
                 padding-top: 8px; border-top: 1px solid var(--line);
                 font-style: italic; }
+
+/* Mobile: the card becomes the screen. A 2,800px modal inside a scrolling page
+   left the close button somewhere above the fold; full-screen with a sticky head
+   keeps the exit reachable from anywhere. */
+@media (max-width: 640px) {
+  .modal-backdrop { padding: 0; }
+  .modal {
+    width: 100%; max-height: 100vh; height: 100vh;
+    border-radius: 0; border: 0;
+  }
+  .modal-head { padding: 16px 16px 12px; }
+  .modal-body { padding: 0 16px 24px; }
+  .modal-name { font-size: 20px; }
+  .modal-grid { grid-template-columns: 1fr 1fr; }
+}

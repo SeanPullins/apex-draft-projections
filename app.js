@@ -8,7 +8,13 @@
   const POS_GROUPS = ["ALL", "QB", "RB", "WR", "TE", "OL", "EDGE", "DL", "LB", "DB"];
   const LATEST = Math.max(...D.classes);
   const state = { tab: "board", year: LATEST, pos: "ALL", q: "", sort: "apex", dir: -1,
-                  pick: null, lens: "drafted" };
+                  pick: null, lens: "drafted",
+                  // Simple by default. The full table is a click away and the
+                  // choice is remembered, so an analyst sets it once.
+                  view: (function () {
+                    try { return localStorage.getItem("apexView") || "simple"; }
+                    catch (e) { return "simple"; }
+                  })() };
 
   /* Two ways of scoring the same players. "drafted" is the shipped model, which
      knows where each player went. "predraft" withholds the pick entirely --
@@ -22,6 +28,27 @@
   const lens = () => LENS[state.lens];
 
   const pct = p => (p == null ? "–" : Math.round(p * 100) + "%");
+  // "93th" was appearing wherever a percentile met a bare "th". One helper, used
+  // everywhere a rank or percentile is written out in words.
+  const ord = n => {
+    const v = Math.round(n), t = v % 100;
+    if (t >= 11 && t <= 13) return v + "th";
+    return v + ({ 1: "st", 2: "nd", 3: "rd" }[v % 10] || "th");
+  };
+  const ordPct = n => ord(n) + " percentile";
+  // How literally to read the score on this card. A 2023 number is not a live
+  // projection and never was: the model was trained through 2021, so 2022-2025
+  // are frozen predictions made on draft night and 2026 is the only class still
+  // open. Calling all three "live" flattened a distinction the whole site rests
+  // on.
+  function scoreStatus(p) {
+    if (p.src === 1) return { short: "held-out historical backtest",
+      long: "Held-out historical backtest — his class was kept out of training and scored blind." };
+    if (p.yr >= 2026) return { short: "current projection",
+      long: "Current projection — this class has not played an NFL snap." };
+    return { short: "frozen " + p.yr + " draft-night projection",
+      long: "Frozen " + p.yr + " draft-night projection — made before he played, never revised since." };
+  }
   const fmt1 = v => (v == null ? "–" : (+v).toFixed(1));
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -116,45 +143,78 @@
   // Quarterbacks only. Off the position the measurement does not exist, and a
   // blank is the honest cell -- a 0 would read as a terrible score rather than
   // as "not applicable here".
+  // A bare "p93" is a convention, not a communication. The cell now says how
+  // high it is and carries the exact figure on hover, so a fan reads a word and
+  // an analyst still gets the number.
+  const pctlWord = v => (v >= 90 ? "Very high" : v >= 70 ? "High"
+                       : v >= 40 ? "Average" : v >= 20 ? "Low" : "Very low");
   const holdCell = p => (p.qbp == null
     ? '<span class="na" title="only measured for quarterbacks">–</span>'
-    // "p93", matching the percentile convention the rest of the site uses. The
-    // first version wrote an ordinal suffix and produced "93th".
-    : '<b>p' + Math.round(p.qbp) + "</b>");
+    : '<b title="' + ordPct(p.qbp) + ' among drafted quarterbacks since 2014">' +
+      pctlWord(p.qbp) + "</b>");
+
+  // Outlook in words, taken straight from the published probability the analyst
+  // table shows in the same row. No new number, no new judgement -- a label for
+  // one that is already there.
+  function outlookCell(p) {
+    const v = p[lens().hit];
+    if (v == null) return '<span class="na">–</span>';
+    const w = outlookWord(v);
+    return '<span class="outlook o-' + (v >= 0.60 ? "hi" : v >= 0.40 ? "mid" : v >= 0.22 ? "lo" : "vlo") +
+      '" title="' + pct(v) + ' chance of a top-quartile career at his position">' + w[0] + "</span>";
+  }
 
   const COLS = [
-    { key: "rk", label: "APEX RK", num: true },
-    { key: "pk", label: "Pick", num: true },
+    { key: "rk", label: "Model rank", num: true },
+    { key: "pk", label: "Draft pick", num: true },
     { key: "nm", label: "Player" },
     { key: "pg", label: "Pos" },
     { key: "apex", label: "APEX", num: true },
-    { key: "ph", label: "Hit", num: true },
+    { key: "ph", label: "Strong career", num: true },
     { key: "ps", label: "Starter", num: true },
-    { key: "pbu", label: "Bust risk", num: true },
-    { key: "ras", label: "RAS", num: true },
+    { key: "pbu", label: "Disappointment risk", num: true },
+    { key: "ras", label: "Athletic score", num: true },
     // quarterbacks only; blank for everyone else, since the measurement does not
     // exist off the position and a zero would read as a bad score
-    { key: "qbp", label: "Stands in", num: true, qbOnly: true },
-    { key: "vd", label: "Value", num: true },
-    { key: "out", label: "Outcome", sortKey: "wav" },
+    { key: "qbp", label: "Pocket poise", num: true, qbOnly: true },
+    { key: "vd", label: "Model vs draft", num: true },
+    { key: "out", label: "So far", sortKey: "wav" },
   ];
-  const head = $("#boardHead");
-  COLS.forEach(c => {
-    const th = document.createElement("th");
-    th.textContent = c.label;
-    if (c.num) th.classList.add("num");
-    th.classList.add("c-" + c.key);
-    th.dataset.key = c.key;
-    th.title = "Sort by " + c.label;
-    th.addEventListener("click", () => {
-      const k = c.sortKey || c.key;
-      if (state.sort === k) state.dir *= -1;
-      else { state.sort = k; state.dir = k === "pk" || k === "rk" ? 1 : -1; }
-      renderBoard();
-    });
-    head.appendChild(th);
-  });
+  // The reduced board. Same rows, same order, same numbers -- fewer of them, so
+  // a reader who does not know what RAS is can still work down the page.
+  const SIMPLE_COLS = [
+    { key: "rk", label: "Model rank", num: true },
+    { key: "nm", label: "Player" },
+    { key: "pg", label: "Pos" },
+    { key: "pk", label: "Draft pick", num: true },
+    { key: "apex", label: "APEX", num: true },
+    { key: "outlook", label: "Outlook", sortKey: "ph" },
+    { key: "out", label: "So far", sortKey: "wav" },
+  ];
+  const activeCols = () => (state.view === "analyst" ? COLS : SIMPLE_COLS);
 
+  const head = $("#boardHead");
+  function buildHead() {
+    head.innerHTML = "";
+    activeCols().forEach(c => {
+      const th = document.createElement("th");
+      th.textContent = c.label;
+      if (c.num) th.classList.add("num");
+      th.classList.add("c-" + c.key);
+      th.dataset.key = c.key;
+      th.title = "Sort by " + c.label;
+      th.addEventListener("click", () => {
+        const k = c.sortKey || c.key;
+        if (state.sort === k) state.dir *= -1;
+        else { state.sort = k; state.dir = k === "pk" || k === "rk" ? 1 : -1; }
+        renderBoard();
+      });
+      head.appendChild(th);
+    });
+  }
+  buildHead();
+
+  let filmEligible = 0;
   function rowsForState() {
     let rows;
     if (state.q) {
@@ -162,14 +222,14 @@
         (p.nm || "").toLowerCase().includes(state.q) ||
         (p.cl || "").toLowerCase().includes(state.q) ||
         (p.tm || "").toLowerCase().includes(state.q));
-    } else if (state.film) {
-      // film spans classes, so scoping it to the selected one would answer
-      // "which 2024 players have film" when the question asked was "which do"
-      rows = D.players.filter(p => p.film);
     } else {
       rows = D.players.filter(p => p.yr === state.year);
     }
     if (state.pos !== "ALL") rows = rows.filter(p => p.pg === state.pos);
+    // counted here, on exactly the rows the filter is about to be applied to.
+    // Counting the whole payload instead is what put "(86)" on a 2023 board
+    // holding three charted players.
+    filmEligible = rows.filter(p => p.film).length;
     if (state.film) rows = rows.filter(p => p.film);
     // the sort keys name the drafted fields; route them through the active lens
     // so clicking "APEX" sorts the pre-draft board by its own score
@@ -218,6 +278,32 @@
     return '<span class="prob">not yet played</span>';
   }
 
+  const viewPills = $("#viewPills");
+  if (viewPills) {
+    [["simple", "Simple"], ["analyst", "Analyst"]].forEach(([k, lbl]) => {
+      const b = document.createElement("button");
+      b.className = "pill" + (k === state.view ? " is-active" : "");
+      b.textContent = lbl;
+      b.setAttribute("aria-pressed", String(k === state.view));
+      b.addEventListener("click", () => {
+        state.view = k;
+        try { localStorage.setItem("apexView", k); } catch (e) {}
+        $$(".pill", viewPills).forEach(x => {
+          const on = x.textContent === lbl;
+          x.classList.toggle("is-active", on);
+          x.setAttribute("aria-pressed", String(on));
+        });
+        // the sort key may not exist in the reduced set; fall back to the score
+        if (!activeCols().some(c => (c.sortKey || c.key) === state.sort)) {
+          state.sort = "apex"; state.dir = -1;
+        }
+        buildHead();
+        renderBoard();
+      });
+      viewPills.appendChild(b);
+    });
+  }
+
   const lensPills = $("#lensPills");
   if (lensPills) {
     [["drafted", "As drafted"], ["predraft", "Pre-draft (no pick)"]].forEach(([v, lbl]) => {
@@ -235,6 +321,7 @@
 
   function renderBoard() {
     const rows = rowsForState();
+    setFilmCount("#boardFilmWrap", filmEligible);
     const band = $("#lensBand");
     if (band) {
       band.hidden = state.lens !== "predraft";
@@ -253,14 +340,16 @@
       }
     }
     // header sort indicators
+    const AC = activeCols();
     $$("th", head).forEach((th, i) => {
-      const k = COLS[i].sortKey || COLS[i].key;
+      if (!AC[i]) return;
+      const k = AC[i].sortKey || AC[i].key;
       // the score column is not APEX when the pick is withheld, and calling it
       // APEX would claim the two numbers are the same thing
       if (k === "apex" || k === "rk") {
         const preLbl = { apex: "PRE-DRAFT", rk: "PRE-DRAFT RK" };
         th.childNodes[0].nodeValue =
-          state.lens === "predraft" ? preLbl[k] : COLS[i].label;
+          state.lens === "predraft" ? preLbl[k] : AC[i].label;
       }
       th.classList.toggle("sorted", k === state.sort);
       const a = th.querySelector(".arrow");
@@ -305,7 +394,7 @@
         const n = tierSize[p[tierKey]];
         const what = state.pos === "ALL" ? (n === 1 ? "player" : "players")
           : (n === 1 ? state.pos : state.pos + "s");
-        sep = '<tr class="tier-row"><td colspan="' + COLS.length + '">' +
+        sep = '<tr class="tier-row"><td colspan="' + AC.length + '">' +
           '<span class="tier-name">' + (state.pos === "ALL" ? "" : state.pos + " ") +
           "Tier " + p[tierKey] + "</span>" +
           '<span class="tier-meta">' + n + " " + what +
@@ -317,23 +406,32 @@
         : p.vd < -4 ? '<span class="delta-down">▼ ' + (-p.vd) + "</span>"
         : '<span class="delta-flat">·</span>';
       const score = p[L.apex];
-      return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
-        '<td class="num c-rk">' + (pre ? preRank : (p.rk ?? "–")) + "</td>" +
-        '<td class="num c-pk">' + (p.pk ?? "–") + "</td>" +
-        '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) + filmTag(p) + '</div><div class="player-meta">' + esc(meta) + "</div></td>" +
-        '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>" +
-        '<td class="c-apex"' + (!pre && p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
+      // One definition per column, shared by both views, so Simple and Analyst
+      // can never disagree about what a cell says.
+      const CELL = {
+        rk: () => '<td class="num c-rk">' + (pre ? preRank : (p.rk ?? "–")) + "</td>",
+        pk: () => '<td class="num c-pk">' + (p.pk ?? "–") + "</td>",
+        nm: () => '<td class="player-cell c-nm"><div class="player-name">' + esc(p.nm) +
+          filmTag(p) + '</div><div class="player-meta">' + esc(meta) + "</div></td>",
+        pg: () => '<td class="c-pg"><span class="pos-chip">' + p.pg + "</span></td>",
+        apex: () => '<td class="c-apex"' +
+          (!pre && p.sd != null ? ' title="± ' + p.sd.toFixed(1) + ' if the model had been trained on a different sample of draft history"' : "") +
           '><div class="score-cell"><span class="score-num">' + fmt1(score) + '</span>' +
           (!pre && p.sd != null ? '<span class="score-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
-          '<span class="meter"><i style="width:' + Math.min(100, score || 0) + '%"></i></span></div></td>' +
-        '<td class="num prob c-ph">' + pct(p[L.hit]) + "</td>" +
-        '<td class="num prob c-ps">' + pct(p[L.starter]) + "</td>" +
-        '<td class="num c-pbu">' + riskCell(p[L.bust]) + "</td>" +
-        '<td class="num prob c-ras"' + (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") +
-          ">" + (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>" +
-        '<td class="num c-qbp">' + holdCell(p) + "</td>" +
-        '<td class="num c-vd">' + vd + "</td>" +
-        '<td class="c-out">' + outcomeCell(p) + "</td></tr>";
+          '<span class="meter"><i style="width:' + Math.min(100, score || 0) + '%"></i></span></div></td>',
+        ph: () => '<td class="num prob c-ph">' + pct(p[L.hit]) + "</td>",
+        ps: () => '<td class="num prob c-ps">' + pct(p[L.starter]) + "</td>",
+        pbu: () => '<td class="num c-pbu">' + riskCell(p[L.bust]) + "</td>",
+        ras: () => '<td class="num prob c-ras"' +
+          (p.ras == null ? ' title="no combine or pro-day workout on record"' : "") + ">" +
+          (p.ras != null ? p.ras.toFixed(2) : "–") + "</td>",
+        qbp: () => '<td class="num c-qbp">' + holdCell(p) + "</td>",
+        vd: () => '<td class="num c-vd">' + vd + "</td>",
+        outlook: () => '<td class="c-outlook">' + outlookCell(p) + "</td>",
+        out: () => '<td class="c-out">' + outcomeCell(p) + "</td>",
+      };
+      return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
+        AC.map(c => (CELL[c.key] ? CELL[c.key]() : "<td></td>")).join("") + "</tr>";
     }).join("");
     $$("tr[data-id]", body).forEach(tr => tr.addEventListener("click", () => {
       const [yr, pk] = tr.dataset.id.split(":").map(Number);
@@ -457,20 +555,20 @@
         "of the distance between his two numbers is missing data rather than disagreement.");
     } else if (p.rasp != null && p.rasp >= 70) {
       why.push("He <strong>tested well</strong> — RAS " + p.ras.toFixed(2) + ", around the " +
-        Math.round(p.rasp) + "th percentile for his position. Athleticism is the input the pre-draft " +
+        ordPct(p.rasp) + " for his position. Athleticism is the input the pre-draft " +
         "model leans on hardest, so this is most of what is holding that number up.");
     } else if (p.rasp != null && p.rasp <= 30) {
       why.push("He <strong>tested poorly</strong> — RAS " + p.ras.toFixed(2) + ", about the " +
-        Math.round(p.rasp) + "th percentile at his position — and athleticism is the block the " +
+        ordPct(p.rasp) + " at his position — and athleticism is the block the " +
         "pre-draft model weights most heavily, so it pulls his profile score down hard.");
     }
     if (p.pffp != null && p.pffp >= 80) {
-      why.push("His college grades were <strong>strong</strong> (p" + Math.round(p.pffp) +
+      why.push("His college grades were <strong>strong</strong> (" + ordPct(p.pffp) +
         " at his position), which helps, though production is worth roughly a tenth of what " +
         "testing is worth to this model.");
     } else if (p.pffp != null && p.pffp <= 25) {
-      why.push("His college grades sat <strong>low for the position</strong> (p" +
-        Math.round(p.pffp) + "), a modest drag on the profile score.");
+      why.push("His college grades sat <strong>low for the position</strong> (" +
+        ordPct(p.pffp) + "), a modest drag on the profile score.");
     }
     if (p.age != null && p.age <= 21) {
       why.push("He was <strong>young for the class</strong> at " + p.age + ", which the model treats as a plus.");
@@ -510,101 +608,225 @@
     return '<div class="gap-story">' + bits.join("") + "</div>";
   }
 
+  /* ---------- plain-English card copy ----------
+     Assembled from fields already on the row, with no new judgement of any kind.
+     Every clause below is a restatement of a number the card also shows: the
+     rank, the pick, the published probability, and whichever inputs are actually
+     extreme for this player. Nothing here reads the film or invents a trait --
+     the film has its own section and says who wrote it.
+
+     The point is that a reader should be able to stop after three sentences and
+     have the gist. The technical account is still on the card, one click down. */
+  function outlookWord(v) {
+    if (v == null) return null;
+    if (v >= 0.60) return ["strong", "one of the better bets in his class"];
+    if (v >= 0.40) return ["solid", "a better-than-even chance of a real career"];
+    if (v >= 0.22) return ["middling", "roughly the typical outcome for his draft range"];
+    return ["long-odds", "a below-average shot at a lasting career"];
+  }
+
+  function cardSummary(p) {
+    const s = [];
+    const st = scoreStatus(p);
+    // 1. where the model had him against where the league did
+    let one = "The model ranked him <b>" + ord(p.rk) + "</b> in the " + p.yr + " class";
+    if (p.prk != null) one += " and " + ord(p.prk) + " among " + p.pg + "s";
+    one += p.pk != null ? "; the league took him at <b>pick " + p.pk + "</b>." : ".";
+    s.push(one);
+
+    // 2. the headline outlook, in words, tied to the number shown above
+    const ow = outlookWord(p.ph);
+    if (ow) {
+      s.push("It gave him " + ow[1] + " — <b>" + pct(p.ph) +
+        "</b> to build a strong NFL career" +
+        (p.src === 1 ? ", scored with his class held out of training" : "") + ".");
+    }
+
+    // 3. strongest input, then the most important gap — whichever he actually has
+    const up = [], down = [];
+    if (p.rasp != null && p.rasp >= 70) up.push("he tested near the top of his position (" + ordPct(p.rasp) + ")");
+    if (p.pffp != null && p.pffp >= 75) up.push("his college grades beat most drafted " + p.pg + "s (" + ordPct(p.pffp) + ")");
+    if (p.age != null && p.age <= 21) up.push("he was young for the class at " + p.age);
+    if (p.pk != null && p.pk <= 32) up.push("first-round picks succeed far more often than the rest of the draft");
+    if (p.ras == null) down.push("he has no combine or pro-day workout on record, which empties the input this model leans on hardest");
+    else if (p.rasp != null && p.rasp <= 30) down.push("he tested poorly for the position (" + ordPct(p.rasp) + ")");
+    if (p.pffp != null && p.pffp <= 25) down.push("his college grades sat low for a drafted " + p.pg + " (" + ordPct(p.pffp) + ")");
+    if (p.age != null && p.age >= 24) down.push("he was old for a rookie at " + p.age);
+    if (!p.sig || !p.sig.length) {
+      if (POS_NO_SIGNAL[p.pg] && p.pg !== "QB") down.push("nothing measurable at his position has reliably predicted NFL success, so his pick carries almost all of the signal");
+    }
+    let three = "";
+    if (up.length) three += "The strongest thing in his favour: " + up[0] + ".";
+    if (down.length) three += (three ? " " : "") + "The biggest gap: " + down[0] + ".";
+    if (three) s.push(three);
+
+    return '<p class="card-summary">' + s.join(" ") + "</p>";
+  }
+
+  /* Two or three reasons, in the reader's language, for why the number is what
+     it is. Deliberately not the calibration story -- that lives one click down
+     under "How the model reached this score". */
+  function whyBullets(p) {
+    const b = [];
+    if (p.pk != null && p.mh != null) {
+      b.push("Selected at <b>pick " + p.pk + "</b>. On its own, that draft slot has " +
+        "historically produced a strong career " + pct(p.mh) + " of the time — and where a " +
+        "player is picked still predicts this better than everything else combined.");
+    }
+    if (p.pffp != null) {
+      b.push("His college grade was better than <b>" + Math.round(p.pffp) + "%</b> of drafted " +
+        p.pg + "s.");
+    }
+    if (p.ras == null) {
+      b.push("<b>No complete combine or pro-day workout was available.</b> That is missing " +
+        "information rather than a poor result, and it is the input the model weighs most.");
+    } else if (p.rasp != null) {
+      b.push("Athletic testing put him at the <b>" + ordPct(p.rasp) + "</b> for his position " +
+        "(RAS " + p.ras.toFixed(2) + ").");
+    }
+    if (p.age != null && (p.age <= 21 || p.age >= 24)) {
+      b.push("He entered the league at <b>" + p.age + "</b>, which the model treats as " +
+        (p.age <= 21 ? "a plus" : "a negative") + ".");
+    }
+    return b.slice(0, 3);
+  }
+
   function openModal(p, fromHash) {
     lastFocus = document.activeElement;
     if (!fromHash && p.yr === state.year && state.tab === "board") {
       state.pick = p.pk;
       writeHash();
     }
+    // Renamed for a reader who does not already know the jargon. The underlying
+    // fields, definitions and numbers are untouched; only the labels change, and
+    // the exact definition is on the tooltip and in the methodology section.
     const probs = [
-      ["Top-quartile career (Hit)", p.ph, p.mh],
-      ["3+ year starter", p.ps, p.ms],
-      ["Pro Bowler", p.pp, p.mp],
-      ["Bust — bottom 25% for his draft range", p.pbu, p.mbu, true],
+      ["Strong NFL career", p.ph, p.mh, false,
+       "Top-quartile career value among players at his position from the same draft class."],
+      ["Long-term starter", p.ps, p.ms, false,
+       "Started at least three NFL seasons."],
+      ["Makes a Pro Bowl", p.pp, p.mp, false,
+       "Named to at least one Pro Bowl."],
+      ["Disappoints for his draft position", p.pbu, p.mbu, true,
+       "Finished in the bottom quarter of career value among picks made in the same range of the draft."],
     ];
     const facts = [];
     facts.push(["Draft capital", "Pick " + p.pk + " · Round " + (p.rd || "–") + (p.tm ? " · " + esc(p.tm) : "")]);
     facts.push(["Age at draft", p.age != null ? p.age : "–"]);
-    facts.push(["RAS (0–10)", p.ras != null ? p.ras.toFixed(2) + pctlNote(p.rasp)
+    facts.push(["Athletic score (RAS 0–10)", p.ras != null ? p.ras.toFixed(2) + pctlNote(p.rasp)
       : '<span class="pctl">did not test — no combine/pro-day workout on record</span>']);
-    facts.push(["PFF college grade", p.pffp != null ? "p" + Math.round(p.pffp) + ' <span class="pctl">percentile at position</span>' : "not covered"]);
-    facts.push(["APEX rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg +
+    facts.push(["College grade", p.pffp != null ? ordPct(p.pffp) + ' <span class="pctl">among drafted players at his position</span>' : "not covered"]);
+    facts.push(["Model rank in class", "#" + p.rk + " overall · #" + p.prk + " " + p.pg +
       (p.tier != null ? ' <span class="pctl">class tier ' + p.tier +
         (p.tierp != null ? " · " + p.pg + " tier " + p.tierp : "") + "</span>" : "")]);
-    facts.push(["Board vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
+    facts.push(["Model vs draft order", p.vd == null ? "–" : p.vd > 0 ? "model higher by " + p.vd : p.vd < 0 ? "model lower by " + (-p.vd) : "aligned"]);
 
     const story = gapStory(p);
 
-    // What the model said about the player alone, before knowing where he went.
-    // Worth showing per player because the gap between the two is the draft's
-    // opinion: a big drop means the league saw something the inputs did not.
     let predraft = "";
     if (p.qh != null) {
       const dh = Math.round((p.ph - p.qh) * 100);
-      const db = p.qbu != null ? Math.round((p.pbu - p.qbu) * 100) : null;
       const verdict = dh >= 8 ? "the draft raised him" : dh <= -8 ? "the draft lowered him"
         : "the draft agreed";
       predraft =
         '<div class="predraft"><div class="predraft-h">Before the draft ' +
         '<span class="predraft-tag">' + verdict + "</span></div>" +
-        '<div class="predraft-row"><span>Hit</span><b>' + pct(p.qh) + "</b>" +
+        '<div class="predraft-row"><span>Strong career</span><b>' + pct(p.qh) + "</b>" +
         '<span class="predraft-arrow">→ ' + pct(p.ph) + "</span></div>" +
-        (p.qbu != null ? '<div class="predraft-row"><span>Bust risk</span><b>' + pct(p.qbu) +
+        (p.qbu != null ? '<div class="predraft-row"><span>Disappointment risk</span><b>' + pct(p.qbu) +
           "</b><span class=\"predraft-arrow\">→ " + pct(p.pbu) + "</span></div>" : "") +
         '<p class="fine">Left: the model given only the player — testing, production, ' +
         'college grades, age — and no idea where he was picked. Right: the published ' +
-        'number, which also knows his draft slot. On hit the draft is worth far more than ' +
-        'everything else combined; on bust risk it adds almost nothing.</p>' +
+        'number, which also knows his draft slot. On a strong career the draft is worth far ' +
+        'more than everything else combined; on disappointment risk it adds almost nothing.</p>' +
         story + "</div>";
     }
 
-    const signals = signalsPanel(p);
-    const comps = compsPanel(p);
+    const signals = signalsPanel(p, true);
+    const comps = compsPanel(p, true);
     const film = filmPanel(p);
+    const st = scoreStatus(p);
 
+    // Moved to the top of the card for anyone whose career has begun. What
+    // actually happened outranks what was predicted about it, and burying the
+    // result under the methodology had that backwards.
     let outcome = "";
     if (p.src === 1) {
       const bits = [];
-      bits.push(p.lh ? "✓ Hit (top-quartile career value at position)" : "✗ Did not reach top-quartile value");
-      bits.push(p.ls ? "✓ 3+ season starter" : "✗ Under 3 seasons started");
+      bits.push(p.lh ? "✓ Top-quarter career value at his position" : "✗ Did not reach top-quarter career value");
+      bits.push(p.ls ? "✓ Started 3+ seasons" : "✗ Under 3 seasons started");
       if (p.pb > 0) bits.push("★ " + p.pb + "× Pro Bowl" + (p.ap > 0 ? " · " + p.ap + "× All-Pro" : ""));
-      const stats = ["Career AV " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
-      outcome = '<div class="outcome-band"><strong>What actually happened:</strong> ' + bits.join(" · ") + '<br><span class="prob">' + stats + "</span></div>";
+      const stats = ["Career value " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
+      outcome = '<div class="outcome-band"><strong>How it turned out:</strong> ' + bits.join(" · ") +
+        '<br><span class="prob">' + stats + "</span></div>";
     } else if (p.ns > 0) {
       const bits = [];
-      if (p.fh) bits.push("✓ Top-quartile value at his position so far");
+      if (p.fh) bits.push("✓ Top-quarter career value at his position so far");
       if (p.fs) bits.push("✓ 2+ seasons started");
       if (p.pb) bits.push("★ " + p.pb + "× Pro Bowl" + (p.ap > 0 ? " · " + p.ap + "× All-Pro" : ""));
-      if (!bits.length) bits.push("Not yet tracking as a top-quartile career");
-      const stats = ["AV " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
-      outcome = '<div class="outcome-band"><strong>' + p.ns + " season" + (p.ns > 1 ? "s" : "") +
-        " in:</strong> " + bits.join(" · ") + '<br><span class="prob">' + stats +
-        " — career to date, not a final grade</span></div>";
+      if (!bits.length) bits.push("Not yet tracking as a top-quarter career");
+      const stats = ["Career value " + (p.wav ?? 0), (p.g ?? 0) + " games", (p.st ?? 0) + " seasons started"].join(" · ");
+      outcome = '<div class="outcome-band outcome-live"><strong>Through ' + p.ns + " season" +
+        (p.ns > 1 ? "s" : "") + ":</strong> " + bits.join(" · ") +
+        '<br><span class="prob">' + stats +
+        " — an active career, not a final result</span></div>";
     }
+
+    const why = whyBullets(p);
 
     modal.innerHTML =
       '<div class="modal-head"><div><h2 class="modal-name" id="modalName">' + esc(p.nm) + '</h2>' +
-      '<div class="modal-meta">' + p.pos + " · " + esc(p.cl || "") + " · " + p.yr + " class" + '</div></div>' +
+      '<div class="modal-meta">' + p.pos + " · " + esc(p.cl || "") + " · " + p.yr + " class" +
+      '<span class="status-chip" title="' + esc(st.long) + '">' + esc(st.short) + "</span></div></div>" +
       '<button class="modal-close" aria-label="Close">✕</button></div>' +
+      '<div class="modal-body">' +
       '<div class="modal-score"><span class="hero">' + fmt1(p.apex) + '</span>' +
       (p.sd != null ? '<span class="hero-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
-      '<span class="hero-sub">APEX score (0–100)<br>' + (p.src === 1 ? "held-out backtest score" : "live projection") + "</span></div>" +
+      '<span class="hero-sub">APEX score (0–100)<br>' + esc(st.short) + "</span></div>" +
+      cardSummary(p) +
+      outcome +
+      '<section class="card-sec"><h4 class="sec-h">Outlook</h4>' +
       '<div class="prob-block">' +
-      probs.map(([label, v, m, isRisk]) =>
-        '<div class="prob-row' + (isRisk ? " prob-row-risk" : "") + '"><span class="prob-label">' + label + '</span>' +
+      probs.map(([label, v, m, isRisk, def]) =>
+        '<div class="prob-row' + (isRisk ? " prob-row-risk" : "") + '"><span class="prob-label" title="' +
+        esc(def) + '">' + label + '<span class="info-dot" aria-hidden="true">i</span></span>' +
         '<span class="prob-track"><span class="prob-fill' + (isRisk ? " prob-fill-risk" : "") + '" style="width:' + Math.round((v || 0) * 100) + '%"></span>' +
         (m != null ? '<span class="prob-mark" style="left:' + Math.round(m * 100) + '%"></span>' : "") +
         "</span><span class=\"prob-val\">" + pct(v) + "</span></div>").join("") +
       '<div class="legend-inline"><span><span class="key" style="background:var(--series-1)"></span>APEX</span>' +
-      '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div></div>' +
+      '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div>' +
+      '<p class="fine prob-note">These outcomes overlap; they are not portions of a single ' +
+      '100% total. Hover a label for its exact definition.</p></div></section>' +
+      film +
+      (why.length
+        ? '<section class="card-sec"><h4 class="sec-h">Why APEX rated him this way</h4>' +
+          '<ul class="why-list"><li>' + why.join("</li><li>") + "</li></ul></section>"
+        : "") +
+      '<details class="card-more card-more-lg"><summary>The numbers behind him</summary>' +
       '<div class="modal-grid">' +
       facts.map(([l, v]) => '<div class="fact"><div class="fact-label">' + l + '</div><div class="fact-value">' + v + "</div></div>").join("") +
-      "</div>" + predraft + signals + film + comps + outcome;
+      "</div></details>" +
+      (predraft
+        ? '<details class="card-more card-more-lg"><summary>How the model reached this score</summary>' +
+          predraft + "</details>"
+        : "") +
+      (signals
+        ? '<details class="card-more card-more-lg"><summary>College traits linked to NFL success at this position</summary>' +
+          signals + "</details>"
+        : "") +
+      (comps
+        ? '<details class="card-more card-more-lg"><summary>Statistical matches</summary>' +
+          comps + "</details>"
+        : "") +
+      "</div>";
     backdrop.hidden = false;
+    modal.scrollTop = 0;
+    const body = $(".modal-body", modal);
+    if (body) body.scrollTop = 0;
     $(".modal-close", modal).addEventListener("click", closeModal);
     $(".modal-close", modal).focus();
   }
-  const pctlNote = p => (p == null ? "" : ' <span class="pctl">· p' + Math.round(p) + " at position</span>");
+  const pctlNote = p => (p == null ? "" : ' <span class="pctl">· ' + ordPct(p) + " at his position</span>");
 
   /* ---------- what matters at this position ----------
      Every PFF grade and rate the file carries was screened, per position,
@@ -635,12 +857,13 @@
   };
   const FAMILY_TAG = { Athletic: "testing", Production: "college production" };
 
-  function signalsPanel(p) {
+  function signalsPanel(p, bare) {
     if (!p.sig || !p.sig.length) {
       const why = POS_NO_SIGNAL[p.pg];
       return why
-        ? '<div class="sig"><div class="sig-h">What matters at this position</div>' +
-          '<p class="fine">' + why + "</p></div>"
+        ? (bare ? '<div class="sig sig-bare"><p class="fine">' + why + "</p></div>"
+                : '<section class="sig card-sec"><div class="sig-h">College traits linked to ' +
+                  'NFL success at this position</div><p class="fine">' + why + "</p></section>")
         : "";
     }
     // Plain words, not statistics. A reader should not have to know what a
@@ -671,19 +894,22 @@
           (FAMILY_TAG[s.f] ? ' <span class="sig-fam">' + FAMILY_TAG[s.f] + "</span>" : "") +
           (s.n ? '<span class="sig-note">' + esc(s.n) + "</span>" : "") +
           (s.w ? '<span class="sig-why">' + esc(s.w) + "</span>" : "") + "</span>" +
-        '<span class="sig-track" title="' + Math.round(s.p) + 'th percentile"><span class="sig-fill ' +
+        '<span class="sig-track" title="' + ordPct(s.p) + '"><span class="sig-fill ' +
           band + '" style="width:' + Math.max(2, Math.round(s.p)) + '%"></span></span>' +
         '<span class="sig-val">' + compareWord(s.p) + "</span>" +
-        '<span class="sig-str ' + wcls + '" title="AUC ' + s.auc.toFixed(2) +
-          ' — 0.50 would be a coin flip">' + word + "</span></li>";
+        '<span class="sig-str ' + wcls + '" title="How much this one has been worth on ' +
+          'its own: AUC ' + s.auc.toFixed(2) + ', where 0.50 would be a coin flip">' +
+          word + "</span></li>";
     }).join("");
 
     const drafted = p.pk != null;
     const who = "drafted " + p.pg + "s since 2014";
-    return '<div class="sig"><div class="sig-h">What matters at this position</div>' +
+    return (bare ? '<div class="sig sig-bare">'
+                 : '<section class="sig card-sec"><div class="sig-h">College traits linked to ' +
+                   'NFL success at this position</div>') +
       '<p class="fine">Of everything we can measure about a ' + p.pg +
       ", " + (p.sig.length === 1 ? "this is the only thing" : "these are the only things") +
-      " that told us in advance who would make it. " +
+      " that told us in advance who developed into a strong NFL player. " +
       "Each bar compares him with " + who + " — so half of them sit below the " +
       "middle, and those are all players good enough to be picked." +
       (drafted ? "" : " He has not been drafted yet, so he is being held to the " +
@@ -692,7 +918,7 @@
       '<p class="fine"><b>Strong</b>, <b>useful</b> and <b>slight</b> say how much ' +
       "each one has actually been worth for picking out the players who lasted. " +
       "Even a strong one is only part of the picture — where a player gets drafted " +
-      "still tells you more than any of these." + "</p></div>";
+      "still tells you more than any of these." + "</p>" + (bare ? "</div>" : "</section>");
   }
 
   /* ---------- historical comparables ----------
@@ -734,61 +960,110 @@
   function wireFilm(box, wrap, rows, apply) {
     const el = $(box), w = $(wrap);
     if (!el || !w) return;
-    const n = rows.filter(p => p.film).length;
-    if (!n) return;
+    if (!rows.some(p => p.film)) return;      // nothing to filter to anywhere
     w.hidden = false;
-    $("span", w).textContent = "Only players with film (" + n + ")";
     el.addEventListener("change", e => apply(e.target.checked));
   }
+  // Called on every render with the count for the view as it currently stands.
+  // A control that keeps a stale number is worse than one with no number.
+  function setFilmCount(wrap, n) {
+    const w = $(wrap);
+    if (!w) return;
+    const s = $("span", w), box = $("input", w);
+    if (s) s.textContent = "Only players with film (" + n + ")";
+    // an empty result is reachable by filtering; disable rather than offer it
+    if (box && !box.checked) { box.disabled = !n; w.classList.toggle("is-off", !n); }
+  }
+
+  // Plain-English names for the charted headings. The scouting vocabulary is
+  // precise and opaque in equal measure -- "drop sync" and "base under blitz"
+  // mean something exact to someone who charts tape and nothing to a fan. The
+  // underlying values are printed unchanged; only the label is translated, and
+  // anything unrecognised falls through as written rather than being dropped.
+  const FILM_LABEL = {
+    "Pocket radius": "Pocket style",
+    "Navigation": "Pocket movement",
+    "Drop sync": "Timing and rhythm",
+    "Processing": "Processing speed",
+    "Base under blitz": "Composure under pressure",
+    "Time to release": "Time to release",
+    "Off platform": "Throwing off balance",
+  };
 
   function filmPanel(p) {
     const f = p.film;
-    if (!f) return "";
+    if (!f) return "";                 // no empty shell for players without film
+    // Strengths and concerns are pooled across the charted areas and capped, so
+    // the default card shows the shape of the report rather than all of it. The
+    // full thing, area by area, is one click down and nothing is dropped.
+    const ups = [], dns = [];
+    (f.t || []).forEach(a => {
+      (a.pos || []).forEach(x => ups.push(x));
+      (a.neg || []).forEach(x => dns.push(x));
+    });
     const metrics = Object.keys(f.m || {}).map(k =>
-      '<div class="film-m"><dt>' + esc(k) + "</dt><dd>" + esc(f.m[k]) + "</dd></div>").join("");
-    const traits = (f.t || []).map(t =>
-      '<div class="film-area"><h5>' + esc(t.area) + "</h5><ul>" +
-      (t.pos || []).map(x => '<li class="film-up">' + esc(x) + "</li>").join("") +
-      (t.neg || []).map(x => '<li class="film-dn">' + esc(x) + "</li>").join("") +
+      '<div class="film-m"><dt>' + esc(FILM_LABEL[k] || k) + "</dt><dd>" +
+      esc(f.m[k]) + "</dd></div>").join("");
+    const full = (f.t || []).map(a =>
+      '<div class="film-area"><h5>' + esc(a.area) + "</h5><ul>" +
+      (a.pos || []).map(x => '<li class="film-up">' + esc(x) + "</li>").join("") +
+      (a.neg || []).map(x => '<li class="film-dn">' + esc(x) + "</li>").join("") +
       "</ul></div>").join("");
-    return '<div class="film">' +
-      '<div class="film-h">On tape' +
-      (f.by ? ' <span class="film-by">' + esc(f.by) + "</span>" : "") + "</div>" +
-      '<p class="film-arch">' + esc(f.arch || "") +
-      (f.rk
-        ? ' <span class="film-rank">#' + f.rk + " of " + f.of +
-          (f.scope === "board" ? "" : " at his position") +
-          (f.grp ? " " + esc(f.grp) : "") + "</span>"
-        : f.solo
-          ? ' <span class="film-rank">the only one at his position in this pass, ' +
-            "so no ranking is shown</span>"
-          : "") + "</p>" +
+
+    const rank = f.rk
+      ? '<span class="film-rank">' + ord(f.rk) + " of " + f.of +
+        (f.scope === "board" ? "" : " at his position") +
+        (f.grp ? " " + esc(f.grp) : "") + "</span>"
+      : f.solo
+        ? '<span class="film-rank">the only one at his position in this pass, ' +
+          "so no ranking is shown</span>"
+        : "";
+
+    return '<section class="film card-sec">' +
+      '<div class="film-h"><span>Film scouting report</span>' +
+      (f.by ? '<span class="film-by">AI-assisted charting by ' + esc(f.by) + "</span>" : "") +
+      "</div>" +
+      '<p class="film-arch">' + esc(f.arch || "") + " " + rank + "</p>" +
+      // the quick read is the film's own summary line where it wrote one, never
+      // a sentence assembled here: this section is the one place on the card
+      // that is somebody's judgement, and it should be their words
+      (f.vd ? '<p class="film-quick">' + esc(f.vd) + "</p>" : "") +
+      (ups.length
+        ? '<div class="film-col"><h5 class="film-col-h film-col-up">What translates</h5><ul>' +
+          ups.slice(0, 3).map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></div>"
+        : "") +
+      (dns.length
+        ? '<div class="film-col"><h5 class="film-col-h film-col-dn">What could hold him back</h5><ul>' +
+          dns.slice(0, 2).map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></div>"
+        : "") +
       (metrics ? '<dl class="film-metrics">' + metrics + "</dl>" : "") +
-      traits +
-      (f.vd ? '<p class="film-verdict">' + esc(f.vd) + "</p>" : "") +
-      '<p class="film-note">' + esc(f.note || "") + "</p></div>";
+      (full
+        ? "<details class=\"card-more\"><summary>Full film notes</summary>" + full + "</details>"
+        : "") +
+      '<p class="film-note">' + esc(f.note || "") + "</p></section>";
   }
 
-  function compsPanel(p) {
+  function compsPanel(p, bare) {
     if (!p.cmp || !p.cmp.length) {
       // pre-2014 players have no college grades, so the only comparables
       // available would be the weaker traits-only kind. Better to say nothing.
       return p.yr < 2014
-        ? '<div class="comps"><div class="comps-h">Historical comparables</div>' +
+        ? (bare ? '<div class="comps comps-bare">' : '<section class="comps card-sec">' +
+            '<div class="comps-h">Statistical matches</div>') +
           '<p class="fine">Not shown for classes before 2014. College grades only ' +
           'begin that year, and matching on measurables alone is a measurably ' +
           'worse comparison — presenting it in the same frame would imply a ' +
-          'confidence it does not have.</p></div>'
+          'confidence it does not have.</p>' + (bare ? "</div>" : "</section>")
         : "";
     }
     const best = p.cmp[0][1];
     const lift = p.cmpr != null && p.cmpb != null ? p.cmpr - p.cmpb : null;
     const tag = lift == null ? ""
-      : lift >= 0.05 ? '<span class="comps-tag comps-tag-up">comps outperformed</span>'
-      : lift <= -0.05 ? '<span class="comps-tag comps-tag-down">comps underperformed</span>'
-      : '<span class="comps-tag">comps ran typical</span>';
+      : lift >= 0.05 ? '<span class="comps-tag comps-tag-up">matches outperformed</span>'
+      : lift <= -0.05 ? '<span class="comps-tag comps-tag-down">matches underperformed</span>'
+      : '<span class="comps-tag">matches ran typical</span>';
 
-    const rows = p.cmp.map(([i, sim, code]) => {
+    const row = ([i, sim, code]) => {
       const c = D.players[i];
       if (!c) return "";
       const [label, cls] = COMP_OUT[code] || COMP_OUT[2];
@@ -798,29 +1073,37 @@
         '<span class="comp-name">' + esc(c.nm) + "</span>" +
         '<span class="comp-meta">' + c.pos + " · " + c.yr + " pk" + c.pk + "</span>" +
         '<span class="comp-out ' + cls + '">' + label + "</span></li>";
-    }).join("");
+    };
+    const weak = best < COMP_WEAK;
+    // With no real match, leading with six names invites the reader to treat
+    // strangers as analogues. The finding is the absence, so that goes first and
+    // the names go away entirely until asked for.
+    const shown = weak ? [] : p.cmp.slice(0, 3);
+    const rest = weak ? p.cmp : p.cmp.slice(3);
 
-    const weak = best < COMP_WEAK
-      ? '<p class="fine comps-weak"><strong>No close match.</strong> His nearest ' +
-        'comparable is further away than nine out of ten players’ are, which is ' +
-        'itself the finding: nothing in eight drafted classes looks much like him, ' +
-        'so read the names below as the closest available rather than as ' +
-        'genuine analogues.</p>'
-      : "";
-
-    return '<div class="comps"><div class="comps-h">Closest historical comparables ' +
-      tag + "</div>" +
-      '<p class="comps-lead">' + p.cmph + " of the " + p.cmpn + " players from 2014–21 " +
-      "whose testing, college production and PFF grades most resemble his became hits — " +
-      "<b>" + pct(p.cmpr) + "</b> once shrunk toward the " + pct(p.cmpb) +
-      " base rate at his position.</p>" +
-      weak +
-      '<ul class="comp-list">' + rows + "</ul>" +
-      '<p class="fine">Distance is measured within position on standardised testing, ' +
-      'production and grade columns, over the features both players actually have. ' +
-      'These comparables are shown, not used: adding them to the model is negative ' +
-      'out of sample, and on their own they reach 0.65 AUC against the pre-draft ' +
-      'model’s 0.69. They explain a projection; they do not make one.</p></div>';
+    return (bare ? '<div class="comps comps-bare">' + (tag ? '<div class="comps-h">' + tag + "</div>" : "")
+                 : '<section class="comps card-sec"><div class="comps-h">Statistical matches ' +
+                   tag + "</div>") +
+      (weak
+        ? '<p class="fine comps-weak"><strong>No reliable statistical match was found.</strong> ' +
+          'His nearest one is further away than nine out of ten players’ are, which is itself ' +
+          'the finding: nothing in eight drafted classes looks much like him.</p>'
+        : '<p class="comps-lead">' + p.cmph + " of the " + p.cmpn + " players from 2014–21 " +
+          "whose testing, college production and college grades most resemble his built strong " +
+          "careers — <b>" + pct(p.cmpr) + "</b> once shrunk toward the " + pct(p.cmpb) +
+          " base rate at his position.</p>") +
+      (shown.length ? '<ul class="comp-list">' + shown.map(row).join("") + "</ul>" : "") +
+      (rest.length
+        ? '<details class="card-more"><summary>See all statistical matches</summary>' +
+          '<ul class="comp-list">' + rest.map(row).join("") + "</ul>" +
+          '<p class="fine">Distance is measured within position on standardised testing, ' +
+          'production and grade columns, over the features both players actually have. ' +
+          'These are <b>statistical</b> matches, not stylistic ones — a similar profile on ' +
+          'paper, which is not the same as playing alike.</p></details>'
+        : "") +
+      '<p class="fine">Shown, not used: these do not affect his score. Adding them to the ' +
+      'model is negative out of sample, and on their own they reach 0.65 AUC against the ' +
+      'pre-draft model’s 0.69. They explain a projection; they do not make one.</p></section>';
   }
 
   /* ---------- watchlist card ----------
@@ -1327,6 +1610,7 @@
     let rows = D.players.filter(p => p.yr > D.train_years[1]);
     if (pState.years.size) rows = rows.filter(p => pState.years.has(p.yr));
     if (pState.pos !== "ALL") rows = rows.filter(p => p.pg === pState.pos);
+    setFilmCount("#projFilmWrap", rows.filter(p => p.film).length);
     if (pState.film) rows = rows.filter(p => p.film);
     if (pState.round === "d3") rows = rows.filter(p => p.rd >= 4);
     else if (pState.round !== "0") rows = rows.filter(p => p.rd === +pState.round);
@@ -1724,6 +2008,7 @@
       if (wState.tier) rows = rows.filter(p => p.t === wState.tier);
       if (wState.hideThin) rows = rows.filter(p => !p.thin);
       if (wState.markers) rows = rows.filter(p => p.mk);
+      setFilmCount("#watchFilmWrap", rows.filter(p => p.film).length);
       if (wState.film) rows = rows.filter(p => p.film);
       if (wState.q) rows = rows.filter(p =>
         (p.nm || "").toLowerCase().includes(wState.q) ||
