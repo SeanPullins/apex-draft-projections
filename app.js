@@ -109,6 +109,8 @@
     clearTimeout(qTimer);
     qTimer = setTimeout(() => { state.q = e.target.value.trim().toLowerCase(); renderBoard(); }, 120);
   });
+  wireFilm("#boardFilm", "#boardFilmWrap", D.players,
+           on => { state.film = on; renderBoard(); });
 
   /* ---------- board table ---------- */
   // Quarterbacks only. Off the position the measurement does not exist, and a
@@ -160,10 +162,15 @@
         (p.nm || "").toLowerCase().includes(state.q) ||
         (p.cl || "").toLowerCase().includes(state.q) ||
         (p.tm || "").toLowerCase().includes(state.q));
+    } else if (state.film) {
+      // film spans classes, so scoping it to the selected one would answer
+      // "which 2024 players have film" when the question asked was "which do"
+      rows = D.players.filter(p => p.film);
     } else {
       rows = D.players.filter(p => p.yr === state.year);
     }
     if (state.pos !== "ALL") rows = rows.filter(p => p.pg === state.pos);
+    if (state.film) rows = rows.filter(p => p.film);
     // the sort keys name the drafted fields; route them through the active lens
     // so clicking "APEX" sorts the pre-draft board by its own score
     const L = lens();
@@ -281,6 +288,9 @@
     // score, so rather than relabel them they are stood down in that lens.
     const tierKey = state.pos === "ALL" ? "tier" : "tierp";
     const showTiers = !pre && state.sort === "apex" && state.dir === -1 && !state.q
+      // tiers describe a whole class; drawn over a filtered subset their
+      // boundaries claim a grouping that is no longer there
+      && !state.film
       && rows.some(p => p[tierKey] != null);
     const tierSize = {};
     if (showTiers) rows.forEach(p => { tierSize[p[tierKey]] = (tierSize[p[tierKey]] || 0) + 1; });
@@ -716,6 +726,19 @@
     return ' <span class="film-tag" title="' + esc(who) +
       " charted this player from all-22 cutups — open the card for the notes. " +
       'Judgement, not a measurement: it feeds no score on this site.">film</span>';
+  }
+
+  // The control only exists where there is something to filter to. A checkbox
+  // that always returns an empty table is worse than no checkbox, and film
+  // covers one position so far.
+  function wireFilm(box, wrap, rows, apply) {
+    const el = $(box), w = $(wrap);
+    if (!el || !w) return;
+    const n = rows.filter(p => p.film).length;
+    if (!n) return;
+    w.hidden = false;
+    $("span", w).textContent = "Only players with film (" + n + ")";
+    el.addEventListener("change", e => apply(e.target.checked));
   }
 
   function filmPanel(p) {
@@ -1298,6 +1321,7 @@
     let rows = D.players.filter(p => p.yr > D.train_years[1]);
     if (pState.years.size) rows = rows.filter(p => pState.years.has(p.yr));
     if (pState.pos !== "ALL") rows = rows.filter(p => p.pg === pState.pos);
+    if (pState.film) rows = rows.filter(p => p.film);
     if (pState.round === "d3") rows = rows.filter(p => p.rd >= 4);
     else if (pState.round !== "0") rows = rows.filter(p => p.rd === +pState.round);
     if (pState.q) rows = rows.filter(p =>
@@ -1378,6 +1402,8 @@
         pState.q = e.target.value.trim().toLowerCase(); renderProj();
       }, 120);
     });
+    wireFilm("#projFilm", "#projFilmWrap", D.players.filter(p => PROJ_YEARS.includes(p.yr)),
+             on => { pState.film = on; renderProj(); });
   }
 
   function renderProj() {
@@ -1678,6 +1704,8 @@
     $("#watchMarkers").addEventListener("change", e => {
       wState.markers = e.target.checked; renderWatch();
     });
+    wireFilm("#watchFilm", "#watchFilmWrap", W.players,
+             on => { wState.film = on; renderWatch(); });
     let wTimer;
     $("#watchSearch").addEventListener("input", e => {
       clearTimeout(wTimer);
@@ -1690,6 +1718,7 @@
       if (wState.tier) rows = rows.filter(p => p.t === wState.tier);
       if (wState.hideThin) rows = rows.filter(p => !p.thin);
       if (wState.markers) rows = rows.filter(p => p.mk);
+      if (wState.film) rows = rows.filter(p => p.film);
       if (wState.q) rows = rows.filter(p =>
         (p.nm || "").toLowerCase().includes(wState.q) ||
         (p.tm || "").toLowerCase().includes(wState.q));
