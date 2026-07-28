@@ -628,3 +628,37 @@ td.num, th.num { text-align: right; }
 /* not-applicable cell: the measurement exists only at one position, and a blank
    says that where a zero would read as a bad score */
 .na { color: var(--ink-3); }
+
+/* Film notes. Deliberately styled unlike every measured panel on a card: no
+   bars, no percentiles, no AUC, and a solid left rule in a neutral colour
+   rather than the good/bad palette the model's own panels use. A reader should
+   be able to tell at a glance that this block was watched rather than counted,
+   and the attribution chip says who watched it. */
+.film { margin-top: 14px; padding: 12px 14px 10px;
+        border-left: 3px solid var(--ink-3, #888); border-radius: 0 8px 8px 0;
+        background: color-mix(in srgb, var(--ink-3, #888) 6%, transparent); }
+.film-h { font-size: 12px; font-weight: 700; letter-spacing: .06em;
+          text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.film-by { font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+           text-transform: none; padding: 1px 7px; margin-left: 4px;
+           border-radius: 999px; vertical-align: 1px;
+           background: color-mix(in srgb, var(--ink-3, #888) 20%, transparent);
+           color: var(--ink-2, inherit); }
+.film-arch { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.film-rank { font-size: 12px; font-weight: 400; color: var(--muted); }
+.film-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                gap: 6px 16px; margin: 0 0 12px; }
+.film-m dt { font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+             color: var(--muted); }
+.film-m dd { margin: 0; font-size: 13px; }
+.film-area { margin-bottom: 10px; }
+.film-area h5 { margin: 0 0 4px; font-size: 12px; font-weight: 700;
+                letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.film-area ul { list-style: none; margin: 0; padding: 0; }
+.film-area li { font-size: 13.5px; line-height: 1.45; padding: 2px 0 2px 18px;
+                position: relative; }
+.film-area li::before { position: absolute; left: 0; font-weight: 700; }
+.film-up::before { content: "+"; color: var(--good-text, #3a7); }
+.film-dn::before { content: "\2212"; color: var(--bad-text, #b55); }
+.film-note { margin: 8px 0 0; font-size: 11.5px; line-height: 1.5;
+             color: var(--muted); }

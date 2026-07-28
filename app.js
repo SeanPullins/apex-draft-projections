@@ -550,6 +550,7 @@
 
     const signals = signalsPanel(p);
     const comps = compsPanel(p);
+    const film = filmPanel(p);
 
     let outcome = "";
     if (p.src === 1) {
@@ -588,7 +589,7 @@
       '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div></div>' +
       '<div class="modal-grid">' +
       facts.map(([l, v]) => '<div class="fact"><div class="fact-label">' + l + '</div><div class="fact-value">' + v + "</div></div>").join("") +
-      "</div>" + predraft + signals + comps + outcome;
+      "</div>" + predraft + signals + film + comps + outcome;
     backdrop.hidden = false;
     $(".modal-close", modal).addEventListener("click", closeModal);
     $(".modal-close", modal).focus();
@@ -700,6 +701,32 @@
     ["never played", "co-bad"], ["bust", "co-bad"], ["rotational", "co-mid"],
     ["starter", "co-ok"], ["hit", "co-hit"],
   ];
+
+  // Gemini's read of the all-22, kept visually apart from everything measured on
+  // this site and attributed on its face. It is the only panel on a card that
+  // was not screened against an outcome, and a reader weighing a scouting note
+  // is entitled to know a model wrote it.
+  function filmPanel(p) {
+    const f = p.film;
+    if (!f) return "";
+    const metrics = Object.keys(f.m || {}).map(k =>
+      '<div class="film-m"><dt>' + esc(k) + "</dt><dd>" + esc(f.m[k]) + "</dd></div>").join("");
+    const traits = (f.t || []).map(t =>
+      '<div class="film-area"><h5>' + esc(t.area) + "</h5><ul>" +
+      (t.pos || []).map(x => '<li class="film-up">' + esc(x) + "</li>").join("") +
+      (t.neg || []).map(x => '<li class="film-dn">' + esc(x) + "</li>").join("") +
+      "</ul></div>").join("");
+    return '<div class="film">' +
+      '<div class="film-h">On tape' +
+      (f.by ? ' <span class="film-by">' + esc(f.by) + "</span>" : "") + "</div>" +
+      '<p class="film-arch">' + esc(f.arch || "") +
+      (f.rk ? ' <span class="film-rank">#' + f.rk + " of " + f.of +
+        " for how the traits project" + (f.grp ? ", " + esc(f.grp) : "") +
+        "</span>" : "") + "</p>" +
+      (metrics ? '<dl class="film-metrics">' + metrics + "</dl>" : "") +
+      traits +
+      '<p class="film-note">' + esc(f.note || "") + "</p></div>";
+  }
 
   function compsPanel(p) {
     if (!p.cmp || !p.cmp.length) {
@@ -885,6 +912,7 @@
             : "") + "</div>"
         : "") +
       signalsPanel(p) +
+      filmPanel(p) +
       levers +
       (has
         ? '<p class="fine" style="margin-top:12px">This is a projection of whether he <em>arrives</em> ' +
