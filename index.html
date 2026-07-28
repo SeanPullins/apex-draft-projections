@@ -219,9 +219,14 @@
 
     <div class="prose" style="max-width:none">
       <h2>How this list is built</h2>
-      <p>Four steps: take everyone who played enough of a 2025 college season, adjust each
-      player&rsquo;s grade for how much he actually played, rank him against his own position, and cut
-      tiers on that rank. No model runs at any point. Nothing here is a forecast.</p>
+      <p>Take everyone who played enough of a 2025 college season, adjust each player&rsquo;s grade
+      for how much he actually played, and rank him against his own position. That ranking is
+      description, not prediction: it is what happened on the field last year, nothing more.</p>
+      <p>The two probability columns are a separate thing and they <em>are</em> a forecast. A model
+      trained on college players from 2014 onward turns the adjusted grade, workload, career shape
+      and level of competition into a probability of reaching an NFL roster and of being drafted,
+      and the tiers are cut on the first of those. Section 4 below describes it and section 5
+      scores it, including where its numbers are wrong.</p>
 
       <h3>1. Who is in the pool</h3>
       <p>Every player with a 2025 college season and at least <strong id="cfgGames"></strong> games,
@@ -290,6 +295,53 @@
       second-best &mdash; rather than pretending the best cornerback and the best quarterback can be
       separated.</p>
 
+      <h3>5. Does 70% mean 70%?</h3>
+      <p>The tiers are printed as probabilities, so the honest test is not whether the model
+      <em>orders</em> players well but whether its numbers are true. Those are different claims and
+      only the second one licenses reading a percentage literally. AUC answers the first and says
+      nothing at all about the second &mdash; a model can rank perfectly while every number it
+      prints is wrong.</p>
+      <p>So here is the second one. Every player-season from
+      <strong id="calFolds"></strong> was scored by a model that had not seen it, using a calibrator
+      fitted only on <em>earlier</em> seasons. Left column is what was said, right column is what
+      happened.</p>
+      <div class="table-wrap"><table class="board mini" id="wlCalTable">
+        <thead><tr><th>Said</th><th class="num">Players</th><th class="num">Actually reached
+          the NFL</th><th class="num">Off by</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="calSummary"></p>
+      <p>The folds themselves, since &ldquo;six cohorts&rdquo; is not a number anyone can check:</p>
+      <div class="table-wrap"><table class="board mini" id="wlFoldTable">
+        <thead><tr><th>Scored</th><th class="num">Trained on</th><th class="num">Players scored</th>
+          <th class="num">Still in college</th><th class="num">Reached the NFL</th>
+          <th class="num">AUC</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p>Two things that table does not let you forget. The error runs one way at the bottom and the
+      other at the top, and part of that is the labels rather than the model: a player whose last
+      college season was 2023 has had fewer years to turn up on a roster than one from 2018, so the
+      recent folds under-count arrivals and the model looks like it is overstating when some of
+      those players simply have not arrived <em>yet</em>. And the top band is thin. Numbers above
+      90% rest on a few hundred historical players, which is why the highest figure on this page is
+      in the low nineties rather than the 98% an uncapped model would happily print.</p>
+
+      <h3>6. The mistake this model made, and what fixing it cost</h3>
+      <p>Until recently the model was trained on one row per player &mdash; his <em>last</em> college
+      season, with career shape measured across the whole career. That is a sound description of a
+      player who is finished. It is the wrong description of most of this list: roughly
+      <strong id="calMid"></strong> of college player-seasons belong to someone who will play again.</p>
+      <p>The two are not the same row even when they carry identical numbers. &ldquo;One season
+      played&rdquo; meant <em>never played again</em> in the training data, which is mostly a
+      washout, and means <em>this was his first year</em> on the watchlist, which says nothing.
+      Scored on players in the middle of a career, the old model lost a fifth of its
+      discrimination and its probabilities bent both ways at once: it said 1.6% where the truth was
+      15.3%, and 96% where the truth was 76%.</p>
+      <p>It is now trained on every player-season, each described only by what was knowable at the
+      time. That halved the calibration error. It also cut the headline accuracy figure from 0.929
+      to <strong id="cfgAucNfl3"></strong>, and that is not a regression &mdash; the old number was
+      measured on finished careers, which are much easier to sort and are not what this page is
+      full of. The lower number is the same model measured on the players it is actually asked
+      about.</p>
+
       <h3>What this page still will not tell you</h3>
       <p>It projects whether a player <em>arrives</em>, not whether he is any <em>good</em>. Those
       are different questions and only the first one is answerable from here.</p>
@@ -305,7 +357,7 @@
       walk-forward it lands about <strong>60 picks</strong> from the truth on average and inside the
       right round only half the time &mdash; close to two rounds of error. &ldquo;Drafted&rdquo; as a
       probability answers the same question at 0.931, so that is what the column shows.</p>
-      <p class="fine">One caveat on the headline numbers: 0.924 looks far better than anything else
+      <p class="fine">One caveat on the headline numbers: <strong id="cfgAucNfl2"></strong> looks far better than anything else
       on this site, and part of that is simply an easier question. The pool includes thousands of
       players who were never NFL prospects at all, and separating them from the ones who were is not
       hard. The figure worth reading is the gap over ranking on the grade percentile &mdash; about
@@ -456,7 +508,7 @@
 </footer>
 
 <script src="data.js?v=a53c33b836"></script>
-<script src="watchlist.js?v=8cd7873a6b"></script>
-<script src="app.js?v=38c2167a87"></script>
+<script src="watchlist.js?v=d22ecbc874"></script>
+<script src="app.js?v=1d747d703b"></script>
 </body>
 </html>

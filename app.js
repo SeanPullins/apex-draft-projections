@@ -862,21 +862,34 @@
       // reaching a roster and being drafted, measured on college players rather
       // than borrowed from a drafted population this player is not in.
       (p.mk
-        ? '<div class="mk-band"><strong>Hits every marker at his position.</strong> ' +
-          "He is top 30% among college " + p.pg + "s on each measurement that " +
-          "predicted success. Of the " + p.mk.n.toLocaleString() + " college " +
-          p.pg + "s since 2014 who did the same, <b>" + Math.round(p.mk.nfl * 100) +
-          "%</b> reached an NFL roster against <b>" + Math.round(p.mk.base * 100) +
-          "%</b> of all of them, and " + Math.round(p.mk.drf * 100) + "% were " +
-          "drafted against " + Math.round(p.mk.dbase * 100) + "%. That is a " +
-          "record for players who looked like this, not a forecast for him.</div>"
+        ? '<div class="mk-band"><strong>No weak spot in his measurements.</strong> ' +
+          "Ranked against college " + p.pg + "s who played a full season, his " +
+          "<em>lowest</em> marker still lands in the top 5% &mdash; and a " +
+          p.pg + " has " + (p.mk.mk === 1 ? "one marker" : p.mk.mk + " of them") +
+          " to clear. Of the " + p.mk.n.toLocaleString() + " who did the same " +
+          "since 2014, <b>" + Math.round(p.mk.nfl * 100) + "%</b> reached an NFL " +
+          "roster against <b>" + Math.round(p.mk.base * 100) + "%</b> of all of " +
+          "them, and " + Math.round(p.mk.drf * 100) + "% were drafted against " +
+          Math.round(p.mk.dbase * 100) + "%. That is a record for players who " +
+          "looked like this, not a forecast for him." +
+          // The markers are inputs to the model that produced the number above,
+          // so most of what the flag knows is already in that number. Measured
+          // rather than assumed, and small enough that saying so is the only
+          // honest option.
+          (typeof p.mk.lift === "number"
+            ? " Set against the probability at the top of this card, the flag is " +
+              "worth about <b>" + Math.round(p.mk.lift * 100) + " points</b> more " +
+              "&mdash; among players already in the top quarter at their position. " +
+              "Lower down it adds nothing: these measurements are what the model " +
+              "reads, so it mostly agrees with the number it sits beside."
+            : "") + "</div>"
         : "") +
       signalsPanel(p) +
       levers +
       (has
         ? '<p class="fine" style="margin-top:12px">This is a projection of whether he <em>arrives</em> ' +
           'in the NFL, not whether he is any good once there. Measured walk-forward at ' +
-          (C.auc_nfl ? C.auc_nfl.toFixed(3) : "0.924") + ' AUC across six cohorts.</p>'
+          C.auc_nfl.toFixed(3) + ' AUC across six cohorts.</p>'
         : "");
     backdrop.hidden = false;
     $(".modal-close", modal).addEventListener("click", closeModal);
@@ -1458,16 +1471,55 @@
       const auc = $("#tierAuc");
       if (auc && C.auc_nfl) {
         auc.innerHTML =
-          "Measured walk-forward — trained on players whose college careers ended by one year, " +
-          "scored on the next, six cohorts running: <strong>" + C.auc_nfl.toFixed(3) + " AUC</strong> " +
-          "for reaching a roster and <strong>" + C.auc_draft.toFixed(3) + "</strong> for being " +
-          "drafted, against " + C.auc_nfl_grade_only.toFixed(3) + " and " +
-          C.auc_draft_grade_only.toFixed(3) + " for ranking on the grade percentile alone. " +
+          "Measured walk-forward — trained on players whose college careers were over by one " +
+          "season, scored on every player who took the field the next, six cohorts running: " +
+          "<strong>" + C.auc_nfl.toFixed(3) + " AUC</strong> for reaching a roster and " +
+          "<strong>" + C.auc_draft.toFixed(3) + "</strong> for being drafted, against " +
+          C.auc_nfl_grade_only.toFixed(3) + " and " + C.auc_draft_grade_only.toFixed(3) +
+          " for ranking on the grade percentile alone. Those are lower than the figures this " +
+          "page used to show, because they are now measured on everyone rather than only on " +
+          "players who had finished college — which is the harder and the honest population. " +
+          (C.cal_nfl ? "Whether the numbers themselves are true is section 5. " : "") +
           (C.prod_only && C.prod_only.length
             ? "<strong>" + C.prod_only.join(", ") + " is the exception</strong>: this dataset has no " +
               "historical college grading for the position, so those players have no projection and " +
               "keep the older production-percentile tiers."
             : "");
+      }
+      // one canonical figure, read from the build rather than typed into the
+      // page in two places — they had already drifted to 0.924 against 0.929
+      setTxt("#cfgAucNfl2", C.auc_nfl ? C.auc_nfl.toFixed(3) : "");
+      setTxt("#cfgAucNfl3", C.auc_nfl ? C.auc_nfl.toFixed(3) : "");
+      if (C.mid_career_frac) setTxt("#calMid", Math.round(C.mid_career_frac * 100) + "%");
+
+      // The reliability table. This is the page's own audit: what it said next
+      // to what happened, on rows no part of the pipeline had seen.
+      const cal = C.cal_nfl, calBody = $("#wlCalTable tbody");
+      if (cal && cal.bands && calBody) {
+        const fy = (C.folds || []).map(f => f.year).filter(y => y >= 2020);
+        setTxt("#calFolds", fy.length ? fy[0] + "–" + fy[fy.length - 1] : "the held-out folds");
+        calBody.innerHTML = cal.bands.map(b => {
+          const off = b.said - b.was;
+          return "<tr><td>" + b.band + '</td><td class="num">' + b.n.toLocaleString() +
+            '</td><td class="num prob">' + (b.was * 100).toFixed(1) + "%</td>" +
+            '<td class="num" style="color:' +
+            (Math.abs(off) < 0.02 ? "var(--ok,#3a7)" : "var(--warn,#b70)") + '">' +
+            (off > 0 ? "+" : "") + (off * 100).toFixed(1) + " pts</td></tr>";
+        }).join("");
+        const n = cal.bands.reduce((a, b) => a + b.n, 0);
+        setTxt("#calSummary",
+          n.toLocaleString() + " player-seasons. Expected calibration error " +
+          cal.ece.toFixed(3) + " — on average the stated probability is off by about " +
+          (cal.ece * 100).toFixed(1) + " points. Brier score " + cal.brier.toFixed(3) + ".");
+      }
+      const foldBody = $("#wlFoldTable tbody");
+      if (C.folds && foldBody) {
+        foldBody.innerHTML = C.folds.map(f =>
+          "<tr><td>" + f.year + '</td><td class="num">' + f.train_n.toLocaleString() +
+          '</td><td class="num">' + f.n.toLocaleString() +
+          '</td><td class="num">' + Math.round(f.mid_career * 100) + "%" +
+          '</td><td class="num prob">' + (f.base * 100).toFixed(1) + "%" +
+          '</td><td class="num">' + f.auc.toFixed(3) + "</td></tr>").join("");
       }
       setTxt("#cfgGames", C.min_games);
       setTxt("#cfgDefSnaps", C.min_def_snaps);
@@ -1565,16 +1617,19 @@
         let sep = "";
         if (p.t !== last) {
           last = p.t; n = 0;
-          sep = '<tr class="tier-row t' + p.t + '"><td colspan="10">' +
+          // counted off the header rather than typed: it was left at 10 when
+          // the "Stands in" column made eleven, and the divider under-spanned
+          sep = '<tr class="tier-row t' + p.t + '"><td colspan="' +
+            document.querySelectorAll("#watchTable thead th").length + '">' +
             '<span class="tier-name">' + TIER_NAME[p.t] + "</span>" +
             '<span class="tier-meta">' + sizes[p.t] + " shown · " + TIER_SUB[p.t] + "</span></td></tr>";
         }
         n++;
         return sep + "<tr class='clickable' data-w='" + shown.push(p) + "'><td class='num'>" + n + "</td>" +
           '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
-          (p.mk ? ' <span class="mk-tag" title="Top 30% at his position on every measurement that predicts. ' +
+          (p.mk ? ' <span class="mk-tag" title="His weakest measurement is still top 5% at his position. ' +
                   Math.round(p.mk.nfl * 100) + '% of college players who did this reached an NFL roster, against ' +
-                  Math.round(p.mk.base * 100) + '% overall.">hits the markers</span>' : "") +
+                  Math.round(p.mk.base * 100) + '% overall.">no weak spot</span>' : "") +
           (p.thin ? ' <span class="thin-tag" title="few snaps or games — the grade is a small sample">thin sample</span>' : "") +
           "</div></td>" +
           "<td>" + esc(p.tm) + "</td>" +
