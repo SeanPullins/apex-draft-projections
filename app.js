@@ -755,12 +755,13 @@
       '<div class="film-h">On tape' +
       (f.by ? ' <span class="film-by">' + esc(f.by) + "</span>" : "") + "</div>" +
       '<p class="film-arch">' + esc(f.arch || "") +
-      (f.rk ? ' <span class="film-rank">#' + f.rk + " of " + f.of +
-        " for how the traits project" + (f.grp ? ", " + esc(f.grp) : "") +
-        "</span>"
-        : f.xpos ? ' <span class="film-rank">charted alongside ' + (f.of - 1) +
-          " players at other positions, so no ranking is shown</span>"
-        : "") + "</p>" +
+      (f.rk
+        ? ' <span class="film-rank">#' + f.rk + " of " + f.of + " at his position" +
+          (f.grp ? " in " + esc(f.grp) : "") + "</span>"
+        : f.solo
+          ? ' <span class="film-rank">the only one at his position in this pass, ' +
+            "so no ranking is shown</span>"
+          : "") + "</p>" +
       (metrics ? '<dl class="film-metrics">' + metrics + "</dl>" : "") +
       traits +
       (f.vd ? '<p class="film-verdict">' + esc(f.vd) + "</p>" : "") +
