@@ -174,7 +174,8 @@ table.board { border-collapse: collapse; width: 100%; min-width: 980px; }
 }
 .board tbody tr { cursor: pointer; }
 .board tbody tr:hover { background: var(--row-hover); }
-.board tbody tr[data-id]:focus-visible {
+.board tbody tr[data-id]:focus-visible,
+.board tbody tr[data-w]:focus-visible {
   outline: 2px solid var(--series-1); outline-offset: -2px;
   background: var(--row-hover);
 }
