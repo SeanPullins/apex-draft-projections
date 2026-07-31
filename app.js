@@ -1138,11 +1138,12 @@
     lastFocus = document.activeElement;
     const C = (W && W.config) || {};
     const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
+    const tier = p.t > 0 ? p.t : 4;
     const has = p.nfl != null;
 
     const facts = [];
     facts.push(["Rank at position", "#" + p.r + " of " + p.pn + " " + p.pg +
-      (p.t ? ' <span class="pctl">· ' + TIER_NAME[p.t] + "</span>" : "")]);
+      ' <span class="pctl">· ' + TIER_NAME[tier] + "</span>"]);
     facts.push(["2025 grade", "p" + p.p + ' <span class="pctl">within position, volume-adjusted' +
       (p.rp != null && Math.abs(p.rp - p.p) > 5 ? " · p" + p.rp + " unadjusted" : "") + "</span>"]);
     facts.push(["Playing time", (p.v != null ? "p" + p.v + " for snaps" : "–") +
@@ -1833,6 +1834,10 @@
   if (W) {
     const wState = { pos: "ALL", q: "", tier: 0, hideThin: false, markers: false };
     const TIER_NAME = { 1: "Blue chip", 2: "Early watch", 3: "On the radar", 4: "Depth" };
+    // The lowest calibrated band is inclusive at 20%. Older payloads stored
+    // players exactly on that floor as tier 0, which made the renderer drop
+    // them even though they belonged in Depth.
+    const watchTier = p => p.t > 0 ? p.t : 4;
     const TIER_SUB = {
       1: "85%+ likely to reach an NFL roster",
       2: "65–85% likely", 3: "40–65% likely", 4: "20–40% likely",
@@ -2003,9 +2008,14 @@
       const b = document.createElement("button");
       b.className = "pill" + (pg === "ALL" ? " is-active" : "");
       b.textContent = pg;
+      b.setAttribute("aria-pressed", String(pg === "ALL"));
       b.addEventListener("click", () => {
         wState.pos = pg;
-        $$(".pill", wPills).forEach(x => x.classList.toggle("is-active", x.textContent === pg));
+        $$(".pill", wPills).forEach(x => {
+          const on = x.textContent === pg;
+          x.classList.toggle("is-active", on);
+          x.setAttribute("aria-pressed", String(on));
+        });
         renderWatch();
       });
       wPills.appendChild(b);
@@ -2016,9 +2026,14 @@
         const b = document.createElement("button");
         b.className = "pill" + (t === 0 ? " is-active" : "");
         b.textContent = lbl;
+        b.setAttribute("aria-pressed", String(t === 0));
         b.addEventListener("click", () => {
           wState.tier = t;
-          $$(".pill", tPills).forEach(x => x.classList.toggle("is-active", x.textContent === lbl));
+          $$(".pill", tPills).forEach(x => {
+            const on = x.textContent === lbl;
+            x.classList.toggle("is-active", on);
+            x.setAttribute("aria-pressed", String(on));
+          });
           renderWatch();
         });
         tPills.appendChild(b);
@@ -2038,9 +2053,9 @@
     });
 
     function renderWatch() {
-      let rows = W.players.filter(p => p.t > 0);
+      let rows = W.players.slice();
       if (wState.pos !== "ALL") rows = rows.filter(p => p.pg === wState.pos);
-      if (wState.tier) rows = rows.filter(p => p.t === wState.tier);
+      if (wState.tier) rows = rows.filter(p => watchTier(p) === wState.tier);
       if (wState.hideThin) rows = rows.filter(p => !p.thin);
       if (wState.markers) rows = rows.filter(p => p.mk);
       setFilmCount("#watchFilmWrap", rows.filter(p => p.film).length);
@@ -2050,27 +2065,28 @@
         (p.tm || "").toLowerCase().includes(wState.q));
       // rank, not percentile: the top of every position rounds to p100, so sorting
       // on the percentile leaves the head of each tier in arbitrary order
-      rows = rows.slice().sort((a, b) => a.t - b.t || a.r - b.r || b.p - a.p);
+      rows = rows.slice().sort((a, b) => watchTier(a) - watchTier(b) || a.r - b.r || b.p - a.p);
 
       let last = null, n = 0;
       const sizes = {};
-      rows.forEach(p => { sizes[p.t] = (sizes[p.t] || 0) + 1; });
+      rows.forEach(p => { const t = watchTier(p); sizes[t] = (sizes[t] || 0) + 1; });
       // rows are filtered and re-sorted, so the card is looked up by render
       // position rather than by name — two players can share a name
       const shown = [];
-      $("#watchBody").innerHTML = rows.slice(0, 400).map(p => {
+      $("#watchBody").innerHTML = rows.length ? rows.slice(0, 400).map(p => {
         let sep = "";
-        if (p.t !== last) {
-          last = p.t; n = 0;
+        const tier = watchTier(p);
+        if (tier !== last) {
+          last = tier; n = 0;
           // counted off the header rather than typed: it was left at 10 when
           // the "Stands in" column made eleven, and the divider under-spanned
-          sep = '<tr class="tier-row t' + p.t + '"><td colspan="' +
+          sep = '<tr class="tier-row t' + tier + '"><td colspan="' +
             document.querySelectorAll("#watchTable thead th").length + '">' +
-            '<span class="tier-name">' + TIER_NAME[p.t] + "</span>" +
-            '<span class="tier-meta">' + sizes[p.t] + " shown · " + TIER_SUB[p.t] + "</span></td></tr>";
+            '<span class="tier-name">' + TIER_NAME[tier] + "</span>" +
+            '<span class="tier-meta">' + sizes[tier] + " shown · " + TIER_SUB[tier] + "</span></td></tr>";
         }
         n++;
-        return sep + "<tr class='clickable' data-w='" + shown.push(p) + "'><td class='num'>" + n + "</td>" +
+        return sep + "<tr class='clickable' data-w='" + shown.push(p) + "' tabindex='0' aria-label='Open " + esc(p.nm) + " watchlist card' title='Open player card'><td class='num'>" + n + "</td>" +
           '<td class="player-cell"><div class="player-name">' + esc(p.nm) +
           (p.mk ? ' <span class="mk-tag" title="His weakest measurement is still top 5% at his position. ' +
                   Math.round(p.mk.nfl * 100) + '% of college players who did this reached an NFL roster, against ' +
@@ -2088,12 +2104,18 @@
           '<td class="num">' + holdCell(p) + "</td>" +
           '<td class="num prob">' + (p.v != null ? "p" + p.v : "–") + "</td>" +
           '<td class="num prob">' + (p.g != null ? p.g : "–") + "</td></tr>";
-      }).join("");
+      }).join("") : '<tr class="empty-row"><td colspan="' + document.querySelectorAll("#watchTable thead th").length + '"><strong>No players match these filters.</strong><br><span>Try clearing the search or changing the position, tier, or checkbox filters.</span></td></tr>';
 
-      $$("tr[data-w]", $("#watchBody")).forEach(tr => tr.addEventListener("click", () => {
-        const p = shown[+tr.dataset.w - 1];      // push() returns the new length
-        if (p) openWatchCard(p, W);
-      }));
+      $$("tr[data-w]", $("#watchBody")).forEach(tr => {
+        const open = () => {
+          const p = shown[+tr.dataset.w - 1];      // push() returns the new length
+          if (p) openWatchCard(p, W);
+        };
+        tr.addEventListener("click", open);
+        tr.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+        });
+      });
 
       $("#watchNote").innerHTML =
         "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
