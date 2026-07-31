@@ -123,9 +123,14 @@
     const b = document.createElement("button");
     b.className = "pill" + (pg === state.pos ? " is-active" : "");
     b.textContent = pg;
+    b.setAttribute("aria-pressed", String(pg === state.pos));
     b.addEventListener("click", () => {
       state.pos = pg;
-      $$(".pill", pills).forEach(x => x.classList.toggle("is-active", x.textContent === pg));
+      $$(".pill", pills).forEach(x => {
+        const on = x.textContent === pg;
+        x.classList.toggle("is-active", on);
+        x.setAttribute("aria-pressed", String(on));
+      });
       renderBoard();
     });
     pills.appendChild(b);
@@ -310,9 +315,14 @@
       const b = document.createElement("button");
       b.className = "pill" + (v === state.lens ? " is-active" : "");
       b.textContent = lbl;
+      b.setAttribute("aria-pressed", String(v === state.lens));
       b.addEventListener("click", () => {
         state.lens = v;
-        $$(".pill", lensPills).forEach(x => x.classList.toggle("is-active", x.textContent === lbl));
+        $$(".pill", lensPills).forEach(x => {
+          const on = x.textContent === lbl;
+          x.classList.toggle("is-active", on);
+          x.setAttribute("aria-pressed", String(on));
+        });
         renderBoard();
       });
       lensPills.appendChild(b);
@@ -386,7 +396,7 @@
     let lastTier = null;
 
     let preRank = 0;
-    body.innerHTML = rows.map(p => {
+    body.innerHTML = rows.length ? rows.map(p => {
       let sep = "";
       if (pre) preRank++;
       if (showTiers && p[tierKey] !== lastTier) {
@@ -430,14 +440,20 @@
         outlook: () => '<td class="c-outlook">' + outlookCell(p) + "</td>",
         out: () => '<td class="c-out">' + outcomeCell(p) + "</td>",
       };
-      return sep + "<tr data-id='" + p.yr + ":" + p.pk + "'>" +
+      return sep + "<tr data-id='" + p.yr + ":" + p.pk + "' tabindex='0' aria-label='Open " + esc(p.nm) + " player card' title='Open player card'>" +
         AC.map(c => (CELL[c.key] ? CELL[c.key]() : "<td></td>")).join("") + "</tr>";
-    }).join("");
-    $$("tr[data-id]", body).forEach(tr => tr.addEventListener("click", () => {
-      const [yr, pk] = tr.dataset.id.split(":").map(Number);
-      const p = D.players.find(x => x.yr === yr && x.pk === pk);
-      if (p) openModal(p);
-    }));
+    }).join("") : '<tr class="empty-row"><td colspan="' + AC.length + '"><strong>No players match these filters.</strong><br><span>Try clearing the search or choosing a different position.</span></td></tr>';
+    $$("tr[data-id]", body).forEach(tr => {
+      const open = () => {
+        const [yr, pk] = tr.dataset.id.split(":").map(Number);
+        const p = D.players.find(x => x.yr === yr && x.pk === pk);
+        if (p) openModal(p);
+      };
+      tr.addEventListener("click", open);
+      tr.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+      });
+    });
 
     renderTiles(rows);
   }
@@ -626,18 +642,22 @@
   }
 
   function cardSummary(p) {
+    const L = lens();
+    const pre = state.lens === "predraft";
     const s = [];
     const st = scoreStatus(p);
     // 1. where the model had him against where the league did
-    let one = "The model ranked him <b>" + ord(p.rk) + "</b> in the " + p.yr + " class";
-    if (p.prk != null) one += " and " + ord(p.prk) + " among " + p.pg + "s";
-    one += p.pk != null ? "; the league took him at <b>pick " + p.pk + "</b>." : ".";
+    let one = pre
+      ? "Without using draft position, the model gave him a pre-draft score of <b>" + fmt1(p[L.apex]) + "</b>."
+      : "The model ranked him <b>" + ord(p.rk) + "</b> in the " + p.yr + " class";
+    if (!pre && p.prk != null) one += " and " + ord(p.prk) + " among " + p.pg + "s";
+    if (!pre && p.pk != null) one += "; the league took him at <b>pick " + p.pk + "</b>.";
     s.push(one);
 
     // 2. the headline outlook, in words, tied to the number shown above
-    const ow = outlookWord(p.ph);
+    const ow = outlookWord(p[L.hit]);
     if (ow) {
-      s.push("It gave him " + ow[1] + " — <b>" + pct(p.ph) +
+      s.push("It gave him " + ow[1] + " — <b>" + pct(p[L.hit]) +
         "</b> to build a strong NFL career" +
         (p.src === 1 ? ", scored with his class held out of training" : "") + ".");
     }
@@ -668,7 +688,8 @@
      under "How the model reached this score". */
   function whyBullets(p) {
     const b = [];
-    if (p.pk != null && p.mh != null) {
+    const pre = state.lens === "predraft";
+    if (!pre && p.pk != null && p.mh != null) {
       b.push("Selected at <b>pick " + p.pk + "</b>. On its own, that draft slot has " +
         "historically produced a strong career " + pct(p.mh) + " of the time — and where a " +
         "player is picked still predicts this better than everything else combined.");
@@ -697,17 +718,19 @@
       state.pick = p.pk;
       writeHash();
     }
+    const pre = state.lens === "predraft";
+    const L = lens();
     // Renamed for a reader who does not already know the jargon. The underlying
     // fields, definitions and numbers are untouched; only the labels change, and
     // the exact definition is on the tooltip and in the methodology section.
     const probs = [
-      ["Strong NFL career", p.ph, p.mh, false,
+      ["Strong NFL career", p[L.hit], p.mh, false,
        "Top-quartile career value among players at his position from the same draft class."],
-      ["Long-term starter", p.ps, p.ms, false,
+      ["Long-term starter", p[L.starter], p.ms, false,
        "Started at least three NFL seasons."],
       ["Makes a Pro Bowl", p.pp, p.mp, false,
        "Named to at least one Pro Bowl."],
-      ["Disappoints for his draft position", p.pbu, p.mbu, true,
+      ["Disappoints for his draft position", p[L.bust], p.mbu, true,
        "Finished in the bottom quarter of career value among picks made in the same range of the draft."],
     ];
     const facts = [];
@@ -780,9 +803,9 @@
       '<span class="status-chip" title="' + esc(st.long) + '">' + esc(st.short) + "</span></div></div>" +
       '<button class="modal-close" aria-label="Close">✕</button></div>' +
       '<div class="modal-body">' +
-      '<div class="modal-score"><span class="hero">' + fmt1(p.apex) + '</span>' +
-      (p.sd != null ? '<span class="hero-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
-      '<span class="hero-sub">APEX score (0–100)<br>' + esc(st.short) + "</span></div>" +
+      '<div class="modal-score"><span class="hero">' + fmt1(p[L.apex]) + '</span>' +
+      (!pre && p.sd != null ? '<span class="hero-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
+      '<span class="hero-sub">' + (pre ? "Pre-draft APEX score" : "APEX score") + " (0–100)<br>" + esc(st.short) + "</span></div>" +
       cardSummary(p) +
       outcome +
       '<section class="card-sec"><h4 class="sec-h">Outlook</h4>' +
@@ -793,7 +816,7 @@
         '<span class="prob-track"><span class="prob-fill' + (isRisk ? " prob-fill-risk" : "") + '" style="width:' + Math.round((v || 0) * 100) + '%"></span>' +
         (m != null ? '<span class="prob-mark" style="left:' + Math.round(m * 100) + '%"></span>' : "") +
         "</span><span class=\"prob-val\">" + pct(v) + "</span></div>").join("") +
-      '<div class="legend-inline"><span><span class="key" style="background:var(--series-1)"></span>APEX</span>' +
+      '<div class="legend-inline"><span><span class="key" style="background:var(--series-1)"></span>' + (pre ? "Pre-draft APEX" : "APEX") + "</span>" +
       '<span><span class="key" style="background:var(--series-2)"></span>Draft-slot prior</span></div>' +
       '<p class="fine prob-note">These outcomes overlap; they are not portions of a single ' +
       '100% total. Hover a label for its exact definition.</p></div></section>' +
