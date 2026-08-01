@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APEX — NFL Draft-to-Success Projections</title>
+<meta name="description" content="Calibrated, backtested projections of NFL draft pick success for every class since 2000. Built on nflverse, RAS, college production and PFF-derived data.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+<link rel="stylesheet" href="styles.css?v=0bb78c86ca">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">APEX</span>
+    <span class="brand-sub">NFL Draft &rarr; Success Projections</span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
+    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+    <button class="tab" data-tab="proj" role="tab" aria-selected="false">Projections</button>
+    <button class="tab" data-tab="watch" role="tab" aria-selected="false">Watchlist</button>
+    <button class="tab" data-tab="method" role="tab" aria-selected="false">Methodology</button>
+  </nav>
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+</header>
+
+<main>
+  <!-- ============ BIG BOARD ============ -->
+  <section id="tab-board" class="tab-panel is-active">
+    <div class="controls" id="boardControls">
+      <label class="control">
+        <span class="control-label">Draft class</span>
+        <select id="classSelect" aria-label="Draft class"></select>
+      </label>
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="posPills" role="group" aria-label="Position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="searchBox" type="search" placeholder="Player, college, team…" aria-label="Search players">
+      </label>
+      <div class="control">
+        <span class="control-label">Scoring</span>
+        <div class="pills" id="lensPills" role="group" aria-label="Scoring lens"></div>
+      </div>
+      <div class="control">
+        <span class="control-label">Detail</span>
+        <div class="pills" id="viewPills" role="group" aria-label="Table detail level"></div>
+      </div>
+      <label class="control check" id="boardFilmWrap" hidden>
+        <input id="boardFilm" type="checkbox">
+        <span>Only players with film</span>
+      </label>
+    </div>
+
+    <p class="warn-band lens-band" id="lensBand" hidden></p>
+
+    <div class="tiles" id="boardTiles"></div>
+    <p class="mode-note" id="modeNote"></p>
+
+    <div class="table-wrap">
+      <table class="board" id="boardTable">
+        <thead><tr id="boardHead"></tr></thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint"><strong>Tiers</strong> group players the model cannot tell apart. The APEX score carries a &plusmn; from refitting the model on resampled draft history; two players land in the same tier when the gap between them is smaller than that uncertainty. Ranking within a tier is not a claim &mdash; ranking across tiers is. Sorting by any other column hides the tiers, because they only describe an APEX ordering. <strong>Bust risk</strong> is the model&rsquo;s probability that a player finishes in the bottom quarter of career value among picks made in the same range of the draft &mdash; the column where APEX separates itself from draft order most clearly, from round two down. In round one it is close to a flat base rate: about a quarter of first-rounders disappoint and the model cannot say which. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
+  </section>
+
+  <!-- ============ INSIGHTS ============ -->
+  <section id="tab-insights" class="tab-panel">
+    <div class="insight-hero" id="disagreeHero"></div>
+
+    <div class="card">
+      <h3>The forward test — classes the model was never trained on</h3>
+      <p class="card-sub">Everything above is a backtest. These four boards were frozen on draft night, after the model had been trained, before any of these players took an NFL snap. This is the scoreboard that cannot be tuned after the fact.</p>
+      <div id="fwdTable"></div>
+      <p class="fine" id="fwdNote"></p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Model vs. market, class by class</h3>
+        <p class="card-sub">AUC for the &ldquo;top-quartile career at position&rdquo; label, each draft class scored with that class held out of training.</p>
+        <div class="chart" id="aucChart"></div>
+        <details class="chart-table"><summary>View as table</summary><div id="aucTable"></div></details>
+      </div>
+      <div class="card">
+        <h3>Do the probabilities mean what they say?</h3>
+        <p class="card-sub">Out-of-fold predicted hit probability vs. what actually happened, 2003&ndash;2021 classes. Dots on the line = perfectly calibrated.</p>
+        <div class="chart" id="calChart"></div>
+        <details class="chart-table"><summary>View as table</summary><div id="calTable"></div></details>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Late-round hits the model liked more than the league did</h3>
+        <p class="card-sub">Round 2+ picks where APEX&rsquo;s held-out hit probability beat the draft-slot prior the most &mdash; and the player hit.</p>
+        <div id="stealsList"></div>
+      </div>
+      <div class="card">
+        <h3>Early picks the model was right to doubt</h3>
+        <p class="card-sub">Top-20 picks where APEX&rsquo;s held-out probability sat furthest below the draft-slot prior &mdash; and the player never became a starter.</p>
+        <div id="skepticList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How often do players hit, by round?</h3>
+      <p class="card-sub">Actual outcomes for the 2000&ndash;2021 classes. &ldquo;Hit&rdquo; = top-quartile career value among same-class, same-position peers.</p>
+      <div class="chart" id="roundChart"></div>
+      <details class="chart-table"><summary>View as table</summary><div id="roundTable"></div></details>
+    </div>
+  </section>
+
+  <!-- ============ PROJECTIONS ============ -->
+  <section id="tab-proj" class="tab-panel">
+    <div class="prose" style="max-width:none">
+      <h2>Projections &mdash; every class the model has never seen</h2>
+      <p>The big board shows one class at a time. This is all of them at once: every class drafted
+      after the training window closed in 2021, ranked together. These are the predictions that
+      count, because none of these players existed in the data the model learned from.</p>
+      <p>Both scores are shown side by side. <strong>APEX</strong> knows where a player was picked.
+      <strong>Pre-draft</strong> is the same model with the pick withheld &mdash; what it would have
+      said in February. <strong>Gap</strong> is the difference, and it is the most interesting column
+      on the page: a large positive gap means the league liked a player far more than his own
+      testing and production did, and a large negative gap means the reverse.</p>
+    </div>
+
+    <div class="controls">
+      <div class="control grow">
+        <span class="control-label">Class</span>
+        <div class="pills" id="projYearPills" role="group" aria-label="Draft class filter"></div>
+      </div>
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="projPosPills" role="group" aria-label="Position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Round</span>
+        <select id="projRound" aria-label="Round filter">
+          <option value="0">All rounds</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+          <option value="d3">Day 3 (4&ndash;7)</option>
+        </select>
+      </label>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="projSearch" type="search" placeholder="Player, college, team…" aria-label="Search projections">
+      </label>
+      <label class="control check" id="projFilmWrap" hidden>
+        <input id="projFilm" type="checkbox">
+        <span>Only players with film</span>
+      </label>
+    </div>
+
+    <div class="tiles" id="projTiles"></div>
+
+    <div class="table-wrap">
+      <table class="board" id="projTable">
+        <thead><tr id="projHead"></tr></thead>
+        <tbody id="projBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint" id="projNote"></p>
+  </section>
+
+  <!-- ============ WATCHLIST ============ -->
+  <section id="tab-watch" class="tab-panel">
+    <div class="prose" style="max-width:none">
+      <h2>Watchlist &mdash; college players who haven&rsquo;t reached the NFL</h2>
+      <p class="warn-band"><strong>This is not a draft class, and these are not APEX scores.</strong>
+      These are players with a 2025 college season who have not signed with an NFL team. The 2026
+      season has not been played, nobody declares until January 2027, and no one has tested at a
+      combine. The projection here answers a deliberately narrow question &mdash; <strong>how often
+      players who produced like this have reached an NFL roster at all</strong> &mdash; and says
+      nothing about whether a player becomes any good once he gets there. That second question needs
+      athletic testing and draft position, which these players do not yet have, and it is the
+      question the rest of this site is about.</p>
+      <p class="fine" id="watchSigned"></p>
+
+      <h3>What the tiers mean</h3>
+      <p>Tiers are cut on <strong>how often players who produced like this have gone on to reach an
+      NFL roster</strong>. That is a different and much more answerable question than the one the
+      rest of this site asks. It is trained on <em>every</em> college player rather than only the
+      drafted ones &mdash; nearly 35,000 of them since 2014, about one in five of whom made it &mdash;
+      which is the population this page actually contains.</p>
+      <p>Because the tiers are probabilities rather than percentiles, they mean the same thing across
+      positions, and a thin position is allowed to have few players in the top band instead of being
+      forced to fill a quota.</p>
+      <ul class="tier-legend" id="tierLegend"></ul>
+      <p class="fine" id="tierAuc"></p>
+    </div>
+    <div class="controls">
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="watchPills" role="group" aria-label="Watchlist position filter"></div>
+      </div>
+      <div class="control grow">
+        <span class="control-label">Tier</span>
+        <div class="pills" id="watchTierPills" role="group" aria-label="Watchlist tier filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Search</span>
+        <input id="watchSearch" type="search" placeholder="Player or school…" aria-label="Search watchlist">
+      </label>
+      <label class="control check">
+        <input id="watchThin" type="checkbox">
+        <span>Hide thin samples</span>
+      </label>
+      <label class="control check">
+        <input id="watchMarkers" type="checkbox">
+        <span>Only players who hit the markers</span>
+      </label>
+      <label class="control check" id="watchFilmWrap" hidden>
+        <input id="watchFilm" type="checkbox">
+        <span>Only players with film</span>
+      </label>
+    </div>
+    <div class="table-wrap">
+      <table class="board" id="watchTable">
+        <thead><tr><th>#</th><th>Player</th><th>School</th><th class="num">Pos</th>
+          <th class="num">Reaches NFL</th><th class="num">Drafted</th>
+          <th class="num">Rank at position</th><th class="num">2025 grade pctl</th>
+          <th class="num" title="Quarterbacks only: how much longer he holds the ball under pressure than in a clean pocket, as a percentile among drafted QBs since 2014">Stands in</th>
+          <th class="num">Volume pctl</th><th class="num">Games</th></tr></thead>
+        <tbody id="watchBody"></tbody>
+      </table>
+    </div>
+    <p class="table-hint" id="watchNote"></p>
+
+    <div class="prose" style="max-width:none">
+      <h2>How this list is built</h2>
+      <p>Take everyone who played enough of a 2025 college season, adjust each player&rsquo;s grade
+      for how much he actually played, and rank him against his own position. That ranking is
+      description, not prediction: it is what happened on the field last year, nothing more.</p>
+      <p>The two probability columns are a separate thing and they <em>are</em> a forecast. A model
+      trained on college players from 2014 onward turns the adjusted grade, workload, career shape
+      and level of competition into a probability of reaching an NFL roster and of being drafted,
+      and the tiers are cut on the first of those. Section 4 below describes it and section 5
+      scores it, including where its numbers are wrong.</p>
+
+      <h3>1. Who is in the pool</h3>
+      <p>Every player with a 2025 college season and at least <strong id="cfgGames"></strong> games,
+      who has not signed with an NFL team. Defenders need <strong id="cfgDefSnaps"></strong>
+      defensive snaps and offensive linemen <strong id="cfgOlSnaps"></strong> offensive snaps, since
+      grades on a handful of snaps are not measuring anything. That leaves
+      <strong id="cfgPool"></strong> players.</p>
+      <p>Position groups come from where a player lined up in college, not from where an NFL team
+      might eventually play him. Pool sizes vary a lot &mdash; there are several times as many
+      defensive backs as quarterbacks &mdash; which is exactly why nothing is ranked across
+      positions.</p>
+
+      <h3>2. What each position is ranked on</h3>
+      <p>One number per player, chosen to be the thing that position is paid to do:</p>
+      <div class="table-wrap"><table class="board mini" id="basisTable">
+        <thead><tr><th>Group</th><th>Ranked on</th><th>Playing time measured as</th>
+          <th class="num">Players</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="fine">Receivers and tight ends are ranked per route run rather than per target,
+      because targets measure what the quarterback decided to do. Linemen have their pass-block and
+      run-block grades averaged: a tackle who cannot do one of them is not a prospect, and splitting
+      the two would imply a precision the percentile does not have. The underlying grades are
+      licensed and are not published &mdash; only the percentiles derived from them.</p>
+
+      <h3>3. Adjusting for how much he played</h3>
+      <p>A grade earned on sixty snaps is a claim about sixty snaps. Ranking on the raw number puts
+      part-timers with one good afternoon at the top of every position &mdash; the unadjusted list
+      had a cornerback who ranked in the 100th percentile on grade and the 1st on volume.</p>
+      <p>So each grade is pulled toward its position&rsquo;s average by how much the player actually
+      played:</p>
+      <p class="formula">
+        <span>adjusted = <em>w</em> &times; grade + <span class="atom">(1 &minus; <em>w</em>)</span>
+          &times; position average</span>
+        <span>where <span class="atom"><em>w</em> = <em>n</em> / (<em>n</em> + <em>k</em>)</span></span>
+      </p>
+      <p><em>n</em> is the player&rsquo;s playing time and <em>k</em> is the position&rsquo;s own 25th-percentile
+      volume. A full-season starter keeps nearly all of his grade; a fringe player is pulled most of
+      the way back to average. Nobody is deleted for playing little &mdash; the claim is just held to
+      the evidence behind it. This is what makes the order here differ from raw grade: it moved
+      <strong id="cfgMoved"></strong> players by more than ten percentile points, the largest by
+      <strong id="cfgMovedMax"></strong>.</p>
+      <p>Players below the <strong id="cfgThinVol"></strong>th percentile for playing time, or under
+      <strong id="cfgThinGames"></strong> games, are tagged <span class="thin-tag">thin sample</span>
+      and can be hidden with the checkbox. They are tagged rather than dropped because a good player
+      on a bad team also plays few snaps.</p>
+
+      <h3>4. From production to a projection</h3>
+      <p>The adjusted grade becomes a percentile <em>within the position group</em>, and that
+      percentile &mdash; along with playing time, career shape, how a player&rsquo;s grade moved
+      year over year, and whether he played in a power conference &mdash; feeds a model trained on
+      what happened next to <strong>every</strong> college player since 2014, not just the drafted
+      ones. Roughly one in five reaches an NFL roster, so this is an ordinary prediction problem
+      rather than a needle in a haystack.</p>
+      <p>It outputs two probabilities, and the tiers are cut on the first:</p>
+      <ul id="cfgTierList"></ul>
+      <p>Players below the tier&nbsp;4 line are not tiered; they stay searchable but are left out of
+      the tiered view. Probabilities are calibrated on out-of-fold predictions rather than on the
+      training fit, so &ldquo;70%&rdquo; is close to literal: of the players given that number in the
+      backtest, roughly seven in ten made it, within about three points. These are historically
+      calibrated estimates rather than guarantees, and the most recent cohorts are not fully
+      resolved &mdash; some of the players counted as failures simply have not arrived
+      <em>yet</em>. Sections 5 to 8 are the evidence, including where it is weakest.</p>
+      <p>The percentile alone could not order the list. A percentile has a hundred buckets and a
+      position has hundreds of players, so the entire top of every position rounds to p100 and the
+      order inside tier&nbsp;1 would be arbitrary. Each player therefore also carries his rank at his
+      position, which never ties. With <strong>All</strong> positions selected the table sorts on that
+      rank, which interleaves fairly &mdash; every position&rsquo;s best, then every position&rsquo;s
+      second-best &mdash; rather than pretending the best cornerback and the best quarterback can be
+      separated.</p>
+
+      <h3>5. Does 70% mean 70%?</h3>
+      <p>The tiers are printed as probabilities, so the honest test is not whether the model
+      <em>orders</em> players well but whether its numbers are true. Those are different claims and
+      only the second one licenses reading a percentage literally. AUC answers the first and says
+      nothing at all about the second &mdash; a model can rank perfectly while every number it
+      prints is wrong.</p>
+      <p>So here is the second one. Every player-season from
+      <strong id="calFolds"></strong> was scored by a model that had not seen it, using a calibrator
+      fitted only on <em>earlier</em> seasons. Left column is what was said, right column is what
+      happened.</p>
+      <div class="table-wrap"><table class="board mini" id="wlCalTable">
+        <thead><tr><th>Said</th><th class="num">Players</th><th class="num">Actually reached
+          the NFL</th><th class="num">Off by</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="calSummary"></p>
+      <p>The folds themselves, since &ldquo;six cohorts&rdquo; is not a number anyone can check:</p>
+      <div class="table-wrap"><table class="board mini" id="wlFoldTable">
+        <thead><tr><th>Scored</th><th class="num">Trained on</th><th class="num">Players scored</th>
+          <th class="num">Still in college</th><th class="num">Reached the NFL</th>
+          <th class="num">AUC</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p>Two things that table does not let you forget. The error runs one way at the bottom and the
+      other at the top, and part of that is the labels rather than the model: a player whose last
+      college season was 2023 has had fewer years to turn up on a roster than one from 2018, so the
+      recent folds under-count arrivals and the model looks like it is overstating when some of
+      those players simply have not arrived <em>yet</em>. And the top band is thin. Numbers above
+      90% rest on a few hundred historical players, which is why the highest figure on this page is
+      in the low nineties rather than the 98% an uncapped model would happily print.</p>
+
+      <h3>6. Three ways of marking the same homework</h3>
+      <p>One protocol cannot rule out the two things a sceptic should suspect first about a model
+      trained on repeated observations of the same athlete. So here are three, hardest last.</p>
+      <div class="table-wrap"><table class="board mini" id="wlProtoTable">
+        <thead><tr><th>Protocol</th><th>What it forbids</th><th class="num">AUC</th>
+          <th class="num">95% CI</th><th class="num">Calibration error</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p><strong>Player</strong> is the check on whether the same player appeared on both sides of a
+      fold, carrying his eventual outcome with him. It comes out identical to <strong>season</strong>
+      because the folds already forbade it: training is restricted to players whose college careers
+      were <em>over</em> before the scored season, which excludes every row of anyone being scored.
+      Zero overlap in all six folds.</p>
+      <p><strong>Mature</strong> is the one that found something. A training row's inputs were always
+      knowable at the time, but its <em>label</em> was not: a player whose last college season was
+      2019 and who first turned up on a roster in 2023 was being counted as a success in the 2020
+      fold, using three years of future knowledge. Forbidding that &mdash; a row may only train once
+      its outcome had actually resolved &mdash; costs about two points of AUC. That is the honest
+      size of the effect, and it is why the number is quoted with the protocol attached.</p>
+      <p class="fine">Every interval resamples <em>players</em>, not rows. Roughly 52,000
+      player-seasons come from about 23,000 people, and treating them as 52,000 independent
+      observations would make these intervals too narrow.</p>
+
+      <h3>7. What it is worth to scout the top of the list</h3>
+      <p>AUC over tens of thousands of players is a hard number to feel. Scouting is a top-of-list
+      problem, so this is the same model measured the way it would be used: work down the ranking,
+      and count how many of the players you looked at reached the NFL.</p>
+      <div class="table-wrap"><table class="board mini" id="wlTopkTable">
+        <thead><tr><th>Scout the top</th><th class="num">Future NFL players found</th>
+          <th class="num">Hit rate</th><th class="num">Ranking on the grade alone</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="wlTopkNote"></p>
+
+      <h3>8. Does 70% mean the same thing at every position?</h3>
+      <p>Overall calibration cannot answer this. Quarterbacks could be overstated by ten points and
+      corners understated by ten and the combined table would still look immaculate. Since the tiers
+      are meant to be read across positions, the claim has to be checked position by position.</p>
+      <div class="table-wrap"><table class="board mini" id="wlPosCalTable">
+        <thead><tr><th>Position</th><th class="num">Player-seasons</th><th class="num">Said</th>
+          <th class="num">Actually</th><th class="num">Gap</th><th class="num">AUC</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="fine" id="wlPosCalNote"></p>
+
+      <h3>9. The mistake this model made, and what fixing it cost</h3>
+      <p>Until recently the model was trained on one row per player &mdash; his <em>last</em> college
+      season, with career shape measured across the whole career. That is a sound description of a
+      player who is finished. It is the wrong description of most of this list: roughly
+      <strong id="calMid"></strong> of college player-seasons belong to someone who will play again.</p>
+      <p>The two are not the same row even when they carry identical numbers. &ldquo;One season
+      played&rdquo; meant <em>never played again</em> in the training data, which is mostly a
+      washout, and means <em>this was his first year</em> on the watchlist, which says nothing.
+      Scored on players in the middle of a career, the old model lost a fifth of its
+      discrimination and its probabilities bent both ways at once: it said 1.6% where the truth was
+      15.3%, and 96% where the truth was 76%.</p>
+      <p>It is now trained on every player-season, each described only by what was knowable at the
+      time. That halved the calibration error. It also cut the headline accuracy figure from 0.929
+      to <strong id="cfgAucNfl3"></strong>, and that is not a regression &mdash; the old number was
+      measured on finished careers, which are much easier to sort and are not what this page is
+      full of. The lower number is the same model measured on the players it is actually asked
+      about.</p>
+
+      <h3>What this page still will not tell you</h3>
+      <p>It projects whether a player <em>arrives</em>, not whether he is any <em>good</em>. Those
+      are different questions and only the first one is answerable from here.</p>
+      <p>Asking the second was tried and measured rather than assumed. A model given production and
+      PFF grades but no athletic testing and no draft slot, tested on classes it never saw, reaches
+      <strong>0.640 AUC</strong> at predicting who becomes good; ranking on the grades alone gets
+      <strong>0.628</strong>. The whole model is worth about one AUC point over a list this page
+      already publishes &mdash; while a model that knows nothing but where a player was drafted
+      scores <strong>0.799</strong>. There is no honest way to dress that up as a projection of NFL
+      quality, so it is not published as one. It is worth revisiting after the February 2027 combine,
+      when these players finally have the input that carries the model.</p>
+      <p>A projected <em>draft position</em> was tried too, and dropped for the same reason. Scored
+      walk-forward it lands about <strong>60 picks</strong> from the truth on average and inside the
+      right round only half the time &mdash; close to two rounds of error. &ldquo;Drafted&rdquo; as a
+      probability answers the same question at 0.931, so that is what the column shows.</p>
+      <p class="fine">One caveat on the headline numbers: <strong id="cfgAucNfl2"></strong> looks far better than anything else
+      on this site, and part of that is simply an easier question. The pool includes thousands of
+      players who were never NFL prospects at all, and separating them from the ones who were is not
+      hard. The figure worth reading is the gap over ranking on the grade percentile &mdash; about
+      eleven AUC points &mdash; because that is what the model adds to what the page could already
+      have told you.</p>
+    </div>
+  </section>
+
+  <!-- ============ METHODOLOGY ============ -->
+  <section id="tab-method" class="tab-panel">
+    <div class="prose">
+      <h2>How APEX works</h2>
+      <p>APEX answers two questions from what was knowable on draft night: <strong>how likely is this player to succeed</strong>, and <strong>how likely is he to never play at all?</strong> They are not mirror images, and the second one is where the model has the clearer advantage over the draft order. It is trained on every pick from 2000&ndash;2021 and validated the only honest way — each class is scored by a model that never saw it.</p>
+
+      <h3>Four definitions of outcome</h3>
+      <ul>
+        <li><strong>Hit</strong> — career weighted Approximate Value in the top 25% of the player&rsquo;s own draft class at his position group. Position- and era-relative by construction, so a 2004 guard and a 2021 quarterback are judged fairly.</li>
+        <li><strong>Starter</strong> — three or more seasons as a primary starter.</li>
+        <li><strong>Pro Bowler</strong> — at least one Pro Bowl selection.</li>
+        <li><strong>Bust</strong> — bottom-quartile career value <em>among the players taken in the same draft-capital band</em>. Judged against his own neighbourhood of the draft, not the class as a whole, so the question stays meaningful at pick 5 and at pick 205 alike.</li>
+      </ul>
+      <p>The headline <strong>APEX score</strong> blends the three success probabilities (50% hit, 30% starter, 20% Pro Bowl) onto a 0&ndash;100 scale. <strong>Bust risk is kept out of it, on purpose.</strong> It is a different question rather than a penalty, and folding it in would bury the one number this model is clearly better at than the draft order.</p>
+      <p class="warn-band"><strong>Those three weights are a value judgement, not a finding.</strong>
+      Nothing in the data says a top-quartile career is worth five times a Pro Bowl; that ratio
+      encodes a preference for durable starters over rare stars, and a team building differently
+      would be right to choose differently. The weights were never tuned against outcomes &mdash;
+      doing so would have made the composite look better while telling you less. The three
+      probabilities underneath are published separately on every player card precisely so you can
+      apply your own weighting, and the model would not need retraining if you did.</p>
+
+      <h3>Where the model actually beats the draft order</h3>
+      <p>Draft position is consensus <em>upside</em> — it is the league agreeing about who is exciting, and it is very hard to improve on. Held out, APEX gains about one AUC point over the draft-slot prior on predicting who becomes good, and on classes it has never seen that edge shrinks to almost nothing.</p>
+      <p>Predicting who <em>disappoints for his draft slot</em> is a different question, and the market prices it far worse — draft position barely predicts it at all, by construction. On held-out classes the model gains <strong>+6.0 AUC points</strong> there against +1.1 on finding hits, the largest edge measured anywhere in this project.</p>
+      <p class="fine"><strong>With the same caveat as everything else here:</strong> that edge is a backtest. On the 2022&ndash;2023 classes, scored before those players had played, the model is <em>behind</em> the draft-slot prior on bust by 2.4 AUC points. There are only 80 busts across those two classes — nowhere near enough to settle it either way — but the backtest advantage has not appeared out of sample, exactly as it has not for the hit label. Both numbers are on the Insights tab.</p>
+      <p><strong>With one blunt exception: the model cannot tell you which first-rounders bust.</strong> On picks 1–32 its edge is +0.5 AUC points with a confidence interval straddling zero — a coin flip. About a quarter of first-round picks return less than the players taken around them, and this model has no idea which quarter. Its skill on that question starts at pick 33 and grows from there (+7.9 points for picks 33–105, +8.4 beyond 105).</p>
+      <p>So: use the APEX score to see who the model likes, and the bust-risk column to see who it is worried about — but treat bust risk in round one as a base rate, not a read.</p>
+
+      <h3>The model, in one paragraph</h3>
+      <p>A smooth spline-logistic curve fit to draft position and position group forms the <em>market prior</em> — the baseline any model must beat, because draft slot is the strongest single predictor of NFL outcomes. On top of it, a bagged LightGBM ensemble adds four evidence blocks: <strong>athleticism</strong> (Relative Athletic Score, combine tests, size-for-position, age), <strong>college production</strong> (final-season and career stats, 2014+), <strong>PFF college grades</strong> (position-matched grades, 2014+), and <strong>market structure</strong> (pick value curves, positional draft depth). The ensemble is shrunk halfway back toward the prior in log-odds space — the model only moves off the market consensus when the evidence is strong — and every probability is isotonic-calibrated on held-out predictions.</p>
+      <p>Ablating those blocks is unflattering and worth publishing anyway &mdash; but it has to be
+      done in the right era. PFF college grades exist only from 2015, so an ablation pooled across
+      2003&ndash;2021 averages a live modern signal against a decade of rows where the column is
+      simply blank. Across the whole window PFF is present for <strong>29%</strong> of training
+      rows; from 2015 it is present for <strong>90%</strong>.</p>
+      <p>Measured on the 2018&ndash;2021 folds, where the coverage is real, each block added to the
+      draft-slot prior is worth:</p>
+      <table class="bt-table"><tr><th>Block added</th><th>Hit AUC</th><th>Gain</th><th>Bust AUC</th><th>Gain</th></tr>
+        <tr><td>draft slot alone</td><td>0.8065</td><td>—</td><td>0.5672</td><td>—</td></tr>
+        <tr><td>+ athletic &amp; college production</td><td>0.8094</td><td class="win">+0.3</td><td>0.6080</td><td class="win">+4.1</td></tr>
+        <tr class="bt-hero"><td>+ PFF college grades</td><td>0.8162</td><td class="win">+0.7</td><td>0.6187</td><td class="win">+1.1</td></tr>
+        <tr><td>+ PFF blocking (offensive line)</td><td>0.8168</td><td class="win">+0.1</td><td>0.6272</td><td class="win">+0.9</td></tr>
+      </table>
+      <p><strong>The grades are the largest single contributor to finding hits</strong> &mdash; more
+      than twice what athleticism and production add together &mdash; which is the opposite of what
+      the pooled number suggested and much closer to what anyone who watches football would expect.
+      An earlier version of this page reported PFF at +0.1 AUC points, and that figure was an
+      artefact of measuring a feature over years in which it did not exist.</p>
+      <p class="fine">Training only on the 2015&ndash;2021 classes, where PFF is nearly complete, was
+      tried and is <em>worse</em>: 0.8120 on hit against 0.8168, and 0.6231 on bust against 0.6272.
+      Dropping three quarters of the rows costs more than the dilution does, and the gradient booster
+      handles the missing years without help. The fix was to measure the ablation honestly, not to
+      shrink the training window.</p>
+      <p>One wrinkle worth naming: plain isotonic calibration is a step function, and it flattens a 250-player class onto about 25 plateaus — which would put four players in a dead heat at the top of every board. APEX keeps the isotonic fit but interpolates between the plateau centres, so the curve stays monotone and honest while every player the model actually separated keeps a distinct number. Checked leave-one-year-out, the smoothed version calibrates as well as the step version and ranks strictly better.</p>
+
+      <h3>How much of this is just the draft?</h3>
+      <p>Draft position has always been two things here at once: the baseline APEX is judged against, and one of the features APEX is built from. So it is fair to ask whether the model knows anything at all, or is simply re-ranking the league&rsquo;s own order. To find out, a third model is trained on <em>only the player</em> &mdash; athletic testing, college production, PFF grades, age, size &mdash; and told nothing about where he was picked.</p>
+      <div id="predraftTable"></div>
+      <p id="predraftNote" class="fine"></p>
+      <p>The split is the honest summary of this project. On <strong>who becomes good</strong>, the draft wins and it is not close: strip the pick number out and the model falls apart, while adding it back is worth several times more than every scouting input combined. Whatever NFL teams know by draft night &mdash; medicals, interviews, film, scheme fit &mdash; most of it never reaches a spreadsheet.</p>
+      <p>On <strong>who busts relative to his slot</strong>, it flips: the player-only model beats draft position outright, and knowing the pick adds almost nothing on top. That result comes with a caveat worth stating plainly &mdash; bust is defined <em>within</em> a draft-capital band, so the label deliberately removes most of the draft-slot signal and the comparison is not a fair fight. But the information is real: testing and production do say something about who fails to justify his selection.</p>
+      <p>One more number puts it in perspective. The rank correlation between the player-only score and actual draft position is about &minus;0.50, meaning that from the same raw material teams use, this model reconstructs roughly a quarter of the variance in draft order. The other half of what decides where a player goes is invisible from here.</p>
+
+      <h3>Tiers, and how much the score is worth</h3>
+      <p>Two players a tenth of a point apart are not meaningfully separated, but a ranked list implies they are. So each APEX score carries a standard error, measured by refitting the model two hundred times on resampled draft history &mdash; the spread of scores it would have produced had it seen a slightly different sample. The resampling draws whole <em>draft classes</em> rather than individual players: men in the same class share an era, a rule set, a testing regime and one labelling pass, so treating five thousand players as five thousand independent observations would understate how much the score could have moved.</p>
+      <p>Tiers follow from that. Reading down the board, a player joins the current tier while his score sits within one standard error of the tier leader&rsquo;s, and opens a new tier once he is clearly below. The comparison is always against the tier leader rather than the previous player: chaining neighbour to neighbour would swallow the entire board into a single tier, because every player is close to the one below him.</p>
+      <p>Read tiers as the real resolution of the board. Order <em>within</em> a tier is noise; order <em>between</em> tiers is the model actually saying something.</p>
+
+      <h3>Would using it have produced better players?</h3>
+      <p>Every other number here is a classification metric. AUC says the model orders players
+      better than the draft does; it does not say a team using it would have ended up with more
+      football. So: at each historical pick, compare the player the team actually took against the
+      best APEX player among those who <em>demonstrably went</em> within the next twenty selections
+      &mdash; men who were provably available at that moment, using only the score a model that never
+      saw that class would have produced.</p>
+      <p>In the 2003&ndash;2021 backtest it works. A team drafting for a specific position gains
+      <strong>+1.0 career AV per pick</strong> (CI +0.4 to +1.6), about a 5% improvement. Ignoring
+      position entirely gains +4.0, but no team drafts that way, so the smaller number is the honest
+      one.</p>
+      <p class="warn-band"><strong>It does not survive out of sample.</strong> On the 2022&ndash;2023
+      classes &mdash; the ones the model never saw &mdash; the same simulation returns
+      <strong>&minus;0.01 AV</strong>, confidence interval &minus;0.34 to +0.30. Careers are shorter
+      there, so a real effect would show up smaller: scaling the backtest gain by mean career length
+      predicts about +0.5 AV. The observed interval <em>excludes</em> that. This is not merely a
+      small sample failing to reach significance &mdash; the forward data actively contradicts the
+      backtest. On the evidence available, <strong>there is no demonstrated decision value.</strong></p>
+      <p>The swaps it would have made are worth seeing, because they explain the pattern. Its
+      biggest wins are all avoided busts near the top of round one &mdash; Terrell Suggs over
+      Johnathan Sullivan, J.J. Watt over Blaine Gabbert, Luke Kuechly over Justin Blackmon. Its worst
+      mistakes are passing on late superstars &mdash; Aaron Rodgers, Bobby Wagner, Matthew Stafford.
+      That asymmetry is the same one the AUC shows: this model knows more about who fails than about
+      who becomes great.</p>
+
+      <h3>Backtest scoreboard</h3>
+      <p>Leave-one-year-out over the 2003&ndash;2021 classes (19 folds, ~4,800 players). &ldquo;Market&rdquo; is the draft-slot prior; beating it is the entire game.</p>
+      <div id="btTable"></div>
+
+      <h3>What ROC AUC leaves out</h3>
+      <p>The two numbers above &mdash; ROC AUC and Brier &mdash; are the most forgiving pair
+      available. AUC ignores whether a probability is <em>correct</em> and only asks whether the
+      ordering is right; Brier is dominated by the base rate whenever an outcome is rare. Here is
+      the fuller picture, on the same leave-one-year-out predictions.</p>
+      <div id="fullMetrics"></div>
+      <p class="fine" id="fullMetricsNote"></p>
+
+      <h3>What moves the needle</h3>
+      <p>Average split gain across the bagged ensemble for the hit model, top features:</p>
+      <div id="impList"></div>
+
+      <h3>Honest limitations</h3>
+      <ul>
+        <li>Draft capital dominates. The model&rsquo;s edge over the market prior is real but measured in single AUC points — anyone claiming huge edges over draft position is fooling you or themselves.</li>
+        <li>College production and PFF grades only exist from 2014, and PFF coverage is offense-heavy. Older classes and defenders lean more on the market + athleticism blocks.</li>
+        <li>The 2022&ndash;2025 boards are true out-of-training projections, and their listed outcomes are careers in progress, not final grades. On that forward test APEX and the draft order are running level on finding hits, and APEX is slightly <em>behind</em> on bust. Neither backtest edge has shown up out of sample yet. The samples are small &mdash; 1,016 players for hits, 80 busts &mdash; but nothing here should be read as validated by the forward test.</li>
+        <li>Bust risk is judged on players whose careers have had time to fail. A rookie who has not started yet is not a bust, so the forward-test bust figures use the 2022&ndash;2023 classes only.</li>
+        <li>Probabilities are calibrated group-wise, not prophecy. A 70% hit probability misses three times in ten — that is the job description.</li>
+      </ul>
+
+      <h3>Data sources</h3>
+      <ul>
+        <li><a href="https://github.com/nflverse" rel="noopener">nflverse</a> — draft, combine, career outcome data</li>
+        <li><a href="https://ras.football" rel="noopener">RAS.football</a> (Kent Lee Platte) — Relative Athletic Scores</li>
+        <li><a href="https://github.com/JackLich10/nfl-draft-data" rel="noopener">Jack Lichtenstein / ESPN</a> — historical prospect grades</li>
+        <li>PFF-derived college grades (private overlay; not redistributed)</li>
+        <li><a href="https://github.com/nflverse/nfldata" rel="noopener">Lee Sharpe / nfldata</a> — draft pick value curves</li>
+      </ul>
+      <p class="fine">Independent research project. Not affiliated with the NFL, PFF, ESPN or any team. Approximate Value courtesy of Pro-Football-Reference via nflverse.</p>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName" id="modal"></div>
+</div>
+
+<footer class="footer">
+  <span>APEX v10 · trained 2000&ndash;2021 · <span id="genDate"></span></span>
+  <span>Built from public nflverse / RAS / prospect data + private PFF overlay</span>
+</footer>
+
+<script src="data.js?v=d6220d4135"></script>
+<script src="watchlist.js?v=4c4befe0c7"></script>
+<script src="app.js?v=a5cc3da241"></script>
+</body>
+</html>
