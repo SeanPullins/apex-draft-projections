@@ -1034,7 +1034,10 @@
       "</ul></div>").join("");
 
     const rank = f.rk
-      ? '<span class="film-rank">' + ord(f.rk) + " of " + f.of +
+      ? '<span class="film-rank">' + ord(f.rk) +
+        // no denominator where the pass is a slice of a larger board: its
+        // ranks run past its own size, and counting the slice read "171st of 10"
+        (f.of ? " of " + f.of : "") +
         (f.scope === "board" ? "" : " at his position") +
         (f.grp ? " " + esc(f.grp) : "") + "</span>"
       : f.solo
