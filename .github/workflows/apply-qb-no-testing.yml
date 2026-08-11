@@ -1,0 +1,34 @@
+name: Apply QB No-Testing Scores
+
+on:
+  push:
+    branches: [agent/apex-qb-no-testing]
+    paths:
+      - 'qb-patch-*.js'
+      - 'qb-no-testing-apply.js'
+      - 'scripts/apply_qb_no_testing.py'
+      - '.github/workflows/apply-qb-no-testing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Wire score overlay into site
+        run: python scripts/apply_qb_no_testing.py
+      - name: Commit generated index change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Apply QB no-testing model to public board'
+          git push
