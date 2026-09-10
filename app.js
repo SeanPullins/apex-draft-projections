@@ -83,7 +83,7 @@
       b.id = "section-tab-" + b.dataset.tab;
       b.setAttribute("aria-controls", "tab-" + b.dataset.tab);
     });
-    $(".tab-panel").forEach(p => {
+    $$(".tab-panel").forEach(p => {
       p.classList.toggle("is-active", p.id === "tab-" + tab);
       p.setAttribute("role", "tabpanel");
       p.setAttribute("aria-labelledby", "section-tab-" + p.id.slice(4));
@@ -94,7 +94,7 @@
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
 
   $(".tabs").addEventListener("keydown", e => {
-    const tabs = $(".tab"), current = tabs.indexOf(document.activeElement);
+    const tabs = $$(".tab"), current = tabs.indexOf(document.activeElement);
     if (current < 0) return;
     let next;
     if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
