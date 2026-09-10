@@ -53,11 +53,16 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   /* ---------- theme ---------- */
+  try {
+    const saved = localStorage.getItem("apexTheme");
+    if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  } catch (e) {}
   $("#themeToggle").addEventListener("click", () => {
     const root = document.documentElement;
     const dark = root.dataset.theme === "dark" ||
       (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
     root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("apexTheme", root.dataset.theme); } catch (e) {}
     renderCharts(); // re-render SVGs against new surface
   });
 
@@ -77,11 +82,33 @@
       const on = b.dataset.tab === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on);
+      b.tabIndex = on ? 0 : -1;
+      b.id = "section-tab-" + b.dataset.tab;
+      b.setAttribute("aria-controls", "tab-" + b.dataset.tab);
     });
-    $$(".tab-panel").forEach(p => p.classList.toggle("is-active", p.id === "tab-" + tab));
+    $(".tab-panel").forEach(p => {
+      p.classList.toggle("is-active", p.id === "tab-" + tab);
+      p.setAttribute("role", "tabpanel");
+      p.setAttribute("aria-labelledby", "section-tab-" + p.id.slice(4));
+      p.tabIndex = 0;
+    });
     if (!skipHash) writeHash();
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  $(".tabs").addEventListener("keydown", e => {
+    const tabs = $(".tab"), current = tabs.indexOf(document.activeElement);
+    if (current < 0) return;
+    let next;
+    if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (current + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+    e.preventDefault();
+    setTab(tabs[next].dataset.tab);
+    tabs[next].focus();
+  });
 
   function readHash() {
     const m = location.hash.match(HASH);
