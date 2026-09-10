@@ -1,26 +1,21 @@
 # APEX — NFL Draft-to-Success Projections
 
-Interactive site with calibrated hit / starter / Pro Bowl probabilities for every
-NFL draft pick since 2000, validated leave-one-year-out against a draft-slot prior.
+Interactive site with retrospective hit / starter / Pro Bowl estimates for NFL draft picks since 2000.
 
-The site is fully static and dependency-free — open `index.html` locally or serve
-it from GitHub Pages (`.github/workflows/pages.yml` deploys on every push to main).
+The site is static. `.github/workflows/publish.yml` publishes main to the GitHub Pages branch after validation.
 
-## What's here
+## Validation status
 
-- `index.html`, `styles.css`, `app.js` — the site
-- `data.js` — baked projections payload (6,782 players, classes 2000–2026)
+- 2000–2002: training-only fits, excluded from reported held-out metrics.
+- 2003–2021: class-held-out base predictions. Legacy v10 calibration reused historical evaluation labels, so its probability metrics are descriptive, not independent validation.
+- 2022–2026: retrospective projections. Scores have been revised and are not verified frozen draft-night forecasts. Outcome snapshots are not live NFL results.
+- V11 and subsequent candidates remain research-only until evaluation supports promotion. AUC measures ranking, not the percentage of predictions that are correct.
 
-Scores for the 2000–2021 classes are out-of-fold backtest values (each class was
-scored by a model that never saw it); 2022–2026 are true projections. The model
-pipeline and full methodology live in a separate private research repository;
-the Methodology tab of the site documents the approach, backtest results, and
-limitations in full.
+`accuracy-audit.js` recalculates supported summaries from the displayed score payload after QB patches. Raw PFF data and the model pipeline remain in the private research repository.
 
-The 2022–2025 boards were frozen on draft night, before those players took an NFL
-snap, and the Insights tab scores them against the draft order itself. So far the
-two are running level — pooled hit AUC 0.825 for the model vs 0.822 for draft
-position, well inside noise at n=1,016. That scoreboard is published win or lose.
+## Checks
+
+Run `npm ci && npm test` before publishing. Checks cover score provenance and rankings, metric reconciliation, full startup, tab clicks, keyboard navigation, class selection and search.
 
 ## Data sources & credits
 

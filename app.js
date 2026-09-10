@@ -131,7 +131,7 @@
   [...D.classes].sort((a, b) => b - a).forEach(y => {
     const o = document.createElement("option");
     o.value = y;
-    o.textContent = y + (y > 2021 ? " · projection" : " · backtest");
+    o.textContent = y + (y > 2021 ? " · projection" : y < 2003 ? " · training fit" : " · backtest");
     classSelect.appendChild(o);
   });
   classSelect.value = state.year;
@@ -1563,7 +1563,7 @@
     $("#btTable").innerHTML = '<table class="bt-table"><tr><th>Outcome</th><th>Base rate</th><th>Prior AUC</th><th>APEX AUC</th><th>Δ</th><th>APEX AUC 2015+</th><th>Brier ↓</th></tr>' +
       rows.map(([k, label]) => {
         const mkt = S.market[k], dep = S.deploy[k];
-        return "<tr" + (k === "bust" ? " class='bt-hero'" : "") + "><td>" + label + "</td><td>" + pct(D.backtest.base_rates[k]) + "</td><td>" + mkt.auc.toFixed(3) +
+        return "<tr" + (k === "bust" ? " class='bt-hero'" : "") + "><td>" + label + "</td><td>" + pct(dep.base_rate ?? D.backtest.base_rates[k]) + "</td><td>" + mkt.auc.toFixed(3) +
           "</td><td><strong>" + dep.auc.toFixed(3) + "</strong></td><td class='win'>+" + ((dep.auc - mkt.auc) * 1000 / 10).toFixed(1) + "</td><td>" +
           dep.auc_2015_2021.toFixed(3) + "</td><td>" + dep.brier.toFixed(4) + " vs " + mkt.brier.toFixed(4) + "</td></tr>";
       }).join("") + "</table>" +
@@ -2145,7 +2145,7 @@
       $("#watchNote").innerHTML =
         "Showing " + Math.min(rows.length, 400) + " of " + rows.length + " tiered players (" +
         W.n + " on the full list). <strong>Reaches NFL</strong> and <strong>Drafted</strong> are " +
-        "modelled probabilities, calibrated so they can be read literally. " +
+        "modelled estimates; retrospective calibration does not establish their accuracy for a future class. " +
         "<strong>Grade percentile is within position and adjusted for " +
         "volume</strong>: a grade earned on 60 snaps is a claim about 60 snaps, so it is pulled " +
         "back toward the position average, while one earned across a season is left alone. That " +

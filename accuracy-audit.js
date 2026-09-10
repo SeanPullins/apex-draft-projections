@@ -4,7 +4,7 @@
   const A = window.APEX;
   if (!A || !A.players) return;
   function metrics(rows, score, label) {
-    const r = rows.filter(p => Number.isFinite(p[score]) && (p[label] === 0 || p[label] === 1));
+    const r = rows.filter(p => Number.isFinite(p[score]) && p[score]>=0 && p[score]<=1 && (p[label] === 0 || p[label] === 1));
     if (!r.length) return null;
     const sorted = r.slice().sort((a,b) => a[score]-b[score]);
     let ranks=0, positives=0, brier=0, loss=0;
@@ -24,10 +24,12 @@
   const history=A.players.filter(p=>p.yr>=2003 && p.yr<=2021 && p.src===1);
   const labels={hit:['ph','mh','lh'],starter:['ps','ms','ls'],probowl:['pp','mp','lp']};
   for(const [name,[score,market,label]] of Object.entries(labels)) {
+    const paired=history.filter(p=>[score,market].every(k=>Number.isFinite(p[k])&&p[k]>=0&&p[k]<=1) && (p[label]===0||p[label]===1));
     for(const [model,key] of [['deploy',score],['market',market]]) {
-      const value=metrics(history,key,label), modern=metrics(history.filter(p=>p.yr>=2015),key,label);
+      const value=metrics(paired,key,label), modern=metrics(paired.filter(p=>p.yr>=2015),key,label);
       if(value) A.backtest.summary[model][name]={...value,auc_2015_2021:modern?.auc};
     }
+    if(paired.length) A.backtest.base_rates[name]=A.backtest.summary.deploy[name].base_rate;
   }
   A.backtest.auc_years=Array.from({length:19},(_,i)=>2003+i);
   for(const [name,key] of [['deploy','ph'],['market','mh']]) {
@@ -51,8 +53,12 @@
         A.forward.classes[row.yr].hit.market=market.auc;
       }
       const eligible=players.filter(p=>p.fh===0 || p.fh===1);
-      const top=eligible.slice().sort((a,b)=>b.apex-a.apex || a.pk-b.pk).slice(0,32);
-      row.m32=top.length?top.reduce((n,p)=>n+p.fh,0)/top.length:0;
+      for(const count of [32,64]) {
+        const top=eligible.slice().sort((a,b)=>b.apex-a.apex || a.pk-b.pk).slice(0,count);
+        const draft=eligible.slice().sort((a,b)=>a.pk-b.pk).slice(0,count);
+        row['m'+count]=top.length?top.reduce((n,p)=>n+p.fh,0)/top.length:null;
+        row['d'+count]=draft.length?draft.reduce((n,p)=>n+p.fh,0)/draft.length:null;
+      }
     }
     const years=new Set((A.forward.head_to_head || []).map(r=>r.yr));
     const all=A.players.filter(p=>years.has(p.yr));

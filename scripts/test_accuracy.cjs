@@ -22,6 +22,19 @@ const metric=context.window.APEX_METRICS;
 assert.equal(metric([{p:.5,y:0},{p:.5,y:1}],'p','y').auc,.5);
 assert.equal(metric([{p:.1,y:0},{p:.9,y:1}],'p','y').auc,1);
 assert.equal(metric([{p:.9,y:0},{p:.1,y:1}],'p','y').auc,0);
+assert.equal(metric([{p:2,y:1},{p:-1,y:0}],'p','y'),null);
+assert.equal(metric([{p:.2,y:0},{p:null,y:1},{p:.8,y:null}],'p','y').n,1);
+for(const outcome of ['hit','starter','probowl']) {
+  assert.equal(A.backtest.base_rates[outcome],A.backtest.summary.deploy[outcome].base_rate);
+  assert.equal(A.backtest.summary.deploy[outcome].n,A.backtest.summary.market[outcome].n);
+}
+for(const row of A.forward.head_to_head) {
+  const players=A.players.filter(p=>p.yr===row.yr&&(p.fh===0||p.fh===1));
+  for(const size of [32,64]) {
+    const top=players.slice().sort((a,b)=>b.apex-a.apex||a.pk-b.pk).slice(0,size);
+    assert.equal(row['m'+size],top.reduce((s,p)=>s+p.fh,0)/top.length);
+  }
+}
 assert.equal(A.backtest.summary.deploy.hit.n,4765);
 assert.equal(A.metrics_full,undefined);
 assert(Number.isFinite(A.forward.pooled.hit.apex));
