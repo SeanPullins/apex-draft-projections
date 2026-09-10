@@ -42,22 +42,24 @@
   // open. Calling all three "live" flattened a distinction the whole site rests
   // on.
   function scoreStatus(p) {
-    if (p.src === 1) return { short: "held-out historical backtest",
-      long: "Held-out historical backtest — his class was kept out of training and scored blind." };
-    if (p.yr >= 2026) return { short: "current projection",
-      long: "Current projection — this class has not played an NFL snap." };
-    return { short: "frozen " + p.yr + " draft-night projection",
-      long: "Frozen " + p.yr + " draft-night projection — made before he played, never revised since." };
+    if (p.src === 2) return {short: "in-sample historical fit", long: "Training-only class: this score was not held out for evaluation."};
+    if (p.src === 1) return {short: "retrospective class-held-out estimate", long: "Base model held this class out. Legacy calibration used pooled historical outcomes, so probability validation is optimistic."};
+    return {short: "retrospective " + p.yr + " projection", long: "Research projection from a model trained through 2021; not verified as a frozen draft-night forecast."};
   }
   const fmt1 = v => (v == null ? "–" : (+v).toFixed(1));
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   /* ---------- theme ---------- */
+  try {
+    const saved = localStorage.getItem("apexTheme");
+    if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  } catch (e) {}
   $("#themeToggle").addEventListener("click", () => {
     const root = document.documentElement;
     const dark = root.dataset.theme === "dark" ||
       (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
     root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("apexTheme", root.dataset.theme); } catch (e) {}
     renderCharts(); // re-render SVGs against new surface
   });
 
@@ -77,11 +79,33 @@
       const on = b.dataset.tab === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on);
+      b.tabIndex = on ? 0 : -1;
+      b.id = "section-tab-" + b.dataset.tab;
+      b.setAttribute("aria-controls", "tab-" + b.dataset.tab);
     });
-    $$(".tab-panel").forEach(p => p.classList.toggle("is-active", p.id === "tab-" + tab));
+    $(".tab-panel").forEach(p => {
+      p.classList.toggle("is-active", p.id === "tab-" + tab);
+      p.setAttribute("role", "tabpanel");
+      p.setAttribute("aria-labelledby", "section-tab-" + p.id.slice(4));
+      p.tabIndex = 0;
+    });
     if (!skipHash) writeHash();
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  $(".tabs").addEventListener("keydown", e => {
+    const tabs = $(".tab"), current = tabs.indexOf(document.activeElement);
+    if (current < 0) return;
+    let next;
+    if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (current + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+    e.preventDefault();
+    setTab(tabs[next].dataset.tab);
+    tabs[next].focus();
+  });
 
   function readHash() {
     const m = location.hash.match(HASH);
@@ -463,7 +487,7 @@
   function renderTiles(rows) {
     const t = $("#boardTiles");
     const scope = state.q ? rows : D.players.filter(p => p.yr === state.year);
-    const hist = !state.q && state.year <= D.train_years[1];
+    const hist = !state.q && state.year >= 2003 && state.year <= D.train_years[1];
     const fwd = state.q ? null : fwdClass(state.year);
     // the tiles state facts about the score being shown, so they read through
     // the same lens as the table -- a "Board #1" from the drafted model sitting
@@ -500,13 +524,14 @@
            top ? top.pg + " · " + (pre ? "score " : "APEX ") + fmt1(top[L.apex]) : "") +
       third + fourth;
 
-    $("#modeNote").innerHTML = state.q
-      ? "Searching all classes 2000–" + LATEST + ". Clear the search to return to the class board."
-      : hist
-        ? '<span class="dot">●</span> <strong>Receipts mode.</strong> Scores for ' + state.year + " come from a model that never saw this class (leave-one-year-out backtest). The Outcome column shows what actually happened."
-        : fwd
-          ? '<span class="dot dot-live"></span> <strong>Forward test.</strong> The ' + state.year + " board was frozen on draft night, before anyone in this class played an NFL snap. " + fwd.seasons + " season" + (fwd.seasons > 1 ? "s are" : " is") + " now in the books — Outcome shows careers to date, not final grades."
-          : '<span class="dot">●</span> <strong>Projection mode.</strong> True out-of-sample predictions — the model trained only on 2000–2021 outcomes. No NFL snaps played yet.';
+    $("#modeNote").textContent = state.q
+      ? "Searching every draft class. These are research estimates; see Insights for validation."
+      : state.year < 2003
+        ? "Training-only class: these scores are in-sample fits, not held-out predictions."
+        : state.year <= 2021
+          ? "Retrospective class-held-out scores. Legacy calibration reused historical evaluation labels; accuracy figures are descriptive, not independent probability validation."
+          : "Retrospective projection, not a verified draft-night snapshot. Outcomes show the data snapshot, not live results. See Insights for the independently evaluated v11 candidate.";
+
   }
   const tile = (label, value, sub) =>
     '<div class="tile"><div class="tile-label">' + label + '</div><div class="tile-value">' + value + '</div><div class="tile-sub">' + sub + "</div></div>";
@@ -1463,7 +1488,7 @@
     const dg = D.insights.disagree;
     $("#disagreeHero").innerHTML =
       '<div><div class="hero-num">' + Math.round(dg.win_rate * 100) + '%</div><div class="tile-label">disagreement win rate</div></div>' +
-      '<div class="hero-copy">In the held-out backtest, whenever APEX moved a player&rsquo;s hit probability <strong>10+ points away from the draft-slot prior</strong>, the model&rsquo;s side of the argument won <strong>' + dg.model_right + " of " + dg.n + "</strong> times. Every score on this site was produced by a model that never saw that player&rsquo;s class.</div>";
+      '<div class="hero-copy">In the held-out backtest, whenever APEX moved a player&rsquo;s hit probability <strong>10+ points away from the draft-slot prior</strong>, the model&rsquo;s side of the argument won <strong>' + dg.model_right + " of " + dg.n + "</strong> times. These rows exclude 2000–2002 in-sample fits. Legacy calibration still reused historical labels, so this is a descriptive check.</div>";
     storyList($("#stealsList"), D.insights.steals, "steal");
     storyList($("#skepticList"), D.insights.skeptic, "skeptic");
     renderForward();
@@ -1500,7 +1525,7 @@
       "&ldquo;Top-quartile so far&rdquo; is the career label applied to a career in progress: weighted AV in the top 25% of the same class and position group. Bust is the same idea inverted and judged against the same draft-capital band. " +
       (p
         ? "Pooled across " + p.n + " players, APEX is <strong>" + (edge >= 0 ? "+" : "") + edge.toFixed(1) +
-          " AUC points</strong> ahead of the draft-slot prior on finding hits — the same direction as the backtest, but far too small to call a win on this sample. "
+          " AUC points</strong> ahead of the draft-slot prior on finding hits — a descriptive comparison, not proof of prospective accuracy. "
         : "") +
       (b
         ? "<strong>Bust risk is worse, not better.</strong> On the " + b.n + " players from 2022–2023 whose careers " +
