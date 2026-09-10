@@ -774,3 +774,30 @@ td.num, th.num { text-align: right; }
   .modal-name { font-size: 20px; }
   .modal-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Readable controls and a consistent keyboard path across screen sizes. */
+body { font-size: 1rem; }
+.control-label, .tile-label, .tile-sub, .mode-note, .table-hint,
+.card-sub, .prose .fine { font-size: .875rem; }
+.prose p, .prose li { font-size: 1rem; }
+.tab, .pill, .theme-toggle, .modal-close { min-height: 44px; }
+.theme-toggle, .modal-close { min-width: 44px; }
+button:focus-visible, a:focus-visible, select:focus-visible,
+input:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--series-1); outline-offset: 3px;
+}
+.skip-link { position: fixed; left: 12px; top: -100px; z-index: 100;
+  padding: 12px 18px; background: var(--surface-1); border: 2px solid var(--series-1); }
+.skip-link:focus { top: 12px; }
+.watch-explainer { margin: 12px 0 20px; }
+.watch-explainer > summary { cursor: pointer; color: var(--ink-2); padding: 10px 0; font-weight: 600; }
+@media (max-width: 1000px) {
+  .topbar { flex-wrap: wrap; }
+  .tabs { order: 3; width: 100%; margin-left: 0; flex-wrap: wrap; }
+  .theme-toggle { margin-left: auto; }
+}
+@media (max-width: 700px) {
+  .tab, .tile-label, .tile-sub { font-size: .875rem; }
+  input[type="search"], select { font-size: 1rem; }
+  .brand { flex: 1; }
+}

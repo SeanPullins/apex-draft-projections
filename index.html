@@ -6,9 +6,10 @@
 <title>APEX — NFL Draft-to-Success Projections</title>
 <meta name="description" content="Calibrated, backtested projections of NFL draft pick success for every class since 2000. Built on nflverse, RAS, college production and PFF-derived data.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="styles.css?v=0bb78c86ca">
+<link rel="stylesheet" href="styles.css?v=20260910-usability">
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to draft content</a>
 <header class="topbar">
   <div class="brand">
     <span class="brand-mark">APEX</span>
@@ -24,7 +25,7 @@
   <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
 </header>
 
-<main>
+<main id="main-content" tabindex="-1">
   <!-- ============ BIG BOARD ============ -->
   <section id="tab-board" class="tab-panel is-active">
     <div class="controls" id="boardControls">
@@ -65,16 +66,18 @@
         <tbody id="boardBody"></tbody>
       </table>
     </div>
-    <p class="table-hint"><strong>Tiers</strong> group players the model cannot tell apart. The APEX score carries a &plusmn; from refitting the model on resampled draft history; two players land in the same tier when the gap between them is smaller than that uncertainty. Ranking within a tier is not a claim &mdash; ranking across tiers is. Sorting by any other column hides the tiers, because they only describe an APEX ordering. <strong>Bust risk</strong> is the model&rsquo;s probability that a player finishes in the bottom quarter of career value among picks made in the same range of the draft &mdash; the column where APEX separates itself from draft order most clearly, from round two down. In round one it is close to a flat base rate: about a quarter of first-rounders disappoint and the model cannot say which. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
+    <p class="table-hint"><strong>Uncertainty:</strong> tiers are withheld after the QB score revision because their old boundaries no longer describe the board. The remaining legacy uncertainty estimates are not available for revised QB scores. Previously, tiers grouped players the model could not tell apart. The APEX score carries a &plusmn; from refitting the model on resampled draft history; two players land in the same tier when the gap between them is smaller than that uncertainty. Ranking within a tier is not a claim &mdash; ranking across tiers is. Sorting by any other column hides the tiers, because they only describe an APEX ordering. <strong>Bust risk</strong> is the model&rsquo;s probability that a player finishes in the bottom quarter of career value among picks made in the same range of the draft &mdash; the column where APEX separates itself from draft order most clearly, from round two down. In round one it is close to a flat base rate: about a quarter of first-rounders disappoint and the model cannot say which. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
   </section>
 
   <!-- ============ INSIGHTS ============ -->
   <section id="tab-insights" class="tab-panel">
+    <div class="card" id="researchResults"></div>
+    <p class="warn-band">Legacy v10 figures below describe the displayed scores. Their calibration reused historical evaluation labels, so they are not an independent test of probability accuracy. V11 uses separate outer evaluation classes.</p>
     <div class="insight-hero" id="disagreeHero"></div>
 
     <div class="card">
-      <h3>The forward test — classes the model was never trained on</h3>
-      <p class="card-sub">Everything above is a backtest. These four boards were frozen on draft night, after the model had been trained, before any of these players took an NFL snap. This is the scoreboard that cannot be tuned after the fact.</p>
+      <h3>Post-training classes — retrospective comparison</h3>
+      <p class="card-sub">These classes are outside the training window. Scores have been revised, including the August 2026 quarterback patch; they are not verified frozen draft-night forecasts. Current careers are incomplete, so these comparisons are provisional.</p>
       <div id="fwdTable"></div>
       <p class="fine" id="fwdNote"></p>
     </div>
@@ -174,15 +177,16 @@
     <div class="prose" style="max-width:none">
       <h2>Watchlist &mdash; college players who haven&rsquo;t reached the NFL</h2>
       <p class="warn-band"><strong>This is not a draft class, and these are not APEX scores.</strong>
-      These are players with a 2025 college season who have not signed with an NFL team. The 2026
-      season has not been played, nobody declares until January 2027, and no one has tested at a
-      combine. The projection here answers a deliberately narrow question &mdash; <strong>how often
+      These are players with a 2025 college season who have not signed with an NFL team. These estimates use 2025 production; they do not include 2026 season results,
+      confirmed 2027 declarations, or 2027 combine testing. The projection here answers a deliberately narrow question &mdash; <strong>how often
       players who produced like this have reached an NFL roster at all</strong> &mdash; and says
       nothing about whether a player becomes any good once he gets there. That second question needs
       athletic testing and draft position, which these players do not yet have, and it is the
       question the rest of this site is about.</p>
       <p class="fine" id="watchSigned"></p>
 
+      <details class="watch-explainer">
+      <summary>What the tiers mean and how they are validated</summary>
       <h3>What the tiers mean</h3>
       <p>Tiers are cut on <strong>how often players who produced like this have gone on to reach an
       NFL roster</strong>. That is a different and much more answerable question than the one the
@@ -194,6 +198,7 @@
       forced to fill a quota.</p>
       <ul class="tier-legend" id="tierLegend"></ul>
       <p class="fine" id="tierAuc"></p>
+      </details>
     </div>
     <div class="controls">
       <div class="control grow">
@@ -431,7 +436,7 @@
   <section id="tab-method" class="tab-panel">
     <div class="prose">
       <h2>How APEX works</h2>
-      <p>APEX answers two questions from what was knowable on draft night: <strong>how likely is this player to succeed</strong>, and <strong>how likely is he to never play at all?</strong> They are not mirror images, and the second one is where the model has the clearer advantage over the draft order. It is trained on every pick from 2000&ndash;2021 and validated the only honest way — each class is scored by a model that never saw it.</p>
+      <p>APEX answers two questions from what was knowable on draft night: <strong>how likely is this player to succeed</strong>, and <strong>how likely is he to never play at all?</strong> They are not mirror images, and the second one is where the model has the clearer advantage over the draft order. It is trained on every pick from 2000&ndash;2021 and evaluated retrospectively by class. The v10 calibration reused evaluation outcomes; the v11 candidate adds an independent outer evaluation.</p>
 
       <h3>Four definitions of outcome</h3>
       <ul>
@@ -530,7 +535,7 @@
       available. AUC ignores whether a probability is <em>correct</em> and only asks whether the
       ordering is right; Brier is dominated by the base rate whenever an outcome is rare. Here is
       the fuller picture, on the same leave-one-year-out predictions.</p>
-      <div id="fullMetrics"></div>
+      <div id="fullMetrics">The previous extended metrics described an older score build and are omitted pending recomputation.</div>
       <p class="fine" id="fullMetricsNote"></p>
 
       <h3>What moves the needle</h3>
@@ -574,8 +579,10 @@
 <script src="qb-patch-2008-2014.js?v=20260811"></script>
 <script src="qb-patch-2015-2020.js?v=20260811"></script>
 <script src="qb-patch-2021-2026.js?v=20260811"></script>
-<script src="qb-no-testing-apply.js?v=20260811"></script>
+<script src="qb-no-testing-apply.js?v=20260910"></script>
 <script src="watchlist.js?v=4c4befe0c7"></script>
-<script src="app.js?v=a5cc3da241"></script>
+<script src="accuracy-audit.js?v=20260910"></script>
+<script src="research-results.js?v=20260910"></script>
+<script src="app.js?v=20260910-usability"></script>
 </body>
 </html>
