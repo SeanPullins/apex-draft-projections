@@ -11,6 +11,8 @@ The site is static. `.github/workflows/publish.yml` publishes main to the GitHub
 - 2022–2026: retrospective projections. Scores have been revised and are not verified frozen draft-night forecasts. Outcome snapshots are not live NFL results.
 - V11 and subsequent candidates remain research-only until evaluation supports promotion. AUC measures ranking, not the percentage of predictions that are correct.
 
+September 11 research reran V11, a repaired V10 calibration pipeline, a market-offset V13 candidate, and a fixed V14 blend. V14 reduced overall Brier error for all three outcomes versus repaired V10, but a small recent-class starter regression failed the release gate. A chronological starter check did not resolve that uncertainty. Live player scores remain unchanged; `research-followup.js` publishes aggregate results only.
+
 `accuracy-audit.js` recalculates supported summaries from the displayed score payload after QB patches. Raw PFF data and the model pipeline remain in the private research repository.
 
 ## Checks

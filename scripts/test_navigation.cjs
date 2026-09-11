@@ -12,8 +12,14 @@ const errors=[];
 w.addEventListener('error', e=>errors.push(e.error || e.message));
 w.matchMedia=()=>({matches:false,addEventListener(){}});
 for(const script of d.querySelectorAll('script[src]')) {
+  const followup=script.getAttribute('src').startsWith('research-followup.js');
+  const before=followup?JSON.stringify(w.APEX.players):null;
   w.eval(fs.readFileSync(path.join(root,script.getAttribute('src').split('?')[0]),'utf8'));
+  if(followup)assert.equal(JSON.stringify(w.APEX.players),before,'Research must not mutate live scores');
 }
+assert(d.querySelector('#researchFollowup').textContent.includes('failed the release gate'));
+assert.equal(w.APEX_RESEARCH_FOLLOWUP.v14.promotion.approved,false);
+assert.equal(w.APEX_RESEARCH_FOLLOWUP.n,4765);
 function active(name) {
   assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
   assert.equal(d.querySelector('.tab-panel.is-active').id,'tab-'+name);
