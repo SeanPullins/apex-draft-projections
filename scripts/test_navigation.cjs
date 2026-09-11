@@ -12,7 +12,7 @@ const errors=[];
 w.addEventListener('error', e=>errors.push(e.error || e.message));
 w.matchMedia=()=>({matches:false,addEventListener(){}});
 for(const script of d.querySelectorAll('script[src]')) {
-  const followup=script.getAttribute('src').startsWith('research-followup.js');
+  const followup=['research-followup.js','accuracy-lab.js'].some(name=>script.getAttribute('src').startsWith(name));
   const before=followup?JSON.stringify(w.APEX.players):null;
   w.eval(fs.readFileSync(path.join(root,script.getAttribute('src').split('?')[0]),'utf8'));
   if(followup)assert.equal(JSON.stringify(w.APEX.players),before,'Research must not mutate live scores');
@@ -20,6 +20,20 @@ for(const script of d.querySelectorAll('script[src]')) {
 assert(d.querySelector('#researchFollowup').textContent.includes('failed the release gate'));
 assert.equal(w.APEX_RESEARCH_FOLLOWUP.v14.promotion.approved,false);
 assert.equal(w.APEX_RESEARCH_FOLLOWUP.n,4765);
+assert.equal(w.APEX_ACCURACY_LAB.production_changed,false);
+for(const report of Object.values(w.APEX_ACCURACY_LAB.reports))assert.equal(report.promotion.approved,false);
+const scope=d.querySelector('#accuracyLabScope');
+for(const option of scope.options){
+ scope.value=option.value;scope.dispatchEvent(new w.Event('change'));
+ const rows=d.querySelectorAll('#accuracyLabRows tr');assert.equal(rows.length,3);
+ for(const [i,n] of ['hit','starter','probowl'].entries()){
+  const cells=rows[i].querySelectorAll('td');
+  assert.equal(Number(cells[0].textContent),w.APEX_ACCURACY_LAB.reports.v15.metrics[n][option.value].market.n);
+  assert.equal(cells[6].textContent,w.APEX_ACCURACY_LAB.reports.v17.metrics[n][option.value].v17.brier.toFixed(6));
+ }
+}
+scope.value='all';scope.dispatchEvent(new w.Event('change'));
+
 function active(name) {
   assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
   assert.equal(d.querySelector('.tab-panel.is-active').id,'tab-'+name);
@@ -45,3 +59,4 @@ dom.window.close();
 console.log('PASS: full startup, all five tabs, keyboard wrap/Home/End, class switching and search');
 
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

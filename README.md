@@ -30,3 +30,6 @@ Run `npm ci && npm test` before publishing. Checks cover score provenance and ra
 
 Independent research project. Not affiliated with the NFL, PFF, ESPN, or any team.
 Approximate Value courtesy of Pro-Football-Reference via nflverse.
+
+
+September 11 follow-up tested V15 position-specific college evidence (including a TE receiving mapping repair), V16 market-offset regression, and a fixed V17 blend. None passed the existing release criteria; scores remain unchanged. `accuracy-lab.js` exposes matched per-position probability errors and data limitations. Backtest checkpoint integrity is repaired in the private pipeline.
