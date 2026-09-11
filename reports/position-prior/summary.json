@@ -1,0 +1,157 @@
+{
+  "protocol": "Fixed C=1 position-by-spline interactions versus additive spline prior; retrospective leave-one-class-out 2003\u20132021. No calibration, selection, or labels from the evaluation class enter fitting.",
+  "input_sha256": "25125bebd91e7e1d9c88ed8b906c9f3e4f81db5705ae57b5f28ce32458108cd4",
+  "metrics": {
+    "lh": {
+      "all": {
+        "baseline": {
+          "n": 4765,
+          "auc": 0.7907901260562803,
+          "brier": 0.15102380148515163,
+          "logloss": 0.46785621318169074
+        },
+        "position": {
+          "n": 4765,
+          "auc": 0.7899449667920121,
+          "brier": 0.15147901734963964,
+          "logloss": 0.46903301589992363
+        }
+      },
+      "QB": {
+        "baseline": {
+          "n": 232,
+          "auc": 0.8537482065997131,
+          "brier": 0.12965742865011143,
+          "logloss": 0.41311855574842604
+        },
+        "position": {
+          "n": 232,
+          "auc": 0.8441535150645625,
+          "brier": 0.13315146257214033,
+          "logloss": 0.42444311518682576
+        }
+      },
+      "modern": {
+        "baseline": {
+          "n": 1753,
+          "auc": 0.7989681426567822,
+          "brier": 0.14897335307775117,
+          "logloss": 0.4610600605459704
+        },
+        "position": {
+          "n": 1753,
+          "auc": 0.7994924196887732,
+          "brier": 0.1494306726300397,
+          "logloss": 0.46197593258627206
+        }
+      },
+      "brier_difference_ci95": [
+        -3.0503534925849742e-05,
+        0.0009463878629917765
+      ]
+    },
+    "ls": {
+      "all": {
+        "baseline": {
+          "n": 4765,
+          "auc": 0.8010699789422285,
+          "brier": 0.15907780985708844,
+          "logloss": 0.4888203991882201
+        },
+        "position": {
+          "n": 4765,
+          "auc": 0.8002960295419171,
+          "brier": 0.15924732278503517,
+          "logloss": 0.48959408817207734
+        }
+      },
+      "QB": {
+        "baseline": {
+          "n": 232,
+          "auc": 0.8677437020810514,
+          "brier": 0.11547310777540294,
+          "logloss": 0.3812279905103205
+        },
+        "position": {
+          "n": 232,
+          "auc": 0.8610806863818911,
+          "brier": 0.1166772004869542,
+          "logloss": 0.3870140318431133
+        }
+      },
+      "modern": {
+        "baseline": {
+          "n": 1753,
+          "auc": 0.8012628679967748,
+          "brier": 0.16052223548884875,
+          "logloss": 0.4895445622647071
+        },
+        "position": {
+          "n": 1753,
+          "auc": 0.8002557745560183,
+          "brier": 0.1606499565218977,
+          "logloss": 0.4902973989034846
+        }
+      },
+      "brier_difference_ci95": [
+        -0.0003314075350536905,
+        0.0007295740497273372
+      ]
+    },
+    "lp": {
+      "all": {
+        "baseline": {
+          "n": 4765,
+          "auc": 0.8012688201082185,
+          "brier": 0.09037373077690111,
+          "logloss": 0.3055484719566332
+        },
+        "position": {
+          "n": 4765,
+          "auc": 0.8013435700575817,
+          "brier": 0.08988017709668299,
+          "logloss": 0.30438741162748595
+        }
+      },
+      "QB": {
+        "baseline": {
+          "n": 232,
+          "auc": 0.8363636363636363,
+          "brier": 0.10845590454976516,
+          "logloss": 0.3558865511925784
+        },
+        "position": {
+          "n": 232,
+          "auc": 0.8236482471776589,
+          "brier": 0.10970309728907568,
+          "logloss": 0.3622517027807949
+        }
+      },
+      "modern": {
+        "baseline": {
+          "n": 1753,
+          "auc": 0.8076104064438479,
+          "brier": 0.08623849863420711,
+          "logloss": 0.29382162965861514
+        },
+        "position": {
+          "n": 1753,
+          "auc": 0.808650433601827,
+          "brier": 0.08580406504565584,
+          "logloss": 0.2921203827768308
+        }
+      },
+      "brier_difference_ci95": [
+        -0.0014530593632492248,
+        0.0005480056101883596
+      ]
+    }
+  },
+  "promoted": false,
+  "limitations": [
+    "Career labels have unequal follow-up.",
+    "This tests a market baseline, not the full deployed model.",
+    "Historical outcomes and features are not timestamped as-of snapshots.",
+    "No PFF-private data used."
+  ]
+}
