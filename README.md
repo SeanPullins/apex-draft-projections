@@ -33,3 +33,5 @@ Approximate Value courtesy of Pro-Football-Reference via nflverse.
 
 
 September 11 follow-up tested V15 position-specific college evidence (including a TE receiving mapping repair), V16 market-offset regression, and a fixed V17 blend. None passed the existing release criteria; scores remain unchanged. `accuracy-lab.js` exposes matched per-position probability errors and data limitations. Backtest checkpoint integrity is repaired in the private pipeline.
+
+September 12 continuation publishes the recovered V18 external-data experiment, chronological first-four-year outcomes, and a new draft-position-free college-workload ablation. The college ablation evaluated 1,753 players in 2015–2021; all three overall Brier errors increased slightly and paired intervals include zero. Live scores remain unchanged. `external-research.js` and `college-context-research.js` expose distinct targets, protocols, coverage and uncertainty.

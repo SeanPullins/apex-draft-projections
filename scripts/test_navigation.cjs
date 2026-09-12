@@ -12,7 +12,7 @@ const errors=[];
 w.addEventListener('error', e=>errors.push(e.error || e.message));
 w.matchMedia=()=>({matches:false,addEventListener(){}});
 for(const script of d.querySelectorAll('script[src]')) {
-  const followup=['research-followup.js','accuracy-lab.js'].some(name=>script.getAttribute('src').startsWith(name));
+  const followup=['research-followup.js','accuracy-lab.js','external-research.js','college-context-research.js'].some(name=>script.getAttribute('src').startsWith(name));
   const before=followup?JSON.stringify(w.APEX.players):null;
   w.eval(fs.readFileSync(path.join(root,script.getAttribute('src').split('?')[0]),'utf8'));
   if(followup)assert.equal(JSON.stringify(w.APEX.players),before,'Research must not mutate live scores');
@@ -33,6 +33,24 @@ for(const option of scope.options){
  }
 }
 scope.value='all';scope.dispatchEvent(new w.Event('change'));
+assert.equal(w.APEX_EXTERNAL_RESEARCH.production_changed,false);
+assert.equal(w.APEX_COLLEGE_RESEARCH.production_changed,false);
+for(const [id,bodyId,payload,outcomes,models] of [
+ ['fourYearScope','fourYearRows',w.APEX_EXTERNAL_RESEARCH.four_year,['hit4','starter4'],['market','existing_features','external_features','without_draft_position']],
+ ['collegeScope','collegeRows',w.APEX_COLLEGE_RESEARCH,['hit','starter','probowl'],['without_context','with_context']]
+]){
+ const control=d.getElementById(id);
+ for(const option of control.options){
+  control.value=option.value;control.dispatchEvent(new w.Event('change'));
+  const rows=d.querySelectorAll('#'+bodyId+' tr');assert.equal(rows.length,outcomes.length);
+  outcomes.forEach((outcome,i)=>{
+   const m=payload.metrics[outcome][option.value],cells=rows[i].querySelectorAll('td');
+   assert.equal(Number(cells[0].textContent),m[models[0]].n);
+   models.forEach((model,j)=>assert.equal(cells[j+1].textContent,m[model].brier.toFixed(6)));
+  });
+ }
+ control.value='all';control.dispatchEvent(new w.Event('change'));
+}
 
 function active(name) {
   assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
@@ -59,4 +77,3 @@ dom.window.close();
 console.log('PASS: full startup, all five tabs, keyboard wrap/Home/End, class switching and search');
 
 })().catch(error=>{console.error(error);process.exitCode=1;});
-
