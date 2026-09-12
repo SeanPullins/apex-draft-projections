@@ -1,0 +1,13 @@
+{
+  "name": "apex-draft-projections",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/test_accuracy.cjs && node scripts/test_navigation.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.0.1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
