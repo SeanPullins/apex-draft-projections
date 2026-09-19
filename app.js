@@ -486,7 +486,10 @@
 
   function renderTiles(rows) {
     const t = $("#boardTiles");
-    const scope = state.q ? rows : D.players.filter(p => p.yr === state.year);
+    // `rows` is the exact visible table scope: class/search, position, film and
+    // the search result cap have already been applied. Tiles must describe that
+    // same scope rather than silently widening back to the whole class.
+    const scope = rows;
     const hist = !state.q && state.year >= 2003 && state.year <= D.train_years[1];
     const fwd = state.q ? null : fwdClass(state.year);
     // the tiles state facts about the score being shown, so they read through
@@ -494,25 +497,53 @@
     // above a pre-draft ranking would name a player who is not top of the list
     const L = lens(), pre = state.lens === "predraft";
     const top = scope.slice().sort((a, b) => (b[L.apex] || 0) - (a[L.apex] || 0))[0];
-    const expHits = scope.reduce((s, p) => s + (p[L.hit] || 0), 0);
-    const actHits = scope.filter(p => p.lh).length;
+    const validProb = v => Number.isFinite(v) && v >= 0 && v <= 1;
+    const validLabel = (p, label) => p[label] === 0 || p[label] === 1;
+    const scoredRows = scope.filter(p => validProb(p[L.hit]));
+    const expHits = scoredRows.reduce((s, p) => s + p[L.hit], 0);
+    const matchedHits = scoredRows.filter(p => validLabel(p, "lh"));
+    const actHits = matchedHits.filter(p => p.lh === 1).length;
     const S = D.backtest.summary;
     const dep = pre ? S.predraft.hit.auc : S.deploy.hit.auc, mkt = S.market.hit.auc;
+    const metric = typeof window.APEX_METRICS === "function" ? window.APEX_METRICS : null;
+    const pairedScope = scope.filter(p => p.src === 1 && p.yr >= 2003 && p.yr <= 2021 &&
+      validProb(p[L.hit]) && validProb(p.mh) && validLabel(p, "lh"));
+    const localDep = metric ? metric(pairedScope, L.hit, "lh")?.auc : null;
+    const localMkt = metric ? metric(pairedScope, "mh", "lh")?.auc : null;
     const edgeLabel = pre ? "Cost of hiding the pick" : "Model edge";
-    const edgeVal = ((dep - mkt) * 100).toFixed(1);
-    const edgeTile = () => tile(edgeLabel, (dep >= mkt ? "+" : "") + edgeVal,
-      pre ? "AUC pts vs draft-slot prior, held-out" : "AUC pts vs draft-slot prior, held-out");
+    const edgeTile = () => {
+      const scoped = localDep != null && localMkt != null;
+      const a = scoped ? localDep : dep, b = scoped ? localMkt : mkt;
+      const edgeVal = ((a - b) * 100).toFixed(1);
+      return tile(edgeLabel + (scoped ? "" : " (all positions)"), (a >= b ? "+" : "") + edgeVal,
+        pre ? "AUC pts vs draft-slot prior, " + (scoped ? "matched historical rows, descriptive" : "historical all positions, descriptive")
+          : "AUC pts vs draft-slot prior, " + (scoped ? "matched historical rows, descriptive" : "historical all positions, descriptive"));
+    };
 
     let third, fourth;
     if (hist) {
-      third = tile("Hits delivered", actHits, "of " + expHits.toFixed(0) + " the model expected");
+      third = tile("Hits delivered", actHits, "of " + matchedHits.reduce((sum,p)=>sum+p[L.hit],0).toFixed(0) + " the model expected");
       fourth = edgeTile();
     } else if (fwd) {
-      const onTrack = scope.filter(p => p.fh).length;
+      // Forward outcome comparisons use the same label and valid score set for
+      // both sides. Recompute them from the visible rows so position and film
+      // filters, and the pre-draft lens, are reflected in the tile.
+      const eligible = scope.filter(p => Number.isFinite(p[L.apex]) && validProb(p[L.hit]) &&
+        Number.isFinite(p.pk) && validLabel(p, "fh"));
+      const topN = Math.min(32, eligible.length);
+      const top = eligible.slice().sort((a, b) =>
+        b[L.apex] - a[L.apex] || (a.pk ?? 1e9) - (b.pk ?? 1e9)).slice(0, topN);
+      const draft = eligible.slice().sort((a, b) =>
+        (a.pk ?? 1e9) - (b.pk ?? 1e9)).slice(0, topN);
+      const rate = xs => xs.length ? xs.reduce((sum, p) => sum + p.fh, 0) / xs.length : null;
+      const modelRate = rate(top), draftRate = rate(draft);
+      const onTrack = eligible.filter(p => p.fh === 1).length;
       third = tile("Tracking so far", onTrack,
         "top-quartile at their position, " + fwd.seasons + " season" + (fwd.seasons > 1 ? "s" : "") + " in");
-      fourth = tile("Board vs draft order", pct(fwd.m32) + " · " + pct(fwd.d32),
-        "top-quartile rate: APEX top 32 vs picks 1–32");
+      fourth = tile(pre ? "Pre-draft vs draft order" : "Board vs draft order",
+        modelRate == null || draftRate == null ? "–" : pct(modelRate) + " · " + pct(draftRate),
+        "top-quartile rate: " + (pre ? "pre-draft" : "APEX") + " top " + topN +
+        " vs first " + topN + " eligible draft selections");
     } else {
       third = tile("Projected hits", expHits.toFixed(0), "expected top-quartile careers");
       fourth = edgeTile();

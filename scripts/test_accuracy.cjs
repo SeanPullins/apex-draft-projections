@@ -43,3 +43,18 @@ for(const yr of A.classes){
  players.forEach((p,i)=>assert.equal(p.rk,i+1));
 }
 console.log('PASS: patched scores, rankings, metric availability, tie-safe AUC, provenance, uncertainty and forward statistics');
+
+// Compare the same players when one model has a missing prediction.
+const forwardPlayer=A.players.find(p=>p.yr===2023 && p.fh===1);
+const pairedCount=A.forward.classes[2023].hit;
+forwardPlayer.mh=null;
+const historicalPlayer=A.players.find(p=>p.yr===2015 && p.lh===1);
+historicalPlayer.qh=null;
+run('accuracy-audit.js');
+const paired=A.players.filter(p=>p.yr===2023 && Number.isFinite(p.ph) && Number.isFinite(p.mh) && (p.fh===0||p.fh===1));
+assert.equal(A.forward.head_to_head.find(r=>r.yr===2023).n,paired.length);
+assert.equal(pairedCount.apex,metric(paired,'ph','fh').auc);
+assert.equal(pairedCount.market,metric(paired,'mh','fh').auc);
+assert.equal(A.backtest.summary.predraft.hit.n,4764);
+assert.equal(A.backtest.summary.predraft.hit.auc,metric(A.players.filter(p=>p.yr>=2003&&p.yr<=2021&&p.src===1),'qh','lh').auc);
+console.log('PASS: matched forward cohorts and recomputed pre-draft metrics');
