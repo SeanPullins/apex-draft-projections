@@ -68,6 +68,49 @@ for(const [key,name] of [['ArrowRight','insights'],['End','method'],['ArrowRight
 d.querySelector('#classSelect').value='2024';
 d.querySelector('#classSelect').dispatchEvent(new w.Event('change',{bubbles:true}));
 assert.equal(d.querySelectorAll('#boardBody tr').length,253);
+
+// Forward comparison tiles must use the visible position scope and the active
+// lens. The old implementation reused whole-class drafted values for every
+// filter, so a QB-only pre-draft board still showed the all-position APEX rate.
+d.querySelector('#classSelect').value='2023';
+d.querySelector('#classSelect').dispatchEvent(new w.Event('change',{bubbles:true}));
+const tile = label => {
+ const node=[...d.querySelectorAll('#boardTiles .tile')].find(x=>x.querySelector('.tile-label').textContent===label);
+ assert(node,`missing tile: ${label}`);
+ return {value:node.querySelector('.tile-value').textContent,sub:node.querySelector('.tile-sub').textContent};
+};
+const qbpill=[...d.querySelectorAll('#posPills button')].find(x=>x.textContent==='QB');
+assert(qbpill);
+qbpill.click();
+const qbs=w.APEX.players.filter(p=>p.yr===2023&&p.pg==='QB');
+const valid=p=>Number.isFinite(p.qapex)&&Number.isFinite(p.qh)&&p.qh>=0&&p.qh<=1&&Number.isFinite(p.pk)&&(p.fh===0||p.fh===1);
+const eligible=qbs.filter(valid);
+const topN=Math.min(32,eligible.length);
+const top=eligible.slice().sort((a,b)=>b.qapex-a.qapex||a.pk-b.pk).slice(0,topN);
+const draft=eligible.slice().sort((a,b)=>a.pk-b.pk).slice(0,topN);
+const rate=xs=>xs.reduce((s,p)=>s+p.fh,0)/xs.length;
+const expected=`${Math.round(rate(top)*100)}% · ${Math.round(rate(draft)*100)}%`;
+const draftedTop=eligible.slice().sort((a,b)=>b.apex-a.apex||a.pk-b.pk).slice(0,topN);
+const draftedExpected=`${Math.round(rate(draftedTop)*100)}% · ${Math.round(rate(draft)*100)}%`;
+assert.equal(tile('Board vs draft order').value,draftedExpected);
+const predraftPill=[...d.querySelectorAll('#lensPills button')].find(x=>x.textContent==='Pre-draft (no pick)');
+assert(predraftPill);
+predraftPill.click();
+assert.equal(tile('Pre-draft vs draft order').value,expected);
+assert(tile('Pre-draft vs draft order').sub.includes(`pre-draft top ${topN} vs first ${topN} eligible draft selections`));
+
+// Restore the default scope before the search assertions below.
+d.querySelector('#posPills button').click(); // ALL is the first pill
+const allEligible=w.APEX.players.filter(p=>p.yr===2023&&valid(p));
+const allTop=allEligible.slice().sort((a,b)=>b.qapex-a.qapex||a.pk-b.pk).slice(0,32);
+const allDraft=allEligible.slice().sort((a,b)=>a.pk-b.pk).slice(0,32);
+const allExpected=`${Math.round(rate(allTop)*100)}% · ${Math.round(rate(allDraft)*100)}%`;
+assert.equal(tile('Pre-draft vs draft order').value,allExpected);
+const allDraftedTop=allEligible.slice().sort((a,b)=>b.apex-a.apex||a.pk-b.pk).slice(0,32);
+assert.notEqual(rate(allTop),rate(allDraftedTop),'fixture must distinguish lenses');
+const draftedPill=[...d.querySelectorAll('#lensPills button')].find(x=>x.textContent==='As drafted');
+assert(draftedPill);
+draftedPill.click();
 const search=d.querySelector('input[type="search"]');
 search.value='Stroud';search.dispatchEvent(new w.Event('input',{bubbles:true}));
 await new Promise(resolve=>w.setTimeout(resolve,160));

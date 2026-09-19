@@ -35,3 +35,13 @@ Approximate Value courtesy of Pro-Football-Reference via nflverse.
 September 11 follow-up tested V15 position-specific college evidence (including a TE receiving mapping repair), V16 market-offset regression, and a fixed V17 blend. None passed the existing release criteria; scores remain unchanged. `accuracy-lab.js` exposes matched per-position probability errors and data limitations. Backtest checkpoint integrity is repaired in the private pipeline.
 
 September 12 continuation publishes the recovered V18 external-data experiment, chronological first-four-year outcomes, and a new draft-position-free college-workload ablation. The college ablation evaluated 1,753 players in 2015–2021; all three overall Brier errors increased slightly and paired intervals include zero. Live scores remain unchanged. `external-research.js` and `college-context-research.js` expose distinct targets, protocols, coverage and uncertainty.
+
+## September 19 evaluation repair
+
+Board summaries now follow the selected scoring lens and visible player filters. Historical pre-draft hit/starter summaries are recalculated from the displayed payload. Forward AUC comparisons, sample counts, yearly AUC curves and top-decile comparisons use matched eligible players so missing predictions cannot silently change the comparison cohort. These repairs improve reporting correctness, not the underlying forecasts.
+
+The existing chronological four-year research is the more relevant check on future performance than the legacy pooled calibration. For 78 quarterbacks, four-year hit Brier was 0.153289 for existing features versus 0.144594 for the draft-market baseline. The pick-free candidate was 0.186205. These are already-explored research results, not an untouched final test, and do not establish a quarterback accuracy advantage.
+
+Model fitting, raw licensed inputs, season-level target construction and forecast provenance live in the separate private research repository. This public repair does not change player scores or claim a predictive improvement.
+
+New candidate exports can be checked with `node scripts/evaluate_candidate.cjs --input candidate.json`. See [the paired evaluation schema](docs/candidate-evaluation.md) for the required forecast, training-cutoff, maturity and cohort-history fields. The evaluator reports class-bootstrap uncertainty and never promotes a model automatically. Supplied timestamps are checked for consistency; independent source and feature audits are still required. No new candidate has been trained or evaluated in this public repair.
