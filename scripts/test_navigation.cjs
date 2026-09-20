@@ -12,7 +12,7 @@ const errors=[];
 w.addEventListener('error', e=>errors.push(e.error || e.message));
 w.matchMedia=()=>({matches:false,addEventListener(){}});
 for(const script of d.querySelectorAll('script[src]')) {
-  const followup=['research-followup.js','accuracy-lab.js','external-research.js','college-context-research.js'].some(name=>script.getAttribute('src').startsWith(name));
+  const followup=['research-followup.js','accuracy-lab.js','external-research.js','college-context-research.js','chronological-research.js'].some(name=>script.getAttribute('src').startsWith(name));
   const before=followup?JSON.stringify(w.APEX.players):null;
   w.eval(fs.readFileSync(path.join(root,script.getAttribute('src').split('?')[0]),'utf8'));
   if(followup)assert.equal(JSON.stringify(w.APEX.players),before,'Research must not mutate live scores');
@@ -51,6 +51,21 @@ for(const [id,bodyId,payload,outcomes,models] of [
  }
  control.value='all';control.dispatchEvent(new w.Event('change'));
 }
+
+assert.equal(w.APEX_V19_RESEARCH.production_changed,false);
+assert.equal(w.APEX_V19_RESEARCH.missingness_repair_prediction_unchanged,true);
+const v19Control=d.getElementById('v19Scope');
+for(const option of v19Control.options){
+ v19Control.value=option.value;v19Control.dispatchEvent(new w.Event('change'));
+ const rows=d.querySelectorAll('#v19Rows tr');assert.equal(rows.length,2);
+ ['hit4','starter4'].forEach((outcome,i)=>{
+  const m=w.APEX_V19_RESEARCH.metrics[outcome][option.value],cells=rows[i].querySelectorAll('td');
+  assert.equal(Number(cells[0].textContent),m.market.n);
+  ['market','existing_features','logistic','boost','blend','no_pick'].forEach((model,j)=>assert.equal(cells[j+1].textContent,m[model].brier.toFixed(6)));
+ });
+}
+v19Control.value='all';v19Control.dispatchEvent(new w.Event('change'));
+assert(d.getElementById('v19Intervals').textContent.includes('Both include zero'));
 
 function active(name) {
   assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
