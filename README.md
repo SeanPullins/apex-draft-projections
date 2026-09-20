@@ -1,0 +1,50 @@
+# APEX — NFL Draft-to-Success Projections
+
+Interactive site with retrospective hit / starter / Pro Bowl estimates for NFL draft picks since 2000.
+
+The site is static. `.github/workflows/publish.yml` publishes main to the GitHub Pages branch after validation.
+
+## Validation status
+
+- 2000–2002: training-only fits, excluded from reported held-out metrics.
+- 2003–2021: class-held-out base predictions. Legacy v10 calibration reused historical evaluation labels, so its probability metrics are descriptive, not independent validation.
+- 2022–2026: retrospective projections. Scores have been revised and are not verified frozen draft-night forecasts. Outcome snapshots are not live NFL results.
+- V11 and subsequent candidates remain research-only until evaluation supports promotion. AUC measures ranking, not the percentage of predictions that are correct.
+
+September 11 research reran V11, a repaired V10 calibration pipeline, a market-offset V13 candidate, and a fixed V14 blend. V14 reduced overall Brier error for all three outcomes versus repaired V10, but a small recent-class starter regression failed the release gate. A chronological starter check did not resolve that uncertainty. Live player scores remain unchanged; `research-followup.js` publishes aggregate results only.
+
+`accuracy-audit.js` recalculates supported summaries from the displayed score payload after QB patches. Raw PFF data and the model pipeline remain in the private research repository.
+
+## Checks
+
+Run `npm ci && npm test` before publishing. Checks cover score provenance and rankings, metric reconciliation, full startup, tab clicks, keyboard navigation, class selection and search.
+
+## Data sources & credits
+
+- [nflverse](https://github.com/nflverse) — draft, combine, and career outcome data
+- [RAS.football](https://ras.football) (Kent Lee Platte) — Relative Athletic Scores
+- [Jack Lichtenstein / ESPN](https://github.com/JackLich10/nfl-draft-data) — historical prospect grades
+- [Lee Sharpe / nfldata](https://github.com/nflverse/nfldata) — draft pick value curves
+- PFF-derived college data informs the model; only derived percentiles (never raw
+  PFF values) appear in this repository or on the site.
+
+Independent research project. Not affiliated with the NFL, PFF, ESPN, or any team.
+Approximate Value courtesy of Pro-Football-Reference via nflverse.
+
+
+September 11 follow-up tested V15 position-specific college evidence (including a TE receiving mapping repair), V16 market-offset regression, and a fixed V17 blend. None passed the existing release criteria; scores remain unchanged. `accuracy-lab.js` exposes matched per-position probability errors and data limitations. Backtest checkpoint integrity is repaired in the private pipeline.
+
+September 12 continuation publishes the recovered V18 external-data experiment, chronological first-four-year outcomes, and a new draft-position-free college-workload ablation. The college ablation evaluated 1,753 players in 2015–2021; all three overall Brier errors increased slightly and paired intervals include zero. Live scores remain unchanged. `external-research.js` and `college-context-research.js` expose distinct targets, protocols, coverage and uncertainty.
+
+## September 19 evaluation repair
+
+Board summaries now follow the selected scoring lens and visible player filters. Historical pre-draft hit/starter summaries are recalculated from the displayed payload. Forward AUC comparisons, sample counts, yearly AUC curves and top-decile comparisons use matched eligible players so missing predictions cannot silently change the comparison cohort. These repairs improve reporting correctness, not the underlying forecasts.
+
+The existing chronological four-year research is the more relevant check on future performance than the legacy pooled calibration. For 78 quarterbacks, four-year hit Brier was 0.153289 for existing features versus 0.144594 for the draft-market baseline. The pick-free candidate was 0.186205. These are already-explored research results, not an untouched final test, and do not establish a quarterback accuracy advantage.
+
+Model fitting, raw licensed inputs, season-level target construction and forecast provenance live in the separate private research repository. This public repair does not change player scores or claim a predictive improvement.
+
+New candidate exports can be checked with `node scripts/evaluate_candidate.cjs --input candidate.json`. See [the paired evaluation schema](docs/candidate-evaluation.md) for the required forecast, training-cutoff, maturity and cohort-history fields. The evaluator reports class-bootstrap uncertainty and never promotes a model automatically. Supplied timestamps are checked for consistency; independent source and feature audits are still required. No new candidate has been trained or evaluated in this public repair.
+
+
+September 20 completion: `chronological-research.js` reports the fixed V19 comparison on mature four-year outcomes. A 50/50 market/boosted-model blend has slightly lower all-position Brier error than the previous four-year research candidate, but paired 95% intervals include zero; QB hit error remains worse than the market baseline. No candidate replaces live scores. The private college aggregation now preserves entirely missing career statistics as unknown. The same experiment was rerun after the fix; prediction bytes were identical. Both full private workflow runs passed.
