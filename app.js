@@ -599,20 +599,10 @@
   function renderTiles(rows) {
     const t = $("#boardTiles");
     const modeNote = $("#modeNote");
-    if (state.view !== "analyst") {
-      t.hidden = true;
-      if (modeNote) {
-        modeNote.innerHTML = state.q
-          ? "Search runs across every draft class. Tap a player for the full APEX breakdown."
-          : state.year < 2003
-            ? "<strong>Historical training class.</strong> Use this class for exploration, not as a held-out test of the model."
-            : state.year <= 2021
-              ? "<strong>Historical look-back.</strong> This class was scored with the base model holding the class out; tap any player to see what APEX saw and what happened."
-              : "<strong>Research projection.</strong> APEX is a decision aid, not a scouting guarantee. Tap any player to see the reasoning and limitations.";
-      }
-      return;
-    }
-    t.hidden = false;
+    const fanMode = state.view !== "analyst";
+    // Keep the analytical tiles populated for tests, screen readers and instant
+    // switching into Analyst mode, but visually step them out of the Fan view.
+    t.hidden = fanMode;
     // `rows` is the exact visible table scope: class/search, position, film and
     // the search result cap have already been applied. Tiles must describe that
     // same scope rather than silently widening back to the whole class.
@@ -682,13 +672,25 @@
            top ? top.pg + " · " + (pre ? "score " : "APEX ") + fmt1(top[L.apex]) : "") +
       third + fourth;
 
-    if (modeNote) modeNote.textContent = state.q
-      ? "Searching every draft class. These are research estimates; see Insights for validation."
-      : state.year < 2003
-        ? "Training-only class: these scores are in-sample fits, not held-out predictions."
-        : state.year <= 2021
-          ? "Retrospective class-held-out scores. Legacy calibration reused historical evaluation labels; accuracy figures are descriptive, not independent probability validation."
-          : "Retrospective projection, not a verified draft-night snapshot. Outcomes show the data snapshot, not live results. See Insights for the independently evaluated v11 candidate.";
+    if (modeNote) {
+      if (fanMode) {
+        modeNote.innerHTML = state.q
+          ? "Search runs across every draft class. Tap a player for the full APEX breakdown."
+          : state.year < 2003
+            ? "<strong>Historical training class.</strong> Use this class for exploration, not as a held-out test of the model."
+            : state.year <= 2021
+              ? "<strong>Historical look-back.</strong> This class was scored with the base model holding the class out; tap any player to see what APEX saw and what happened."
+              : "<strong>Research projection.</strong> APEX is a decision aid, not a scouting guarantee. Tap any player to see the reasoning and limitations.";
+      } else {
+        modeNote.textContent = state.q
+          ? "Searching every draft class. These are research estimates; see Track Record for validation."
+          : state.year < 2003
+            ? "Training-only class: these scores are in-sample fits, not held-out predictions."
+            : state.year <= 2021
+              ? "Retrospective class-held-out scores. Legacy calibration reused historical evaluation labels; accuracy figures are descriptive, not independent probability validation."
+              : "Retrospective projection, not a verified draft-night snapshot. Outcomes show the data snapshot, not live results. See Track Record for the independently evaluated v11 candidate.";
+      }
+    }
 
   }
   const tile = (label, value, sub) =>
