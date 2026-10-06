@@ -314,6 +314,7 @@
     [["simple", "Fan"], ["analyst", "Analyst"]].forEach(([k, lbl]) => {
       const b = document.createElement("button");
       b.className = "pill" + (k === state.view ? " is-active" : "");
+      b.dataset.viewMode = k;
       b.textContent = lbl;
       b.setAttribute("aria-pressed", String(k === state.view));
       b.addEventListener("click", () => {
@@ -341,6 +342,7 @@
     [["drafted", "With NFL draft pick"], ["predraft", "Without NFL draft pick"]].forEach(([v, lbl]) => {
       const b = document.createElement("button");
       b.className = "pill" + (v === state.lens ? " is-active" : "");
+      b.dataset.lens = v;
       b.textContent = lbl;
       b.setAttribute("aria-pressed", String(v === state.lens));
       b.addEventListener("click", () => {
