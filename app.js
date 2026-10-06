@@ -2215,7 +2215,7 @@
     const results = $("#heroSearchResults");
     const latest = $("#latestBoardBtn");
 
-    $("[data-tab-jump]").forEach(btn => {
+    $$("[data-tab-jump]").forEach(btn => {
       btn.addEventListener("click", () => setTab(btn.dataset.tabJump));
     });
 
@@ -2296,7 +2296,7 @@
           (p.pk != null ? ' · Pick ' + p.pk : '') + '</span>' +
         '</button>'
       ).join("");
-      $(".hero-search-result", results).forEach(btn => {
+      $$(".hero-search-result", results).forEach(btn => {
         btn.addEventListener("click", () => {
           const p = matches[+btn.dataset.result];
           if (p) openPlayer(p);
@@ -2310,7 +2310,7 @@
       timer = setTimeout(renderResults, 70);
     });
     input.addEventListener("keydown", e => {
-      const opts = $(".hero-search-result", results);
+      const opts = $$(".hero-search-result", results);
       if (e.key === "Escape") {
         input.value = "";
         closeResults();
@@ -2323,7 +2323,7 @@
       }
     });
     results.addEventListener("keydown", e => {
-      const opts = $(".hero-search-result", results);
+      const opts = $$(".hero-search-result", results);
       const i = opts.indexOf(document.activeElement);
       if (i < 0) return;
       if (e.key === "ArrowDown") {
