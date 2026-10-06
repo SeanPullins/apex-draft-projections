@@ -213,13 +213,14 @@
   // The reduced board. Same rows, same order, same numbers -- fewer of them, so
   // a reader who does not know what RAS is can still work down the page.
   const SIMPLE_COLS = [
-    { key: "rk", label: "Model rank", num: true },
+    { key: "rk", label: "APEX rank", num: true },
     { key: "nm", label: "Player" },
     { key: "pg", label: "Pos" },
-    { key: "pk", label: "Draft pick", num: true },
-    { key: "apex", label: "APEX", num: true },
-    { key: "outlook", label: "Outlook", sortKey: "ph" },
-    { key: "out", label: "So far", sortKey: "wav" },
+    { key: "pk", label: "NFL pick", num: true },
+    { key: "apex", label: "APEX score", num: true },
+    { key: "outlook", label: "Career outlook", sortKey: "ph" },
+    { key: "vd", label: "APEX vs NFL", num: true },
+    { key: "out", label: "NFL result", sortKey: "wav" },
   ];
   const activeCols = () => (state.view === "analyst" ? COLS : SIMPLE_COLS);
 
@@ -310,7 +311,7 @@
 
   const viewPills = $("#viewPills");
   if (viewPills) {
-    [["simple", "Simple"], ["analyst", "Analyst"]].forEach(([k, lbl]) => {
+    [["simple", "Fan"], ["analyst", "Analyst"]].forEach(([k, lbl]) => {
       const b = document.createElement("button");
       b.className = "pill" + (k === state.view ? " is-active" : "");
       b.textContent = lbl;
@@ -337,7 +338,7 @@
 
   const lensPills = $("#lensPills");
   if (lensPills) {
-    [["drafted", "As drafted"], ["predraft", "Pre-draft (no pick)"]].forEach(([v, lbl]) => {
+    [["drafted", "With NFL draft pick"], ["predraft", "Without NFL draft pick"]].forEach(([v, lbl]) => {
       const b = document.createElement("button");
       b.className = "pill" + (v === state.lens ? " is-active" : "");
       b.textContent = lbl;
@@ -368,7 +369,7 @@
       if (state.q) bits.push("across all draft classes");
       if (state.pos !== "ALL") bits.push(state.pos + " only");
       if (state.lens === "predraft") bits.push("pre-draft lens");
-      if (state.view === "analyst") bits.push("analyst detail");
+      if (state.view === "analyst") bits.push("Analyst mode");
       boardContext.textContent = bits.join(" · ");
     }
     setFilmCount("#boardFilmWrap", filmEligible);
@@ -495,13 +496,123 @@
       });
     });
 
+    renderFanSpotlights(rows);
     renderTiles(rows);
+  }
+
+  function renderFanSpotlights(visibleRows) {
+    const wrap = $("#fanSpotlights");
+    const hub = $(".fan-hub");
+    const title = $("#fanHubTitle");
+    const context = $("#fanHubContext");
+    if (!wrap || !hub) return;
+
+    const hide = !!state.q || state.lens === "predraft";
+    hub.hidden = hide;
+    if (hide) return;
+
+    let pool = D.players.filter(p => p.yr === state.year);
+    if (state.pos !== "ALL") pool = pool.filter(p => p.pg === state.pos);
+    if (!pool.length) {
+      wrap.innerHTML = "";
+      return;
+    }
+
+    if (title) {
+      title.textContent = state.pos === "ALL"
+        ? state.year + ": four names to know"
+        : state.year + " " + state.pos + "s to know";
+    }
+    if (context) {
+      context.textContent = state.pos === "ALL"
+        ? "The fastest way into the class. Tap any player for the full breakdown."
+        : "The biggest APEX stories among " + state.pos + "s in this class.";
+    }
+
+    const used = new Set();
+    const id = p => p.yr + ":" + p.pk;
+    const choose = rows => {
+      const p = rows.find(x => !used.has(id(x))) || rows[0];
+      if (p) used.add(id(p));
+      return p;
+    };
+
+    const byScore = pool.slice().filter(p => Number.isFinite(p.apex))
+      .sort((a,b) => b.apex - a.apex || (a.pk || 999) - (b.pk || 999));
+    const byLove = pool.slice().filter(p => Number.isFinite(p.vd) && p.vd > 0)
+      .sort((a,b) => b.vd - a.vd || b.apex - a.apex);
+    const byFade = pool.slice().filter(p => Number.isFinite(p.vd) && p.vd < 0)
+      .sort((a,b) => a.vd - b.vd || b.apex - a.apex);
+    const bySleeper = pool.slice().filter(p => Number.isFinite(p.vd) && p.vd > 0 && p.pk >= 65)
+      .sort((a,b) => b.vd - a.vd || b.apex - a.apex);
+
+    const top = choose(byScore);
+    const love = choose(byLove);
+    const fade = choose(byFade);
+    const sleeper = choose(bySleeper.length ? bySleeper : byLove);
+
+    const cards = [
+      top && {
+        p: top, tag: "BEST ON THE BOARD", cls: "spot-top",
+        title: "APEX #1",
+        line: "Score " + fmt1(top.apex) + " · " + pct(top.ph) + " strong-career outlook"
+      },
+      love && {
+        p: love, tag: "APEX LOVES", cls: "spot-love",
+        title: "Higher than the NFL",
+        line: "APEX ranked him " + love.vd + " spot" + (love.vd === 1 ? "" : "s") + " higher than his draft slot"
+      },
+      fade && {
+        p: fade, tag: "APEX QUESTIONS", cls: "spot-fade",
+        title: "Lower than the NFL",
+        line: "APEX ranked him " + Math.abs(fade.vd) + " spot" + (Math.abs(fade.vd) === 1 ? "" : "s") + " lower than his draft slot"
+      },
+      sleeper && {
+        p: sleeper, tag: "SLEEPER RADAR", cls: "spot-sleeper",
+        title: sleeper.pk >= 65 ? "Day 2/3 value" : "Value pick",
+        line: "NFL pick " + sleeper.pk + " · APEX score " + fmt1(sleeper.apex)
+      },
+    ].filter(Boolean);
+
+    wrap.innerHTML = cards.map((c,i) => {
+      const ow = outlookWord(c.p.ph);
+      return '<button class="fan-spotlight ' + c.cls + '" type="button" data-spot="' + i + '">' +
+        '<span class="fan-spot-tag">' + c.tag + '</span>' +
+        '<span class="fan-spot-player"><span class="fan-spot-pos">' + c.p.pg + '</span>' +
+        '<strong>' + esc(c.p.nm) + '</strong></span>' +
+        '<span class="fan-spot-title">' + c.title + '</span>' +
+        '<span class="fan-spot-line">' + c.line + '</span>' +
+        '<span class="fan-spot-outlook">' + (ow ? ow[0] + " outlook" : "Open player") + ' <b>→</b></span>' +
+      '</button>';
+    }).join("");
+
+    $(".fan-spotlight", wrap).forEach(btn => {
+      btn.addEventListener("click", () => {
+        const card = cards[+btn.dataset.spot];
+        if (card) openModal(card.p);
+      });
+    });
   }
 
   const fwdClass = yr => (D.forward && D.forward.head_to_head || []).find(r => r.yr === yr);
 
   function renderTiles(rows) {
     const t = $("#boardTiles");
+    const modeNote = $("#modeNote");
+    if (state.view !== "analyst") {
+      t.hidden = true;
+      if (modeNote) {
+        modeNote.innerHTML = state.q
+          ? "Search runs across every draft class. Tap a player for the full APEX breakdown."
+          : state.year < 2003
+            ? "<strong>Historical training class.</strong> Use this class for exploration, not as a held-out test of the model."
+            : state.year <= 2021
+              ? "<strong>Historical look-back.</strong> This class was scored with the base model holding the class out; tap any player to see what APEX saw and what happened."
+              : "<strong>Research projection.</strong> APEX is a decision aid, not a scouting guarantee. Tap any player to see the reasoning and limitations.";
+      }
+      return;
+    }
+    t.hidden = false;
     // `rows` is the exact visible table scope: class/search, position, film and
     // the search result cap have already been applied. Tiles must describe that
     // same scope rather than silently widening back to the whole class.
@@ -571,7 +682,7 @@
            top ? top.pg + " · " + (pre ? "score " : "APEX ") + fmt1(top[L.apex]) : "") +
       third + fourth;
 
-    $("#modeNote").textContent = state.q
+    if (modeNote) modeNote.textContent = state.q
       ? "Searching every draft class. These are research estimates; see Insights for validation."
       : state.year < 2003
         ? "Training-only class: these scores are in-sample fits, not held-out predictions."
@@ -758,6 +869,33 @@
   /* Two or three reasons, in the reader's language, for why the number is what
      it is. Deliberately not the calibration story -- that lives one click down
      under "How the model reached this score". */
+  function fanVerdict(p) {
+    const pre = state.lens === "predraft";
+    const L = lens();
+    const ow = outlookWord(p[L.hit]);
+    let label = "APEX TAKE", cls = "fan-v-agree", copy = ow ? ow[1] : "Open the details below for the full projection.";
+    if (pre) {
+      label = "PLAYER-ONLY VIEW";
+      cls = "fan-v-neutral";
+      copy = "This view ignores where the NFL drafted him and scores only the player information available to the model.";
+    } else if (p.vd >= 10) {
+      label = "APEX LIKED HIM MORE";
+      cls = "fan-v-up";
+      copy = "APEX ranked him " + p.vd + " spots higher than the NFL did.";
+    } else if (p.vd <= -10) {
+      label = "APEX WAS LOWER";
+      cls = "fan-v-down";
+      copy = "APEX ranked him " + Math.abs(p.vd) + " spots lower than the NFL did.";
+    } else if (p.vd != null) {
+      label = "APEX & NFL MOSTLY AGREED";
+      cls = "fan-v-agree";
+      copy = "The model and draft order told a similar story about his value.";
+    }
+    return '<div class="fan-verdict ' + cls + '"><span>' + label + '</span><strong>' +
+      (ow ? ow[0].toUpperCase() + " CAREER OUTLOOK" : "PLAYER BREAKDOWN") +
+      '</strong><p>' + copy + '</p></div>';
+  }
+
   function whyBullets(p) {
     const b = [];
     const pre = state.lens === "predraft";
@@ -877,7 +1015,8 @@
       '<div class="modal-body">' +
       '<div class="modal-score"><span class="hero">' + fmt1(p[L.apex]) + '</span>' +
       (!pre && p.sd != null ? '<span class="hero-sd">± ' + p.sd.toFixed(1) + "</span>" : "") +
-      '<span class="hero-sub">' + (pre ? "Pre-draft APEX score" : "APEX score") + " (0–100)<br>" + esc(st.short) + "</span></div>" +
+      '<span class="hero-sub">' + (pre ? "Player-only APEX score" : "APEX score") + " (0–100)<br>" + esc(st.short) + "</span></div>" +
+      fanVerdict(p) +
       cardSummary(p) +
       outcome +
       '<section class="card-sec"><h4 class="sec-h">Outlook</h4>' +
@@ -2214,6 +2353,7 @@
     const input = $("#heroPlayerSearch");
     const results = $("#heroSearchResults");
     const latest = $("#latestBoardBtn");
+    const findPlayer = $("#findPlayerBtn");
 
     $$("[data-tab-jump]").forEach(btn => {
       btn.addEventListener("click", () => setTab(btn.dataset.tabJump));
@@ -2230,6 +2370,14 @@
         setTab("board");
         renderBoard();
         $("#boardControls")?.scrollIntoView({behavior: "smooth", block: "start"});
+      });
+    }
+
+    if (findPlayer && input) {
+      findPlayer.addEventListener("click", () => {
+        setTab("board");
+        input.focus();
+        input.select();
       });
     }
 
