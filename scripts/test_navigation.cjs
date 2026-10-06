@@ -108,7 +108,7 @@ const expected=`${Math.round(rate(top)*100)}% · ${Math.round(rate(draft)*100)}%
 const draftedTop=eligible.slice().sort((a,b)=>b.apex-a.apex||a.pk-b.pk).slice(0,topN);
 const draftedExpected=`${Math.round(rate(draftedTop)*100)}% · ${Math.round(rate(draft)*100)}%`;
 assert.equal(tile('Board vs draft order').value,draftedExpected);
-const predraftPill=[...d.querySelectorAll('#lensPills button')].find(x=>x.textContent==='Pre-draft (no pick)');
+const predraftPill=d.querySelector('#lensPills button[data-lens="predraft"]');
 assert(predraftPill);
 predraftPill.click();
 assert.equal(tile('Pre-draft vs draft order').value,expected);
@@ -123,7 +123,7 @@ const allExpected=`${Math.round(rate(allTop)*100)}% · ${Math.round(rate(allDraf
 assert.equal(tile('Pre-draft vs draft order').value,allExpected);
 const allDraftedTop=allEligible.slice().sort((a,b)=>b.apex-a.apex||a.pk-b.pk).slice(0,32);
 assert.notEqual(rate(allTop),rate(allDraftedTop),'fixture must distinguish lenses');
-const draftedPill=[...d.querySelectorAll('#lensPills button')].find(x=>x.textContent==='As drafted');
+const draftedPill=d.querySelector('#lensPills button[data-lens="drafted"]');
 assert(draftedPill);
 draftedPill.click();
 const search=d.querySelector('input[type="search"]');
