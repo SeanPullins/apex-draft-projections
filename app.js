@@ -15,6 +15,7 @@
                     try { return localStorage.getItem("apexView") || "simple"; }
                     catch (e) { return "simple"; }
                   })() };
+  document.body.dataset.view = state.view;
 
   /* Two ways of scoring the same players. "drafted" is the shipped model, which
      knows where each player went. "predraft" withholds the pick entirely --
@@ -316,6 +317,7 @@
       b.setAttribute("aria-pressed", String(k === state.view));
       b.addEventListener("click", () => {
         state.view = k;
+        document.body.dataset.view = k;
         try { localStorage.setItem("apexView", k); } catch (e) {}
         $$(".pill", viewPills).forEach(x => {
           const on = x.textContent === lbl;
@@ -355,6 +357,20 @@
 
   function renderBoard() {
     const rows = rowsForState();
+    const boardTitle = $("#boardTitle");
+    const boardContext = $("#boardContext");
+    if (boardTitle) {
+      boardTitle.textContent = state.q ? "Player search results" : state.year + " NFL Draft Big Board";
+    }
+    if (boardContext) {
+      const bits = [];
+      bits.push(rows.length + (rows.length === 1 ? " player" : " players"));
+      if (state.q) bits.push("across all draft classes");
+      if (state.pos !== "ALL") bits.push(state.pos + " only");
+      if (state.lens === "predraft") bits.push("pre-draft lens");
+      if (state.view === "analyst") bits.push("analyst detail");
+      boardContext.textContent = bits.join(" · ");
+    }
     setFilmCount("#boardFilmWrap", filmEligible);
     const band = $("#lensBand");
     if (band) {
@@ -2190,8 +2206,151 @@
     renderWatch();
   }
 
+  /* ---------- product experience ----------
+     The landing search is intentionally a navigation layer over the existing
+     player cards. It creates no new scores or rankings; it only helps a reader
+     get to the player they already came to see. */
+  function setupProductExperience() {
+    const input = $("#heroPlayerSearch");
+    const results = $("#heroSearchResults");
+    const latest = $("#latestBoardBtn");
+
+    $("[data-tab-jump]").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tabJump));
+    });
+
+    if (latest) {
+      latest.addEventListener("click", () => {
+        state.year = LATEST;
+        state.pick = null;
+        state.q = "";
+        classSelect.value = LATEST;
+        const search = $("#searchBox");
+        if (search) search.value = "";
+        setTab("board");
+        renderBoard();
+        $("#boardControls")?.scrollIntoView({behavior: "smooth", block: "start"});
+      });
+    }
+
+    if (!input || !results) return;
+
+    const closeResults = () => {
+      results.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+    };
+
+    const openPlayer = p => {
+      state.year = p.yr;
+      state.pick = null;
+      state.q = "";
+      classSelect.value = p.yr;
+      const search = $("#searchBox");
+      if (search) search.value = "";
+      setTab("board");
+      renderBoard();
+      input.value = "";
+      closeResults();
+      openModal(p);
+    };
+
+    const matchesFor = raw => {
+      const q = raw.trim().toLowerCase();
+      if (q.length < 2) return [];
+      const scored = D.players.map(p => {
+        const name = (p.nm || "").toLowerCase();
+        const college = (p.cl || "").toLowerCase();
+        const team = (p.tm || "").toLowerCase();
+        let score = 0;
+        if (name === q) score = 100;
+        else if (name.startsWith(q)) score = 80;
+        else if (name.includes(q)) score = 60;
+        else if (college.startsWith(q) || team.startsWith(q)) score = 40;
+        else if (college.includes(q) || team.includes(q)) score = 20;
+        return score ? {p, score} : null;
+      }).filter(Boolean);
+      scored.sort((a, b) => b.score - a.score || b.p.yr - a.p.yr ||
+        (a.p.rk || 999) - (b.p.rk || 999));
+      return scored.slice(0, 7).map(x => x.p);
+    };
+
+    const renderResults = () => {
+      const matches = matchesFor(input.value);
+      const q = input.value.trim();
+      if (q.length < 2) {
+        closeResults();
+        results.innerHTML = "";
+        return;
+      }
+      results.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      if (!matches.length) {
+        results.innerHTML = '<div class="hero-search-empty">No matching player, school or team.</div>';
+        return;
+      }
+      results.innerHTML = matches.map((p, i) =>
+        '<button type="button" class="hero-search-result" role="option" data-result="' + i + '">' +
+          '<span class="hero-result-main"><strong>' + esc(p.nm) + '</strong>' +
+          '<span>' + esc(p.cl || "College unavailable") + '</span></span>' +
+          '<span class="hero-result-meta">' + p.yr + ' · ' + p.pg +
+          (p.pk != null ? ' · Pick ' + p.pk : '') + '</span>' +
+        '</button>'
+      ).join("");
+      $(".hero-search-result", results).forEach(btn => {
+        btn.addEventListener("click", () => {
+          const p = matches[+btn.dataset.result];
+          if (p) openPlayer(p);
+        });
+      });
+    };
+
+    let timer;
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(renderResults, 70);
+    });
+    input.addEventListener("keydown", e => {
+      const opts = $(".hero-search-result", results);
+      if (e.key === "Escape") {
+        input.value = "";
+        closeResults();
+      } else if (e.key === "Enter" && opts.length) {
+        e.preventDefault();
+        opts[0].click();
+      } else if (e.key === "ArrowDown" && opts.length) {
+        e.preventDefault();
+        opts[0].focus();
+      }
+    });
+    results.addEventListener("keydown", e => {
+      const opts = $(".hero-search-result", results);
+      const i = opts.indexOf(document.activeElement);
+      if (i < 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault(); opts[(i + 1) % opts.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (i === 0) input.focus(); else opts[i - 1].focus();
+      } else if (e.key === "Escape") {
+        e.preventDefault(); closeResults(); input.focus();
+      }
+    });
+    document.addEventListener("click", e => {
+      if (!results.contains(e.target) && e.target !== input) closeResults();
+    });
+    document.addEventListener("keydown", e => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setTab("board");
+        input.focus();
+        input.select();
+      }
+    });
+  }
+
   /* ---------- boot ---------- */
   $("#genDate").textContent = "generated " + D.generated;
+  setupProductExperience();
   renderBoard();
   renderProj();
   renderInsights();
