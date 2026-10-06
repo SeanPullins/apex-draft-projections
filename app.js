@@ -586,7 +586,7 @@
       '</button>';
     }).join("");
 
-    $(".fan-spotlight", wrap).forEach(btn => {
+    $$(".fan-spotlight", wrap).forEach(btn => {
       btn.addEventListener("click", () => {
         const card = cards[+btn.dataset.spot];
         if (card) openModal(card.p);
