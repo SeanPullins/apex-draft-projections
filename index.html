@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APEX — NFL Draft-to-Success Projections</title>
-<meta name="description" content="APEX is an interactive NFL draft intelligence tool that compares prospect success projections with league consensus, with boards, player cards, validation and pre-draft views for every class since 2000.">
+<title>APEX — NFL Draft Intelligence</title>
+<meta name="description" content="Explore NFL draft classes in plain English: APEX rankings, career outlooks, sleepers, draft-day disagreements and player cards for every class since 2000.">
 <meta name="theme-color" content="#0b1220">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="styles.css?v=20261006-experience">
+<link rel="stylesheet" href="styles.css?v=20261006-fan">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to draft content</a>
@@ -17,11 +17,11 @@
     <span class="brand-sub">NFL Draft &rarr; Success Projections</span>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
-    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Model vs NFL</button>
-    <button class="tab" data-tab="proj" role="tab" aria-selected="false">All Classes</button>
-    <button class="tab" data-tab="watch" role="tab" aria-selected="false">Watchlist</button>
-    <button class="tab" data-tab="method" role="tab" aria-selected="false">How It Works</button>
+    <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Draft Board</button>
+    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Track Record</button>
+    <button class="tab" data-tab="proj" role="tab" aria-selected="false">Recent Classes</button>
+    <button class="tab" data-tab="watch" role="tab" aria-selected="false">Future Prospects</button>
+    <button class="tab" data-tab="method" role="tab" aria-selected="false">About APEX</button>
   </nav>
   <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
 </header>
@@ -31,51 +31,63 @@
   <section id="tab-board" class="tab-panel is-active">
     <div class="product-hero" aria-labelledby="apexHeroTitle">
       <div class="hero-main">
-        <p class="eyebrow">APEX DRAFT INTELLIGENCE</p>
-        <h1 id="apexHeroTitle">Find the prospects consensus may be missing.</h1>
-        <p class="hero-deck">APEX turns draft capital, athletic testing, college production and college performance into one transparent NFL success projection — then shows you exactly where the model agrees with the league and where it doesn&rsquo;t.</p>
+        <p class="eyebrow">NFL DRAFT, MADE SIMPLE</p>
+        <h1 id="apexHeroTitle">See who APEX loves, who it questions, and why.</h1>
+        <p class="hero-deck">Pick a draft class and get the story in seconds: the best prospects, the players APEX liked more than the NFL, the biggest concerns, sleepers, and a plain-English outlook for every player.</p>
         <div class="hero-actions" aria-label="Quick actions">
-          <button class="hero-btn hero-btn-primary" id="latestBoardBtn" type="button">Explore the latest board</button>
-          <button class="hero-btn" type="button" data-tab-jump="insights">See model vs NFL</button>
-          <button class="hero-btn" type="button" data-tab-jump="method">How APEX works</button>
+          <button class="hero-btn hero-btn-primary" id="latestBoardBtn" type="button">See the latest draft class</button>
+          <button class="hero-btn" type="button" data-tab-jump="insights">See APEX&rsquo;s track record</button>
+          <button class="hero-btn" id="findPlayerBtn" type="button">Find a player</button>
         </div>
         <div class="hero-proof" aria-label="APEX highlights">
+          <span>Plain-English outlooks</span>
+          <span>APEX vs. NFL draft order</span>
           <span>Every draft since 2000</span>
-          <span>Class-held-out validation</span>
-          <span>Pre-draft scoring lens</span>
         </div>
       </div>
       <div class="hero-search-card">
-        <label class="hero-search-label" for="heroPlayerSearch">Find any player</label>
+        <span class="hero-search-kicker">LOOK UP A PLAYER</span>
+        <label class="hero-search-label" for="heroPlayerSearch">Who do you want to see?</label>
         <div class="hero-search-input-wrap">
           <span class="hero-search-icon" aria-hidden="true">⌕</span>
-          <input id="heroPlayerSearch" type="search" autocomplete="off" placeholder="Search player, school or team…" aria-label="Search every draft class" aria-controls="heroSearchResults" aria-expanded="false">
+          <input id="heroPlayerSearch" type="search" autocomplete="off" placeholder="Try Patrick Mahomes, Ohio State, CLE…" aria-label="Search every draft class" aria-controls="heroSearchResults" aria-expanded="false">
         </div>
         <div id="heroSearchResults" class="hero-search-results" role="listbox" aria-label="Player search results" hidden></div>
-        <p class="hero-search-help">Search across every draft class. Open a result for its full APEX card.</p>
+        <p class="hero-search-help">Search every class, school and NFL team. Tap a player for the full APEX breakdown.</p>
       </div>
     </div>
 
     <details class="quick-guide">
-      <summary><span class="quick-guide-tag">New to APEX?</span> Read the board in 30 seconds</summary>
+      <summary><span class="quick-guide-tag">First time here?</span> What am I looking at?</summary>
       <div class="quick-guide-grid">
-        <div><strong>APEX score</strong><span>The 0–100 headline score blends strong-career, starter and Pro Bowl probabilities.</span></div>
-        <div><strong>Outlook</strong><span>The simple view translates the strong-career probability into plain English.</span></div>
-        <div><strong>Model vs draft</strong><span>Shows where APEX ranked a player higher or lower than his actual draft slot.</span></div>
-        <div><strong>Bust risk</strong><span>Most useful after Round 1. APEX has little proven edge separating first-round disappointments.</span></div>
+        <div><strong>APEX Rank</strong><span>Where the model ranks a player inside that draft class.</span></div>
+        <div><strong>APEX Score</strong><span>A 0–100 ranking score. Higher means a stronger overall NFL outlook; it is not a literal success percentage.</span></div>
+        <div><strong>Career Outlook</strong><span>The model&rsquo;s strong-career probability translated into normal language.</span></div>
+        <div><strong>APEX vs NFL</strong><span>How much higher or lower APEX ranked the player than where the NFL actually drafted him.</span></div>
       </div>
     </details>
 
+    <section class="fan-hub" aria-labelledby="fanHubTitle">
+      <div class="fan-hub-head">
+        <div>
+          <p class="eyebrow">THE STORY OF THIS CLASS</p>
+          <h2 id="fanHubTitle">Four names to know</h2>
+        </div>
+        <p id="fanHubContext">Start here, then dive into the full board.</p>
+      </div>
+      <div class="fan-spotlights" id="fanSpotlights" aria-live="polite"></div>
+    </section>
+
     <div class="section-heading">
       <div>
-        <p class="eyebrow">BIG BOARD</p>
-        <h2 id="boardTitle">NFL Draft Big Board</h2>
+        <p class="eyebrow">EXPLORE THE CLASS</p>
+        <h2 id="boardTitle">NFL Draft Board</h2>
       </div>
       <p class="section-context" id="boardContext" aria-live="polite"></p>
     </div>
     <div class="controls" id="boardControls">
       <label class="control">
-        <span class="control-label">Draft class</span>
+        <span class="control-label">Class</span>
         <select id="classSelect" aria-label="Draft class"></select>
       </label>
       <div class="control grow">
@@ -83,15 +95,15 @@
         <div class="pills" id="posPills" role="group" aria-label="Position filter"></div>
       </div>
       <label class="control">
-        <span class="control-label">Search</span>
-        <input id="searchBox" type="search" placeholder="Player, college, team…" aria-label="Search players">
+        <span class="control-label">Search this class</span>
+        <input id="searchBox" type="search" placeholder="Player, school, team…" aria-label="Search players">
       </label>
       <div class="control">
-        <span class="control-label">Scoring</span>
+        <span class="control-label">Model view</span>
         <div class="pills" id="lensPills" role="group" aria-label="Scoring lens"></div>
       </div>
       <div class="control">
-        <span class="control-label">Detail</span>
+        <span class="control-label">Experience</span>
         <div class="pills" id="viewPills" role="group" aria-label="Table detail level"></div>
       </div>
       <label class="control check" id="boardFilmWrap" hidden>
