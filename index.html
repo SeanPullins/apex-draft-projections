@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>APEX — NFL Draft-to-Success Projections</title>
-<meta name="description" content="Retrospective NFL draft success estimates with documented validation limits for every class since 2000. Built on nflverse, RAS, college production and PFF-derived data.">
+<meta name="description" content="APEX is an interactive NFL draft intelligence tool that compares prospect success projections with league consensus, with boards, player cards, validation and pre-draft views for every class since 2000.">
+<meta name="theme-color" content="#0b1220">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="styles.css?v=20260910-usability">
+<link rel="stylesheet" href="styles.css?v=20261006-experience">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to draft content</a>
@@ -17,10 +18,10 @@
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">Big Board</button>
-    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
-    <button class="tab" data-tab="proj" role="tab" aria-selected="false">Projections</button>
+    <button class="tab" data-tab="insights" role="tab" aria-selected="false">Model vs NFL</button>
+    <button class="tab" data-tab="proj" role="tab" aria-selected="false">All Classes</button>
     <button class="tab" data-tab="watch" role="tab" aria-selected="false">Watchlist</button>
-    <button class="tab" data-tab="method" role="tab" aria-selected="false">Methodology</button>
+    <button class="tab" data-tab="method" role="tab" aria-selected="false">How It Works</button>
   </nav>
   <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
 </header>
@@ -28,6 +29,50 @@
 <main id="main-content" tabindex="-1">
   <!-- ============ BIG BOARD ============ -->
   <section id="tab-board" class="tab-panel is-active">
+    <div class="product-hero" aria-labelledby="apexHeroTitle">
+      <div class="hero-main">
+        <p class="eyebrow">APEX DRAFT INTELLIGENCE</p>
+        <h1 id="apexHeroTitle">Find the prospects consensus may be missing.</h1>
+        <p class="hero-deck">APEX turns draft capital, athletic testing, college production and college performance into one transparent NFL success projection — then shows you exactly where the model agrees with the league and where it doesn&rsquo;t.</p>
+        <div class="hero-actions" aria-label="Quick actions">
+          <button class="hero-btn hero-btn-primary" id="latestBoardBtn" type="button">Explore the latest board</button>
+          <button class="hero-btn" type="button" data-tab-jump="insights">See model vs NFL</button>
+          <button class="hero-btn" type="button" data-tab-jump="method">How APEX works</button>
+        </div>
+        <div class="hero-proof" aria-label="APEX highlights">
+          <span>Every draft since 2000</span>
+          <span>Class-held-out validation</span>
+          <span>Pre-draft scoring lens</span>
+        </div>
+      </div>
+      <div class="hero-search-card">
+        <label class="hero-search-label" for="heroPlayerSearch">Find any player</label>
+        <div class="hero-search-input-wrap">
+          <span class="hero-search-icon" aria-hidden="true">⌕</span>
+          <input id="heroPlayerSearch" type="search" autocomplete="off" placeholder="Search player, school or team…" aria-label="Search every draft class" aria-controls="heroSearchResults" aria-expanded="false">
+        </div>
+        <div id="heroSearchResults" class="hero-search-results" role="listbox" aria-label="Player search results" hidden></div>
+        <p class="hero-search-help">Search across every draft class. Open a result for its full APEX card.</p>
+      </div>
+    </div>
+
+    <details class="quick-guide">
+      <summary><span class="quick-guide-tag">New to APEX?</span> Read the board in 30 seconds</summary>
+      <div class="quick-guide-grid">
+        <div><strong>APEX score</strong><span>The 0–100 headline score blends strong-career, starter and Pro Bowl probabilities.</span></div>
+        <div><strong>Outlook</strong><span>The simple view translates the strong-career probability into plain English.</span></div>
+        <div><strong>Model vs draft</strong><span>Shows where APEX ranked a player higher or lower than his actual draft slot.</span></div>
+        <div><strong>Bust risk</strong><span>Most useful after Round 1. APEX has little proven edge separating first-round disappointments.</span></div>
+      </div>
+    </details>
+
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">BIG BOARD</p>
+        <h2 id="boardTitle">NFL Draft Big Board</h2>
+      </div>
+      <p class="section-context" id="boardContext" aria-live="polite"></p>
+    </div>
     <div class="controls" id="boardControls">
       <label class="control">
         <span class="control-label">Draft class</span>
@@ -66,7 +111,10 @@
         <tbody id="boardBody"></tbody>
       </table>
     </div>
-    <p class="table-hint"><strong>Uncertainty:</strong> tiers are withheld after the QB score revision because their old boundaries no longer describe the board. The remaining legacy uncertainty estimates are not available for revised QB scores. Previously, tiers grouped players the model could not tell apart. The APEX score carries a &plusmn; from refitting the model on resampled draft history; two players land in the same tier when the gap between them is smaller than that uncertainty. Ranking within a tier is not a claim &mdash; ranking across tiers is. Sorting by any other column hides the tiers, because they only describe an APEX ordering. <strong>Bust risk</strong> is the model&rsquo;s probability that a player finishes in the bottom quarter of career value among picks made in the same range of the draft &mdash; the column where APEX separates itself from draft order most clearly, from round two down. In round one it is close to a flat base rate: about a quarter of first-rounders disappoint and the model cannot say which. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
+    <details class="board-notes">
+      <summary>Definitions, uncertainty &amp; caveats</summary>
+      <p class="table-hint"><strong>Uncertainty:</strong> tiers are withheld after the QB score revision because their old boundaries no longer describe the board. The remaining legacy uncertainty estimates are not available for revised QB scores. Previously, tiers grouped players the model could not tell apart. The APEX score carries a &plusmn; from refitting the model on resampled draft history; two players land in the same tier when the gap between them is smaller than that uncertainty. Ranking within a tier is not a claim &mdash; ranking across tiers is. Sorting by any other column hides the tiers, because they only describe an APEX ordering. <strong>Bust risk</strong> is the model&rsquo;s probability that a player finishes in the bottom quarter of career value among picks made in the same range of the draft &mdash; the column where APEX separates itself from draft order most clearly, from round two down. In round one it is close to a flat base rate: about a quarter of first-rounders disappoint and the model cannot say which. Click any row for the full player card — the address bar updates, so every player is a shareable link. Click column headers to sort. A blank RAS means the player never posted a full combine or pro-day workout, which is common at the very top of a draft.</p>
+    </details>
   </section>
 
   <!-- ============ INSIGHTS ============ -->
