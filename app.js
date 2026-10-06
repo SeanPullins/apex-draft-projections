@@ -818,10 +818,10 @@
      have the gist. The technical account is still on the card, one click down. */
   function outlookWord(v) {
     if (v == null) return null;
-    if (v >= 0.60) return ["strong", "one of the better bets in his class"];
-    if (v >= 0.40) return ["solid", "a better-than-even chance of a real career"];
-    if (v >= 0.22) return ["middling", "roughly the typical outcome for his draft range"];
-    return ["long-odds", "a below-average shot at a lasting career"];
+    if (v >= 0.60) return ["strong", "one of the stronger outlooks in his class"];
+    if (v >= 0.40) return ["solid", "a meaningful chance to build a strong NFL career"];
+    if (v >= 0.22) return ["in the mix", "a real path to a strong career, with plenty of risk"];
+    return ["long-shot", "a lower-probability path to a strong NFL career"];
   }
 
   function cardSummary(p) {
