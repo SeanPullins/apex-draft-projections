@@ -18,7 +18,11 @@ const {JSDOM} = require('jsdom');
   }
 
   assert(w.APEX2027,'2027 payload must load');
-  assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-team3'));
+  assert(w.APEX2026,'2026 live-detail payload must load');
+  assert.equal(Object.keys(w.APEX2026.players).length,201);
+  assert.equal(w.APEX2026.coverage.identified,199);
+  assert.equal(w.APEX2026.coverage.liveScored,159);
+  assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data4'));
   assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-team3')),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
@@ -91,6 +95,13 @@ const {JSDOM} = require('jsdom');
   assert.equal(d.querySelectorAll('#teamBoardBody tr').length,24);
   assert(d.querySelector('#teamBoardBody').textContent.includes('Team Fit')===false);
   assert([...d.querySelectorAll('#teamBoardBody .team-fit-score')].every(x=>Number(x.textContent)>=0 && Number(x.textContent)<=100));
+  const firstTeamRow=d.querySelector('#teamBoardBody tr');
+  const equation=firstTeamRow.querySelector('.fit-equation').textContent;
+  const nums=[...equation.matchAll(/\+(\d+)/g)].map(m=>Number(m[1]));
+  const total=Number(equation.match(/=\s*(\d+)/)[1]);
+  assert.equal(nums.length,4);
+  assert.equal(nums.reduce((a,b)=>a+b,0),total,'Displayed Team Fit components must sum to Team Fit');
+  assert(firstTeamRow.textContent.includes('Main drivers:'));
   d.querySelector('#teamFormulaButton').click();
   assert.equal(d.querySelector('#teamFormulaSheet').hidden,false);
   assert(d.querySelector('#teamFormulaSheet').textContent.includes('not an APEX talent score'));
@@ -124,9 +135,23 @@ const {JSDOM} = require('jsdom');
   assert.equal(d.querySelector('#modalBackdrop').hidden,false);
   assert(d.querySelector('#modal').textContent.includes('What would change our mind?'));
   assert(d.querySelector('#modal').textContent.includes('Topology freshness'));
+  assert(d.querySelector('#modal').textContent.includes('2026 season'));
+  assert(d.querySelector('#modal').textContent.includes('664'));
+  assert(d.querySelector('#modal').textContent.includes('Pass yds'));
 
   d.querySelector('#modal .modal-close').click();
   assert.equal(d.querySelector('#modalBackdrop').hidden,true);
+
+  // OL dossiers should show current roster/bio without inventing a public individual grade.
+  search.value='Trevor Goosby';search.dispatchEvent(new w.Event('input',{bubbles:true}));
+  await new Promise(resolve=>w.setTimeout(resolve,130));
+  assert.equal(d.querySelectorAll('#boardBody tr').length,1);
+  d.querySelector('#boardBody tr').click();
+  assert(d.querySelector('#modal').textContent.includes('Why no 2026 OL score?'));
+  assert(d.querySelector('#modal').textContent.includes('do not provide a trustworthy individual offensive-line performance grade'));
+  assert(d.querySelector('#modal').textContent.includes('6′7″'));
+  assert(d.querySelector('#modal').textContent.includes('325 lb'));
+  d.querySelector('#modal .modal-close').click();
 
   d.querySelector('#plainEnglishButton').click();
   assert.equal(d.querySelector('#plainEnglishSheet').hidden,false);
