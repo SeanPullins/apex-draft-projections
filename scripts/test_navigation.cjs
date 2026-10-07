@@ -34,6 +34,26 @@ const {JSDOM} = require('jsdom');
   d.querySelector('[data-close-column-help]').click();
   assert.equal(d.querySelector('#columnHelpSheet').hidden,true);
 
+  assert.equal(d.querySelectorAll('.war-card').length,4,'War Room must show four decision views');
+  assert(d.querySelector('#warRoomGrid').textContent.includes('Review up'));
+  assert(d.querySelector('#warRoomGrid').textContent.includes('Review down'));
+  assert(d.querySelector('#warRoomGrid').textContent.includes('Biggest uncertainty'));
+  assert(d.querySelector('#warRoomGrid').textContent.includes('Scout first'));
+  assert(d.querySelectorAll('.war-item').length>=6,'War Room should surface multiple actionable prospects');
+
+  const compareA=d.querySelector('#compareA'), compareB=d.querySelector('#compareB'), compareButton=d.querySelector('#compareButton');
+  assert(compareA.options.length>200);
+  compareA.value='1';compareA.dispatchEvent(new w.Event('change',{bubbles:true}));
+  compareB.value='2';compareB.dispatchEvent(new w.Event('change',{bubbles:true}));
+  assert.equal(compareButton.disabled,false);
+  compareButton.click();
+  assert.equal(d.querySelector('#compareBackdrop').hidden,false);
+  assert.equal(d.querySelectorAll('#compareModal .compare-prospect').length,2);
+  assert(d.querySelector('#compareModal').textContent.includes('What would change our mind?'));
+  assert(d.querySelector('#compareModal').textContent.includes('No synthetic winner.'));
+  d.querySelector('#compareModal .compare-close').click();
+  assert.equal(d.querySelector('#compareBackdrop').hidden,true);
+
   function active(name){
     assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
     assert.equal(d.querySelector('.tab-panel.is-active').id,'tab-'+name);

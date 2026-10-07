@@ -59,6 +59,31 @@
       <span class="key-copy muted">Red does not mean “bad prospect.” It means “learn more before being confident.”</span>
     </div>
 
+    <section class="war-room" aria-labelledby="warRoomTitle">
+      <div class="war-room-head">
+        <div>
+          <div class="eyebrow">APEX War Room</div>
+          <h2 id="warRoomTitle">Who deserves your attention right now?</h2>
+          <p>Four fast views of the same 2027 board — no new ranking, just the highest-value decisions and questions.</p>
+        </div>
+      </div>
+      <div class="war-room-grid" id="warRoomGrid"></div>
+    </section>
+
+    <section class="compare-strip" aria-labelledby="compareTitle">
+      <div class="compare-copy">
+        <div class="eyebrow">Head-to-head</div>
+        <h2 id="compareTitle">Compare two prospects</h2>
+        <p>See market rank, APEX take, confidence, uncertainty, and the next scouting question side-by-side.</p>
+      </div>
+      <div class="compare-controls">
+        <label><span>Prospect 1</span><select id="compareA" aria-label="First prospect"></select></label>
+        <span class="compare-vs">vs</span>
+        <label><span>Prospect 2</span><select id="compareB" aria-label="Second prospect"></select></label>
+        <button id="compareButton" class="primary-button" type="button" disabled>Compare</button>
+      </div>
+    </section>
+
     <div class="controls">
       <div class="control grow">
         <span class="control-label">Position</span>
@@ -203,6 +228,10 @@
 
 <div class="modal-backdrop" id="modalBackdrop" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName" id="modal"></div>
+</div>
+
+<div class="modal-backdrop" id="compareBackdrop" hidden>
+  <div class="modal compare-modal" role="dialog" aria-modal="true" aria-labelledby="compareModalTitle" id="compareModal"></div>
 </div>
 
 <div class="sheet-backdrop" id="plainEnglishSheet" hidden>
