@@ -2,6 +2,7 @@
 (function () {
   "use strict";
   const D = window.APEX2027;
+  const L26 = window.APEX2026 || {coverage:{},players:{}};
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
   const state = { tab: "board", pos: "ALL", attention: "all", q: "", sort: "r", dir: 1 };
@@ -9,6 +10,12 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const pct = v => v == null ? "—" : Math.round(v * 100) + "%";
   const one = v => v == null ? "—" : (+v).toFixed(2);
+  const whole = v => v == null ? "—" : Math.round(+v).toLocaleString();
+  const heightText = inches => {
+    if (inches == null || !Number.isFinite(+inches)) return "—";
+    const n=Math.round(+inches); return Math.floor(n/12)+"′"+(n%12)+"″";
+  };
+  const live2026 = p => (L26.players && L26.players[p.r]) || null;
 
   const TAKE = {
     HOLD_PRIOR: ["Market looks reasonable", "take-hold"],
@@ -378,11 +385,50 @@
     return {pick:.35,need:.30,action:.20,risk:.15};
   }
 
-  function teamFit(p, pick=null) {
+  function teamFitBreakdown(p, pick=null) {
     const w = philosophyWeights();
-    const pf = pick ? pickFitScore(p,pick) : bestPickFit(p);
-    const raw = w.pick*pf + w.need*needScore(p) + w.action*actionScore(p) + w.risk*riskScore(p);
-    return Math.round(raw * 100);
+    const scores = {
+      pick: pick ? pickFitScore(p,pick) : bestPickFit(p),
+      need: needScore(p),
+      action: actionScore(p),
+      risk: riskScore(p)
+    };
+    const exact = {
+      pick: w.pick*scores.pick*100,
+      need: w.need*scores.need*100,
+      action: w.action*scores.action*100,
+      risk: w.risk*scores.risk*100
+    };
+    const total = Math.round(exact.pick+exact.need+exact.action+exact.risk);
+    const points = {
+      pick: Math.round(exact.pick),
+      need: Math.round(exact.need),
+      action: Math.round(exact.action),
+      risk: Math.round(exact.risk)
+    };
+    // Keep displayed component points mathematically reconciled to displayed Team Fit.
+    points.risk += total-(points.pick+points.need+points.action+points.risk);
+    return {total,points,scores,weights:w};
+  }
+
+  function teamFit(p, pick=null) {
+    return teamFitBreakdown(p,pick).total;
+  }
+
+  function teamFitEquation(p,pick=null) {
+    const b=teamFitBreakdown(p,pick);
+    return "Pick +"+b.points.pick+" · Need +"+b.points.need+" · APEX +"+b.points.action+" · Risk +"+b.points.risk+" = "+b.total;
+  }
+
+  function teamFitDrivers(p,pick=null) {
+    const b=teamFitBreakdown(p,pick);
+    const items=[
+      ["Pick fit",b.points.pick],
+      ["Roster need",b.points.need],
+      ["APEX evidence",b.points.action],
+      ["Risk / confidence",b.points.risk]
+    ].sort((a,b)=>b[1]-a[1]);
+    return "Main drivers: "+items.slice(0,2).map(x=>x[0]+" "+x[1]+" pts").join(" • ");
   }
 
   function pickFitLabel(p,pick) {
@@ -491,6 +537,7 @@
       '<div class="pick-score"><strong>'+teamFit(p,pick)+'</strong><span>Team Fit</span></div>' +
       '<div class="pick-tags"><span class="pick-fit-tag">'+esc(pickFitLabel(p,pick))+'</span><span class="take '+takeClass+'">'+esc(take)+'</span>'+
       (p.ta?'<span class="status '+confClass+'">'+esc(conf)+'</span>':'')+'</div>' +
+      '<div class="fit-breakdown"><strong>'+esc(teamFitEquation(p,pick))+'</strong><span>'+esc(teamFitDrivers(p,pick))+'</span></div>' +
       '<p>'+esc(teamWhy(p,pick))+'</p>' +
     '</button>';
   }
@@ -526,7 +573,7 @@
         '<td>'+esc(pick?pickFitLabel(p,pick)+" · #"+pick:"Set picks")+'</td>' +
         '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
         '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
-        '<td class="why-cell">'+esc(teamWhy(p,pick))+'</td>' +
+        '<td class="why-cell"><div class="fit-equation">'+esc(teamFitEquation(p,pick))+'</div><div>'+esc(teamFitDrivers(p,pick))+'</div><div class="fit-narrative">'+esc(teamWhy(p,pick))+'</div></td>' +
       '</tr>';
     }).join("");
     document.querySelectorAll("#teamBoardBody tr").forEach(tr=>tr.addEventListener("click",()=>{
@@ -550,6 +597,78 @@
   function closeTeamFormula() {
     teamFormulaSheet.hidden=true;
     if(backdrop.hidden && compareBackdrop.hidden && sheet.hidden && columnHelpSheet.hidden) document.body.classList.remove("modal-open");
+  }
+
+  function liveStatusLabel(l) {
+    if (!l) return ["2026 DATA UNAVAILABLE","live-status-muted"];
+    const status=l.status || "ACTIVE_OR_NORMAL";
+    if (status==="OUT_INJURY_2026") return ["OUT — INJURY","live-status-warn"];
+    if (status==="LIMITED_INJURY_2026") return ["LIMITED — INJURY","live-status-warn"];
+    if (status==="SITTING_OUT_2026") return ["SITTING OUT 2026","live-status-warn"];
+    if (status==="ELIGIBILITY_NO_2026_GAMES") return ["ELIGIBILITY — NO 2026 GAMES","live-status-warn"];
+    if (l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE") return ["2026 ROSTER DATA","live-status-neutral"];
+    if (l.ds==="PARTIAL_2026_DATA") return ["PARTIAL 2026 DATA","live-status-warn"];
+    if (l.ds==="LIVE_2026_SCORED") return ["2026 LIVE","live-status-good"];
+    return ["2026 STATUS","live-status-neutral"];
+  }
+
+  function liveStat(label,value) {
+    return '<div class="live-stat"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>';
+  }
+
+  function liveStatsFor(p,l) {
+    if (!l) return [];
+    const out=[];
+    if (p.p==="QB") {
+      if(l.py!=null) out.push(["Pass yds",whole(l.py)]);
+      if(l.ptd!=null) out.push(["Pass TD",whole(l.ptd)]);
+      if(l.qbr!=null) out.push(["Adj QBR",one(l.qbr)]);
+      if(l.ry!=null) out.push(["Rush yds",whole(l.ry)]);
+      if(l.rtd!=null) out.push(["Rush TD",whole(l.rtd)]);
+    } else if (["RB","WR","TE"].includes(p.p)) {
+      if(l.rec!=null) out.push(["Receptions",whole(l.rec)]);
+      if(l.rey!=null) out.push(["Rec yds",whole(l.rey)]);
+      if(l.retd!=null) out.push(["Rec TD",whole(l.retd)]);
+      if(l.ry!=null) out.push(["Rush yds",whole(l.ry)]);
+      if(l.rtd!=null) out.push(["Rush TD",whole(l.rtd)]);
+      if(l.sy!=null) out.push(["Scrimmage yds",whole(l.sy)]);
+    } else if (p.p!=="OL") {
+      if(l.tk!=null) out.push(["Tackles",one(l.tk)]);
+      if(l.sk!=null) out.push(["Sacks",one(l.sk)]);
+      if(l.tfl!=null) out.push(["TFL",one(l.tfl)]);
+      if(l.pd!=null) out.push(["Pass defended",one(l.pd)]);
+      if(l.int!=null) out.push(["INT",one(l.int)]);
+      if(l.hu!=null) out.push(["Hurries",one(l.hu)]);
+    }
+    return out.slice(0,6);
+  }
+
+  function live2026Section(p) {
+    const l=live2026(p);
+    if(!l) return '<section class="dossier-section live-season"><div class="section-kicker">2026 season</div><h3>Current-season data unavailable</h3><p>The current evidence payload does not contain a defensible 2026 identity for this prospect.</p></section>';
+    const [status,statusClass]=liveStatusLabel(l);
+    const stats=liveStatsFor(p,l);
+    const bio=[
+      l.team ? esc(l.team) : null,
+      l.rp ? esc(l.rp) : null,
+      l.h!=null ? heightText(l.h) : null,
+      l.w!=null ? whole(l.w)+" lb" : null
+    ].filter(Boolean).join(" · ");
+    const evidence=l.peer!=null
+      ? '<div class="live-evidence-line"><span>Peer-relative 2026 production</span><strong>'+pct(l.peer)+'</strong><span>Evidence confidence</span><strong>'+pct(l.conf)+'</strong></div>'
+      : '';
+    const note=l.note ? '<div class="live-note">'+esc(l.note)+'</div>' : '';
+    const olNote=l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE"
+      ? '<div class="live-note live-note-neutral"><strong>Why no 2026 OL score?</strong> Public box scores do not provide a trustworthy individual offensive-line performance grade, so APEX shows current roster data without inventing one.</div>'
+      : '';
+    return '<section class="dossier-section live-season">' +
+      '<div class="live-season-head"><div><div class="section-kicker">2026 season</div><h3>Current evidence</h3></div><span class="live-status '+statusClass+'">'+esc(status)+'</span></div>' +
+      (bio?'<div class="live-bio">'+bio+'</div>':'') +
+      (l.gp!=null?'<div class="live-games">'+whole(l.gp)+' games with box-score data</div>':'') +
+      (stats.length?'<div class="live-stat-grid">'+stats.map(([k,v])=>liveStat(k,v)).join("")+'</div>':'') +
+      evidence+note+olNote+
+      '<div class="live-source">Updated Oct. 7, 2026 · '+esc(l.source || "ESPN live roster/box data")+'</div>' +
+    '</section>';
   }
 
   /* modal */
@@ -614,6 +733,7 @@
         metric("Scout priority",p.cr ? "#"+p.cr : "—","Where this player sits in the combined work queue.") +
       '</div>' +
       '<section class="dossier-section"><div class="section-kicker">The short version</div><h3>Why APEX is paying attention</h3><p>'+esc(p.why || shortWhy(p))+'</p></section>' +
+      live2026Section(p) +
       '<section class="dossier-section spotlight"><div class="section-kicker">What would change our mind?</div><h3>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</h3><p>'+esc(question)+'</p>' +
         (p.ctx ? '<div class="swing-note">This is the context with the greatest estimated ability to change the topology under the frozen weak-vs-strong evidence test.</div>' : '') +
       '</section>' +
