@@ -1582,3 +1582,277 @@ body[data-view="simple"] #boardTable .c-out { min-width: 120px; }
   .hero-search-label { font-size: 16px; }
   .quick-guide > summary { font-size: 13.5px; }
 }
+
+
+/* ---------- simple customer track record ---------- */
+.track-intro {
+  max-width: 880px;
+  margin: 8px 0 20px;
+}
+.track-intro h2 {
+  margin: 2px 0 10px;
+  font-size: clamp(2.1rem, 4.3vw, 3.65rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+.track-lead {
+  max-width: 820px;
+  margin: 0;
+  color: var(--ink-2);
+  font-size: clamp(1rem, 1.45vw, 1.16rem);
+  line-height: 1.58;
+}
+.track-lead strong { color: var(--ink-1); }
+
+.track-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 14px;
+}
+.track-takeaway {
+  min-height: 205px;
+  padding: 19px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface-1);
+  box-shadow: 0 8px 28px rgba(11,11,11,.05);
+}
+.track-takeaway-primary {
+  border-top: 4px solid var(--series-1);
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--series-1) 8%, var(--surface-1)), var(--surface-1) 68%);
+}
+.track-kicker {
+  display: block;
+  margin-bottom: 13px;
+  color: var(--ink-3);
+  font-size: 9.5px;
+  font-weight: 850;
+  letter-spacing: .1em;
+}
+.track-big {
+  display: block;
+  color: var(--ink-1);
+  font-size: clamp(2.35rem, 4.2vw, 3.35rem);
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+.track-big-words {
+  max-width: 260px;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  line-height: 1;
+}
+.track-takeaway p {
+  margin: 16px 0 0;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.track-takeaway p b { color: var(--ink-1); }
+
+.track-rule {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 34px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--series-1);
+  border-radius: 0 9px 9px 0;
+  background: color-mix(in srgb, var(--series-1) 5%, transparent);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.track-rule strong { flex: 0 0 auto; color: var(--ink-1); }
+
+.track-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 2px 12px;
+}
+.track-section-head h2 {
+  margin: 0;
+  font-size: clamp(1.65rem, 2.8vw, 2.2rem);
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+.track-section-head > p {
+  max-width: 390px;
+  margin: 0 0 2px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-align: right;
+}
+.track-stories { margin-bottom: 14px; }
+.track-story-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.track-story-icon {
+  position: absolute;
+  top: 16px;
+  right: 17px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--series-1);
+  font-size: 15px;
+  font-weight: 900;
+}
+.track-story-card:nth-child(2) .track-story-icon { color: var(--serious); }
+.track-story-card h3 { padding-right: 34px; }
+
+.track-story-card .story-row {
+  grid-template-columns: 82px minmax(130px, 1.25fr) minmax(165px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+.track-story-card .story-prob {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11.5px;
+  line-height: 1.25;
+}
+.track-story-card .story-prob strong {
+  color: var(--ink-1);
+  font-size: 12px;
+}
+.track-story-card .story-prob small {
+  color: var(--ink-3);
+  font-size: 10.5px;
+}
+
+.track-bottom-line {
+  margin: 14px 0 24px;
+  padding: 24px;
+  border-radius: 17px;
+}
+.track-bottom-line h2 {
+  margin: 3px 0 18px;
+  font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+  letter-spacing: -.035em;
+}
+.track-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.track-bottom-grid > div {
+  padding: 13px 14px;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+.track-bottom-grid strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--ink-1);
+  font-size: 12px;
+}
+.track-bottom-grid span {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.48;
+}
+
+.track-technical {
+  margin: 18px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface-1);
+  overflow: hidden;
+}
+.track-technical > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  list-style: none;
+  cursor: pointer;
+}
+.track-technical > summary::-webkit-details-marker { display: none; }
+.track-technical > summary span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.track-technical > summary strong {
+  color: var(--ink-1);
+  font-size: 14px;
+}
+.track-technical > summary small {
+  color: var(--ink-3);
+  font-size: 11.5px;
+}
+.track-technical-action {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--chip);
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 800;
+}
+.track-technical[open] .track-technical-action::after { content: " less"; }
+.track-technical[open] .track-technical-action { font-size: 0; }
+.track-technical[open] .track-technical-action::before {
+  content: "Close";
+  font-size: 11px;
+}
+.track-technical-body {
+  display: grid;
+  gap: 14px;
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+.track-technical-body > *:first-child { margin-top: 14px; }
+.track-technical-body .card { margin: 0; }
+.track-technical-body .insight-hero { margin: 0; }
+.table-scroll { overflow-x: auto; }
+
+@media (max-width: 900px) {
+  .track-summary { grid-template-columns: 1fr; }
+  .track-takeaway { min-height: 0; }
+  .track-bottom-grid { grid-template-columns: 1fr; }
+  .track-story-card .story-row {
+    grid-template-columns: 72px minmax(120px, 1fr) auto;
+  }
+  .track-story-card .story-prob {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .track-intro h2 { font-size: clamp(2.15rem, 11vw, 3rem); }
+  .track-summary { gap: 9px; }
+  .track-takeaway { padding: 17px; border-radius: 14px; }
+  .track-rule { display: block; margin-bottom: 27px; }
+  .track-rule strong { display: block; margin-bottom: 3px; }
+  .track-section-head { display: block; margin-left: 2px; margin-right: 2px; }
+  .track-section-head > p { margin-top: 5px; text-align: left; }
+  .track-stories { grid-template-columns: 1fr; }
+  .track-story-card .story-row {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+    gap: 4px 8px;
+    padding: 11px 0;
+  }
+  .track-story-card .story-name { min-width: 0; }
+  .track-story-card .story-meta { display: block; margin-top: 2px; }
+  .track-story-card .story-prob {
+    grid-column: 2 / 4;
+    padding-top: 3px;
+  }
+  .track-bottom-line { padding: 19px; }
+  .track-technical > summary { padding: 15px 16px; }
+  .track-technical > summary small { max-width: 240px; }
+  .track-technical-body { padding: 0 10px 10px; }
+}
