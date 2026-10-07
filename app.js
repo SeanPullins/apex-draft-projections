@@ -120,7 +120,7 @@
       warCard("Scout first", "Highest-value work queue right now — not a talent ranking.", scoutFirst,
         p => p.cr ? "Scout priority #"+p.cr : "High-value follow-up", "scout");
 
-    $(".war-item").forEach(button => button.addEventListener("click", () => {
+    document.querySelectorAll(".war-item").forEach(button => button.addEventListener("click", () => {
       const p = D.players.find(x => x.r === +button.dataset.rank);
       if (p) openModal(p);
     }));
