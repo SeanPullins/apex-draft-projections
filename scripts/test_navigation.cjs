@@ -63,6 +63,34 @@ const {JSDOM} = require('jsdom');
   for(const b of d.querySelectorAll('.tab')){b.click();active(b.dataset.tab);}
   d.querySelector('.tab[data-tab="board"]').click();
 
+  // Team Mode is a downstream decision layer; changing settings must not mutate prospect data.
+  const originalRank=w.APEX2027.players[0].r;
+  const originalTake=w.APEX2027.players[0].a;
+  d.querySelector('.tab[data-tab="team"]').click();
+  active('team');
+  const teamSelect=d.querySelector('#teamSelect');
+  teamSelect.value='Cleveland Browns';teamSelect.dispatchEvent(new w.Event('change',{bubbles:true}));
+  const picks=d.querySelector('#teamPicks');
+  picks.value='12, 44';picks.dispatchEvent(new w.Event('input',{bubbles:true}));
+  const qbNeed=[...d.querySelectorAll('.team-need')].find(x=>x.textContent==='QB');
+  assert(qbNeed,'QB need pill must exist');qbNeed.click();
+  assert.equal(d.querySelectorAll('.pick-card').length,2);
+  assert(d.querySelector('#teamSummary').textContent.includes('Cleveland Browns'));
+  assert(d.querySelector('#teamSummary').textContent.includes('#12'));
+  assert(d.querySelector('#teamSummary').textContent.includes('QB'));
+  assert.equal(d.querySelectorAll('#teamBoardBody tr').length,24);
+  assert(d.querySelector('#teamBoardBody').textContent.includes('Team Fit')===false);
+  assert([...d.querySelectorAll('#teamBoardBody .team-fit-score')].every(x=>Number(x.textContent)>=0 && Number(x.textContent)<=100));
+  d.querySelector('#teamFormulaButton').click();
+  assert.equal(d.querySelector('#teamFormulaSheet').hidden,false);
+  assert(d.querySelector('#teamFormulaSheet').textContent.includes('not an APEX talent score'));
+  d.querySelector('[data-close-team-formula]').click();
+  assert.equal(d.querySelector('#teamFormulaSheet').hidden,true);
+  assert.equal(w.APEX2027.players[0].r,originalRank);
+  assert.equal(w.APEX2027.players[0].a,originalTake);
+  d.querySelector('.tab[data-tab="board"]').click();
+  active('board');
+
   const qb=[...d.querySelectorAll('#posPills button')].find(x=>x.textContent==='QB');
   assert(qb,'QB position pill must exist');
   qb.click();
