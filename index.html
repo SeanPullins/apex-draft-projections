@@ -93,12 +93,12 @@
         <table class="board" id="boardTable">
           <thead>
             <tr>
-              <th class="num sortable" data-sort="r">Rank</th>
-              <th class="sortable" data-sort="n">Player</th>
-              <th class="sortable" data-sort="a">APEX Take</th>
-              <th class="sortable" data-sort="ta">Confidence</th>
-              <th>Why it matters</th>
-              <th class="num sortable" data-sort="cr">Scout priority</th>
+              <th class="num sortable" data-sort="r"><span class="th-label">Rank <button class="column-help" data-help="rank" type="button" aria-label="What does Rank mean?" title="What does Rank mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="n"><span class="th-label">Player <button class="column-help" data-help="player" type="button" aria-label="What does Player mean?" title="What does Player mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="a"><span class="th-label">APEX Take <button class="column-help" data-help="take" type="button" aria-label="What does APEX Take mean?" title="What does APEX Take mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="ta"><span class="th-label">Confidence <button class="column-help" data-help="confidence" type="button" aria-label="What does Confidence mean?" title="What does Confidence mean?">ⓘ</button></span></th>
+              <th><span class="th-label">Why it matters <button class="column-help" data-help="why" type="button" aria-label="What does Why it matters mean?" title="What does Why it matters mean?">ⓘ</button></span></th>
+              <th class="num sortable" data-sort="cr"><span class="th-label">Scout priority <button class="column-help" data-help="priority" type="button" aria-label="What does Scout priority mean?" title="What does Scout priority mean?">ⓘ</button></span></th>
             </tr>
           </thead>
           <tbody id="boardBody"></tbody>
@@ -218,6 +218,16 @@
       <div><strong>Need more evidence</strong><span>The decision matters, but APEX does not have enough trustworthy information yet.</span></div>
       <div><strong>Sleeper watch</strong><span>Positive evidence is appearing outside the premium part of the market board.</span></div>
     </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="columnHelpSheet" hidden>
+  <div class="sheet column-help-sheet" role="dialog" aria-modal="true" aria-labelledby="columnHelpTitle">
+    <div class="sheet-head">
+      <div><div class="eyebrow">Board column</div><h2 id="columnHelpTitle">Column help</h2></div>
+      <button class="modal-close" data-close-column-help aria-label="Close">×</button>
+    </div>
+    <div id="columnHelpBody" class="column-help-body"></div>
   </div>
 </div>
 
