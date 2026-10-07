@@ -161,7 +161,7 @@
     return rows;
   }
 
-  $("[data-sort]").forEach(th => th.addEventListener("click", () => {
+  document.querySelectorAll("[data-sort]").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.sort;
     if (state.sort === k) state.dir *= -1;
     else {
