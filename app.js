@@ -53,6 +53,25 @@
     }
   };
 
+  const NFL_TEAMS = [
+    "Arizona Cardinals","Atlanta Falcons","Baltimore Ravens","Buffalo Bills","Carolina Panthers",
+    "Chicago Bears","Cincinnati Bengals","Cleveland Browns","Dallas Cowboys","Denver Broncos",
+    "Detroit Lions","Green Bay Packers","Houston Texans","Indianapolis Colts","Jacksonville Jaguars",
+    "Kansas City Chiefs","Las Vegas Raiders","Los Angeles Chargers","Los Angeles Rams","Miami Dolphins",
+    "Minnesota Vikings","New England Patriots","New Orleans Saints","New York Giants","New York Jets",
+    "Philadelphia Eagles","Pittsburgh Steelers","San Francisco 49ers","Seattle Seahawks",
+    "Tampa Bay Buccaneers","Tennessee Titans","Washington Commanders"
+  ];
+
+  const TEAM_NEED_ORDER = ["QB","RB","WR","TE","OL","ED","DT","DL","LB","CB","S"];
+  const teamState = {
+    team: "",
+    picks: [],
+    philosophy: "balanced",
+    risk: "balanced",
+    needs: new Set()
+  };
+
   function takeMeta(action) {
     return TAKE[action] || ["Monitor", "take-hold"];
   }
@@ -167,7 +186,7 @@
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
   const initial = (location.hash || "#board").slice(1);
-  if (["board","how","validation"].includes(initial)) setTab(initial);
+  if (["board","team","how","validation"].includes(initial)) setTab(initial);
 
   /* position filters */
   const positions = ["ALL", ...Array.from(new Set(D.players.map(p => p.p))).sort()];
@@ -301,6 +320,235 @@
     }));
   }
 
+  function parsePicks(value) {
+    return Array.from(new Set(String(value || "").split(/[^0-9]+/).filter(Boolean)
+      .map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 257))).sort((a,b)=>a-b);
+  }
+
+  function actionScore(p) {
+    const scores = {
+      EXECUTIVE_REVIEW_UP: .95,
+      SLEEPER_DISCOVERY: .90,
+      HOLD_PRIOR: .70,
+      SCOUT_MORE: .52,
+      DATA_GAP: .46,
+      URGENT_DATA_GAP: .42,
+      EXECUTIVE_REVIEW_DOWN: .34
+    };
+    return scores[p.a] ?? .55;
+  }
+
+  function baseRiskScore(p) {
+    if (p.ta === "GREEN") return 1;
+    if (p.ta === "AMBER") return .65;
+    if (p.ta === "RED") return .35;
+    return .55;
+  }
+
+  function riskScore(p) {
+    const base = baseRiskScore(p);
+    if (teamState.risk === "conservative") return base;
+    if (teamState.risk === "aggressive") return .80 + .20 * base;
+    return .50 + .50 * base;
+  }
+
+  function needScore(p) {
+    if (!teamState.needs.size) return .65;
+    return teamState.needs.has(p.p) ? 1 : .25;
+  }
+
+  function pickFitScore(p, pick) {
+    if (!pick) return .60;
+    const gap = p.r - pick;
+    if (gap <= 0) return Math.max(.35, 1 - Math.abs(gap) * .024);
+    return Math.max(0, 1 - gap / 35);
+  }
+
+  function bestPickFit(p) {
+    if (!teamState.picks.length) return .60;
+    return Math.max(...teamState.picks.map(pick => pickFitScore(p,pick)));
+  }
+
+  function philosophyWeights() {
+    if (teamState.philosophy === "bpa") return {pick:.45,need:.15,action:.25,risk:.15};
+    if (teamState.philosophy === "need") return {pick:.25,need:.50,action:.15,risk:.10};
+    return {pick:.35,need:.30,action:.20,risk:.15};
+  }
+
+  function teamFit(p, pick=null) {
+    const w = philosophyWeights();
+    const pf = pick ? pickFitScore(p,pick) : bestPickFit(p);
+    const raw = w.pick*pf + w.need*needScore(p) + w.action*actionScore(p) + w.risk*riskScore(p);
+    return Math.round(raw * 100);
+  }
+
+  function pickFitLabel(p,pick) {
+    if (!pick) return "No pick set";
+    const gap = p.r-pick;
+    if (gap < -8) return "If he falls";
+    if (gap <= 5) return "In range";
+    if (gap <= 18) return "Small reach";
+    return "Reach";
+  }
+
+  function teamWhy(p,pick=null) {
+    const parts=[];
+    if (teamState.needs.has(p.p)) parts.push("fills a selected need");
+    if (p.a === "EXECUTIVE_REVIEW_UP" || p.a === "SLEEPER_DISCOVERY") parts.push("positive APEX evidence");
+    if (p.a === "EXECUTIVE_REVIEW_DOWN") parts.push("negative evidence needs review");
+    if (p.a === "DATA_GAP" || p.a === "URGENT_DATA_GAP" || p.a === "SCOUT_MORE") parts.push("information is incomplete");
+    if (p.ta === "RED") parts.push("projection is fragile");
+    else if (p.ta === "GREEN") parts.push("projection is comparatively stable");
+    if (pick) parts.push(pickFitLabel(p,pick).toLowerCase()+" at pick "+pick);
+    return parts.length ? parts.join("; ")+"." : "Neutral team context; evaluate on the underlying APEX dossier.";
+  }
+
+  function saveTeamState() {
+    try {
+      localStorage.setItem("apexTeamMode", JSON.stringify({
+        team:teamState.team,picks:teamState.picks,philosophy:teamState.philosophy,
+        risk:teamState.risk,needs:[...teamState.needs]
+      }));
+    } catch (_) {}
+  }
+
+  function restoreTeamState() {
+    try {
+      const raw=localStorage.getItem("apexTeamMode");
+      if(!raw) return;
+      const s=JSON.parse(raw);
+      if(NFL_TEAMS.includes(s.team)) teamState.team=s.team;
+      if(Array.isArray(s.picks)) teamState.picks=s.picks.filter(n=>Number.isInteger(n)&&n>=1&&n<=257);
+      if(["balanced","bpa","need"].includes(s.philosophy)) teamState.philosophy=s.philosophy;
+      if(["balanced","conservative","aggressive"].includes(s.risk)) teamState.risk=s.risk;
+      if(Array.isArray(s.needs)) teamState.needs=new Set(s.needs);
+    } catch (_) {}
+  }
+
+  function initTeamMode() {
+    restoreTeamState();
+    const teamSelect=$("#teamSelect");
+    teamSelect.innerHTML='<option value="">Choose a team…</option>'+NFL_TEAMS.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");
+    teamSelect.value=teamState.team;
+    $("#teamPicks").value=teamState.picks.join(", ");
+    $("#teamPhilosophy").value=teamState.philosophy;
+    $("#teamRisk").value=teamState.risk;
+
+    const present=new Set(D.players.map(p=>p.p));
+    const needPositions=TEAM_NEED_ORDER.filter(p=>present.has(p)).concat(
+      [...present].filter(p=>!TEAM_NEED_ORDER.includes(p)).sort()
+    );
+    $("#teamNeedPills").innerHTML=needPositions.map(pos =>
+      '<button type="button" class="pill team-need '+(teamState.needs.has(pos)?"is-active":"")+'" data-pos="'+esc(pos)+'">'+esc(pos)+'</button>'
+    ).join("");
+
+    teamSelect.addEventListener("change",e=>{teamState.team=e.target.value;saveTeamState();renderTeamMode();});
+    $("#teamPicks").addEventListener("input",e=>{teamState.picks=parsePicks(e.target.value);saveTeamState();renderTeamMode();});
+    $("#teamPhilosophy").addEventListener("change",e=>{teamState.philosophy=e.target.value;saveTeamState();renderTeamMode();});
+    $("#teamRisk").addEventListener("change",e=>{teamState.risk=e.target.value;saveTeamState();renderTeamMode();});
+    document.querySelectorAll(".team-need").forEach(button=>button.addEventListener("click",()=>{
+      const pos=button.dataset.pos;
+      if(teamState.needs.has(pos)) teamState.needs.delete(pos); else teamState.needs.add(pos);
+      button.classList.toggle("is-active",teamState.needs.has(pos));
+      saveTeamState();renderTeamMode();
+    }));
+    $("#clearNeeds").addEventListener("click",()=>{
+      teamState.needs.clear();
+      document.querySelectorAll(".team-need").forEach(b=>b.classList.remove("is-active"));
+      saveTeamState();renderTeamMode();
+    });
+  }
+
+  function summaryChip(label,value) {
+    return '<div class="team-summary-chip"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>';
+  }
+
+  function candidatePool(pick) {
+    return D.players.filter(p=>p.r>=Math.max(1,pick-12) && p.r<=pick+30);
+  }
+
+  function uniqueAlternatives(pool,pick) {
+    const sorted=pool.slice().sort((a,b)=>teamFit(b,pick)-teamFit(a,pick) || a.r-b.r);
+    const best=sorted[0] || null;
+    const remaining=sorted.filter(p=>!best || p.r!==best.r);
+    const safer=remaining.slice().sort((a,b)=>riskScore(b)-riskScore(a) || teamFit(b,pick)-teamFit(a,pick))[0] || null;
+    const used=new Set([best?.r,safer?.r].filter(Boolean));
+    const edge=remaining.filter(p=>!used.has(p.r) && (p.a==="EXECUTIVE_REVIEW_UP" || p.a==="SLEEPER_DISCOVERY"))
+      .sort((a,b)=>teamFit(b,pick)-teamFit(a,pick))[0] ||
+      remaining.filter(p=>!used.has(p.r)).sort((a,b)=>teamFit(b,pick)-teamFit(a,pick))[0] || null;
+    return {best,safer,edge};
+  }
+
+  function pickCandidate(kind,p,pick) {
+    if(!p) return '<div class="pick-candidate empty">No qualifying alternative.</div>';
+    const [take,takeClass]=takeMeta(p.a), [conf,confClass]=confidenceMeta(p);
+    return '<button class="pick-candidate" type="button" data-rank="'+p.r+'">' +
+      '<span class="pick-kind">'+esc(kind)+'</span>' +
+      '<div class="pick-player"><strong>#'+p.r+' '+esc(p.n)+'</strong><span>'+esc(p.p)+' · '+esc(p.s)+'</span></div>' +
+      '<div class="pick-score"><strong>'+teamFit(p,pick)+'</strong><span>Team Fit</span></div>' +
+      '<div class="pick-tags"><span class="pick-fit-tag">'+esc(pickFitLabel(p,pick))+'</span><span class="take '+takeClass+'">'+esc(take)+'</span>'+
+      (p.ta?'<span class="status '+confClass+'">'+esc(conf)+'</span>':'')+'</div>' +
+      '<p>'+esc(teamWhy(p,pick))+'</p>' +
+    '</button>';
+  }
+
+  function renderPickPlans() {
+    const host=$("#pickPlanGrid");
+    if(!teamState.picks.length) {
+      host.innerHTML='<div class="team-empty"><strong>Add your 2027 picks to build a pick-by-pick plan.</strong><span>APEX will create a transparent candidate window around each selection.</span></div>';
+      return;
+    }
+    host.innerHTML=teamState.picks.map(pick=>{
+      const alts=uniqueAlternatives(candidatePool(pick),pick);
+      return '<article class="pick-card"><div class="pick-card-head"><span>Overall pick</span><strong>#'+pick+'</strong></div>' +
+        pickCandidate("Best team fit",alts.best,pick) +
+        pickCandidate("Safer profile",alts.safer,pick) +
+        pickCandidate("APEX edge / alternative",alts.edge,pick) +
+      '</article>';
+    }).join("");
+    document.querySelectorAll(".pick-candidate[data-rank]").forEach(b=>b.addEventListener("click",()=>{
+      const p=D.players.find(x=>x.r===+b.dataset.rank); if(p) openModal(p);
+    }));
+  }
+
+  function renderTeamBoard() {
+    const rows=D.players.slice().sort((a,b)=>teamFit(b)-teamFit(a) || a.r-b.r).slice(0,24);
+    $("#teamBoardBody").innerHTML=rows.map(p=>{
+      const [take,takeClass]=takeMeta(p.a), [conf,confClass]=confidenceMeta(p);
+      const pick=teamState.picks.length ? teamState.picks.slice().sort((a,b)=>pickFitScore(p,b)-pickFitScore(p,a))[0] : null;
+      return '<tr data-rank="'+p.r+'">' +
+        '<td class="num team-fit-score">'+teamFit(p)+'</td>' +
+        '<td><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">#'+p.r+' · '+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
+        '<td>'+(teamState.needs.has(p.p)?'<span class="need-match">NEED</span>':'<span class="need-neutral">—</span>')+'</td>' +
+        '<td>'+esc(pick?pickFitLabel(p,pick)+" · #"+pick:"Set picks")+'</td>' +
+        '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
+        '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
+        '<td class="why-cell">'+esc(teamWhy(p,pick))+'</td>' +
+      '</tr>';
+    }).join("");
+    document.querySelectorAll("#teamBoardBody tr").forEach(tr=>tr.addEventListener("click",()=>{
+      const p=D.players.find(x=>x.r===+tr.dataset.rank); if(p) openModal(p);
+    }));
+  }
+
+  function renderTeamMode() {
+    const team=teamState.team || "No team selected";
+    const picks=teamState.picks.length ? teamState.picks.map(n=>"#"+n).join(", ") : "Not set";
+    const needs=teamState.needs.size ? [...teamState.needs].join(", ") : "Neutral";
+    const philosophy={balanced:"Balanced",bpa:"Best player available",need:"Need-forward"}[teamState.philosophy];
+    const risk={balanced:"Balanced",conservative:"Conservative",aggressive:"Aggressive"}[teamState.risk];
+    $("#teamSummary").innerHTML =
+      summaryChip("Team",team)+summaryChip("Picks",picks)+summaryChip("Needs",needs)+summaryChip("Philosophy",philosophy)+summaryChip("Risk",risk);
+    renderPickPlans();
+    renderTeamBoard();
+  }
+
+  const teamFormulaSheet=$("#teamFormulaSheet");
+  function closeTeamFormula() {
+    teamFormulaSheet.hidden=true;
+    if(backdrop.hidden && compareBackdrop.hidden && sheet.hidden && columnHelpSheet.hidden) document.body.classList.remove("modal-open");
+  }
+
   /* modal */
   const backdrop = $("#modalBackdrop"), modal = $("#modal");
   const compareBackdrop = $("#compareBackdrop"), compareModal = $("#compareModal");
@@ -396,15 +644,19 @@
     document.body.classList.remove("modal-open");
   }
   backdrop.addEventListener("click", e => { if (e.target === backdrop || e.target.closest(".modal-close")) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeCompare(); closeSheet(); closeColumnHelp(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeCompare(); closeSheet(); closeColumnHelp(); closeTeamFormula(); } });
 
   /* plain-English sheet */
   const sheet = $("#plainEnglishSheet");
+  $("#teamFormulaButton").addEventListener("click",()=>{teamFormulaSheet.hidden=false;document.body.classList.add("modal-open");});
+  teamFormulaSheet.addEventListener("click",e=>{if(e.target===teamFormulaSheet || e.target.closest("[data-close-team-formula]")) closeTeamFormula();});
   $("#plainEnglishButton").addEventListener("click", () => { sheet.hidden=false; document.body.classList.add("modal-open"); });
   function closeSheet(){ sheet.hidden=true; if(backdrop.hidden) document.body.classList.remove("modal-open"); }
   sheet.addEventListener("click", e => { if(e.target===sheet || e.target.closest("[data-close-sheet]")) closeSheet(); });
 
   renderWarRoom();
   populateCompare();
+  initTeamMode();
+  renderTeamMode();
   render();
 })();

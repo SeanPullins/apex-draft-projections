@@ -16,6 +16,7 @@
   </a>
   <nav class="tabs" role="tablist" aria-label="APEX sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">2027 Board</button>
+    <button class="tab" data-tab="team" role="tab" aria-selected="false">Team Mode</button>
     <button class="tab" data-tab="how" role="tab" aria-selected="false">How APEX Works</button>
     <button class="tab" data-tab="validation" role="tab" aria-selected="false">Validation</button>
   </nav>
@@ -130,6 +131,102 @@
         </table>
       </div>
       <p class="table-hint">Tap a player for the full APEX dossier: evidence tension, uncertainty, role sensitivity, and the next question that matters.</p>
+    </div>
+  </section>
+
+  <section id="tab-team" class="tab-panel">
+    <div class="team-mode">
+      <div class="team-hero">
+        <div>
+          <div class="eyebrow">APEX Team Mode</div>
+          <h1>Build your draft room.</h1>
+          <p>Turn the generic 2027 board into a team-specific decision board using <strong>your picks, roster needs, draft philosophy, and risk tolerance</strong>.</p>
+        </div>
+        <div class="team-rule">
+          <strong>Team context is downstream.</strong>
+          <span>These settings change recommendations — never the underlying APEX prospect evidence.</span>
+        </div>
+      </div>
+
+      <div class="team-config">
+        <label class="team-field">
+          <span>Team</span>
+          <select id="teamSelect" aria-label="NFL team"></select>
+        </label>
+        <label class="team-field team-picks-field">
+          <span>2027 picks</span>
+          <input id="teamPicks" type="text" inputmode="numeric" placeholder="e.g. 12, 44, 76" aria-label="Draft picks">
+          <small>Enter overall pick numbers, separated by commas.</small>
+        </label>
+        <label class="team-field">
+          <span>Draft philosophy</span>
+          <select id="teamPhilosophy" aria-label="Draft philosophy">
+            <option value="balanced">Balanced</option>
+            <option value="bpa">Best player available</option>
+            <option value="need">Need-forward</option>
+          </select>
+        </label>
+        <label class="team-field">
+          <span>Risk tolerance</span>
+          <select id="teamRisk" aria-label="Risk tolerance">
+            <option value="balanced">Balanced</option>
+            <option value="conservative">Conservative</option>
+            <option value="aggressive">Aggressive</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="team-needs-shell">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Roster needs</div>
+            <h2>Where does this team need help?</h2>
+            <p>Select as many positions as you want. No selection means APEX treats need as neutral.</p>
+          </div>
+          <button id="clearNeeds" class="text-button" type="button">Clear needs</button>
+        </div>
+        <div id="teamNeedPills" class="team-need-pills" role="group" aria-label="Team needs"></div>
+      </div>
+
+      <div class="team-summary" id="teamSummary"></div>
+
+      <section class="pick-plan" aria-labelledby="pickPlanTitle">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Pick plan</div>
+            <h2 id="pickPlanTitle">Who should be in the conversation?</h2>
+            <p>APEX builds a candidate set around each pick and explains the tradeoff instead of pretending to know who will definitely be available.</p>
+          </div>
+        </div>
+        <div id="pickPlanGrid" class="pick-plan-grid"></div>
+      </section>
+
+      <section class="team-board-shell" aria-labelledby="teamBoardTitle">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Team board</div>
+            <h2 id="teamBoardTitle">Best fits for your settings</h2>
+            <p><strong>Team Fit is not a talent grade.</strong> It is a transparent downstream decision score using pick fit, need, APEX take, and confidence.</p>
+          </div>
+          <button id="teamFormulaButton" class="text-button" type="button">How Team Fit works</button>
+        </div>
+        <div class="table-wrap">
+          <table class="board team-board">
+            <thead>
+              <tr>
+                <th class="num">Team Fit</th>
+                <th>Player</th>
+                <th>Need</th>
+                <th>Pick fit</th>
+                <th>APEX Take</th>
+                <th>Confidence</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody id="teamBoardBody"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </section>
 
@@ -257,6 +354,23 @@
       <button class="modal-close" data-close-column-help aria-label="Close">×</button>
     </div>
     <div id="columnHelpBody" class="column-help-body"></div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="teamFormulaSheet" hidden>
+  <div class="sheet team-formula-sheet" role="dialog" aria-modal="true" aria-labelledby="teamFormulaTitle">
+    <div class="sheet-head">
+      <div><div class="eyebrow">Team Mode</div><h2 id="teamFormulaTitle">How Team Fit works</h2></div>
+      <button class="modal-close" data-close-team-formula aria-label="Close">×</button>
+    </div>
+    <div class="team-formula-copy">
+      <p><strong>Team Fit is a decision aid, not an APEX talent score.</strong> The underlying prospect evidence stays unchanged.</p>
+      <div><strong>Pick fit</strong><span>How close the prospect's market rank is to the selected pick window.</span></div>
+      <div><strong>Roster need</strong><span>Selected needs receive more decision weight; unselected positions are still eligible.</span></div>
+      <div><strong>APEX take</strong><span>Review-up / sleeper signals help; review-down / data-gap signals reduce confidence.</span></div>
+      <div><strong>Projection confidence</strong><span>Risk tolerance controls how much RED/AMBER uncertainty matters.</span></div>
+      <p class="fine">Changing team, picks, needs, philosophy, or risk tolerance changes Team Fit only. It never changes market rank, APEX Take, evidence edge, or topology.</p>
+    </div>
   </div>
 </div>
 
