@@ -22,6 +22,8 @@ const {JSDOM} = require('jsdom');
   assert.equal(Object.keys(w.APEX2026.players).length,201);
   assert.equal(w.APEX2026.coverage.identified,199);
   assert.equal(w.APEX2026.coverage.liveScored,159);
+  assert.notEqual(w.APEX2027.players.find(p=>p.r===19).a,'URGENT_DATA_GAP','Tae Johnson must use refreshed 2026 evidence');
+  assert.equal(w.APEX2027.players.find(p=>p.r===70).a,'SCOUT_MORE','OJ Frederique should use refreshed 2026 evidence');
   assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data4'));
   assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-data4')),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
