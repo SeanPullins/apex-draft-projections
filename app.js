@@ -187,7 +187,7 @@
     columnHelpSheet.hidden = true;
     if (backdrop.hidden && sheet.hidden) document.body.classList.remove("modal-open");
   }
-  $(".column-help").forEach(button => button.addEventListener("click", e => {
+  document.querySelectorAll(".column-help").forEach(button => button.addEventListener("click", e => {
     e.preventDefault();
     e.stopPropagation();
     openColumnHelp(button.dataset.help);
