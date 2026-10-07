@@ -18,6 +18,8 @@ const {JSDOM} = require('jsdom');
   }
 
   assert(w.APEX2027,'2027 payload must load');
+  assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-team3'));
+  assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-team3')),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
   assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
@@ -62,6 +64,11 @@ const {JSDOM} = require('jsdom');
     assert.equal(d.querySelector('.tab-panel.is-active').id,'tab-'+name);
     assert.equal(d.querySelector('.tab[aria-selected="true"]').dataset.tab,name);
   }
+  active('board');
+  assert(d.querySelector('#openTeamMode'),'Homepage Team Mode launcher must exist');
+  d.querySelector('#openTeamMode').click();
+  active('team');
+  d.querySelector('.tab[data-tab="board"]').click();
   active('board');
   for(const b of d.querySelectorAll('.tab')){b.click();active(b.dataset.tab);}
   d.querySelector('.tab[data-tab="board"]').click();
