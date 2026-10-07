@@ -24,6 +24,16 @@ const {JSDOM} = require('jsdom');
   assert(d.body.textContent.includes('Know the player.'));
   assert(d.body.textContent.includes('Know the uncertainty.'));
 
+  assert.equal(d.querySelectorAll('.column-help').length,6);
+  const rankHelp=d.querySelector('.column-help[data-help="rank"]');
+  assert(rankHelp,'Rank help button must exist');
+  rankHelp.click();
+  assert.equal(d.querySelector('#columnHelpSheet').hidden,false);
+  assert.equal(d.querySelector('#columnHelpTitle').textContent,'Rank');
+  assert(d.querySelector('#columnHelpBody').textContent.includes('consensus 2027 draft-board rank'));
+  d.querySelector('[data-close-column-help]').click();
+  assert.equal(d.querySelector('#columnHelpSheet').hidden,true);
+
   function active(name){
     assert.equal(d.querySelectorAll('.tab-panel.is-active').length,1);
     assert.equal(d.querySelector('.tab-panel.is-active').id,'tab-'+name);
