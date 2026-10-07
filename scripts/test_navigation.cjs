@@ -23,7 +23,7 @@ const {JSDOM} = require('jsdom');
   assert.equal(w.APEX2026.coverage.identified,199);
   assert.equal(w.APEX2026.coverage.liveScored,159);
   assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data4'));
-  assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-team3')),'All JS assets must be cache-busted');
+  assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-data4')),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
   assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
