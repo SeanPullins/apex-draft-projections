@@ -18,6 +18,9 @@ const {JSDOM} = require('jsdom');
   }
 
   assert(w.APEX2027,'2027 payload must load');
+  const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+  assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
+  assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
   assert.equal(w.APEX2027.players.length,201);
   assert.equal(d.querySelector('#classSelect'),null,'historical class selector must stay hidden');
   assert.equal(d.querySelectorAll('#boardBody tr').length,201);
