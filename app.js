@@ -188,6 +188,9 @@
   const initial = (location.hash || "#board").slice(1);
   if (["board","team","how","validation"].includes(initial)) setTab(initial);
 
+  const teamLauncher = $("#openTeamMode");
+  if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
+
   /* position filters */
   const positions = ["ALL", ...Array.from(new Set(D.players.map(p => p.p))).sort()];
   const pills = $("#posPills");
