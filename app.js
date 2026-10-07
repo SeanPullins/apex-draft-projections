@@ -20,6 +20,39 @@
     SLEEPER_DISCOVERY: ["Sleeper watch", "take-up"]
   };
 
+  const COLUMN_HELP = {
+    rank: {
+      title: "Rank",
+      body: "The current consensus 2027 draft-board rank. This is the market starting point, not an APEX-generated talent rank.",
+      note: "APEX keeps the market visible so users can see when evidence agrees, disagrees, or is still incomplete."
+    },
+    player: {
+      title: "Player",
+      body: "The prospect's name, position, and school.",
+      note: "Tap any player row to open the full APEX dossier."
+    },
+    take: {
+      title: "APEX Take",
+      body: "The action APEX recommends taking with the current market opinion: hold it, review the player up or down, gather more evidence, or watch for a sleeper.",
+      note: "This is a decision label, not a second draft ranking."
+    },
+    confidence: {
+      title: "Confidence",
+      body: "How stable or fragile the projection looks based on validated Translation Topology uncertainty signals.",
+      note: "GREEN, AMBER, and RED describe projection confidence — not player quality. RED means learn more before being confident."
+    },
+    why: {
+      title: "Why it matters",
+      body: "A one-line explanation of why APEX is holding the market view, questioning it, or asking for more evidence.",
+      note: "The full dossier shows the underlying evidence tension and the next question that could change the decision."
+    },
+    priority: {
+      title: "Scout priority",
+      body: "Where the player ranks in APEX's scouting and research work queue — who deserves more investigation first.",
+      note: "Scout Priority #1 does not mean APEX's #1 player. High draft stakes, uncertainty, disagreement, or missing evidence can all raise scouting priority."
+    }
+  };
+
   function takeMeta(action) {
     return TAKE[action] || ["Monitor", "take-hold"];
   }
@@ -128,7 +161,7 @@
     return rows;
   }
 
-  $$("[data-sort]").forEach(th => th.addEventListener("click", () => {
+  $("[data-sort]").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.sort;
     if (state.sort === k) state.dir *= -1;
     else {
@@ -137,6 +170,31 @@
     }
     render();
   }));
+
+  const columnHelpSheet = $("#columnHelpSheet");
+  function openColumnHelp(key) {
+    const info = COLUMN_HELP[key];
+    if (!info) return;
+    $("#columnHelpTitle").textContent = info.title;
+    $("#columnHelpBody").innerHTML =
+      '<p class="column-help-lead">'+esc(info.body)+'</p>' +
+      '<div class="column-help-note">'+esc(info.note)+'</div>';
+    columnHelpSheet.hidden = false;
+    document.body.classList.add("modal-open");
+    $("[data-close-column-help]", columnHelpSheet).focus();
+  }
+  function closeColumnHelp() {
+    columnHelpSheet.hidden = true;
+    if (backdrop.hidden && sheet.hidden) document.body.classList.remove("modal-open");
+  }
+  $(".column-help").forEach(button => button.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    openColumnHelp(button.dataset.help);
+  }));
+  columnHelpSheet.addEventListener("click", e => {
+    if (e.target === columnHelpSheet || e.target.closest("[data-close-column-help]")) closeColumnHelp();
+  });
 
   function renderTiles(rows) {
     const covered = rows.filter(p => !!p.ta);
@@ -232,7 +290,7 @@
     document.body.classList.remove("modal-open");
   }
   backdrop.addEventListener("click", e => { if (e.target === backdrop || e.target.closest(".modal-close")) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeSheet(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeSheet(); closeColumnHelp(); } });
 
   /* plain-English sheet */
   const sheet = $("#plainEnglishSheet");
