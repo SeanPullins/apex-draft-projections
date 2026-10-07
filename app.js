@@ -378,11 +378,50 @@
     return {pick:.35,need:.30,action:.20,risk:.15};
   }
 
-  function teamFit(p, pick=null) {
+  function teamFitBreakdown(p, pick=null) {
     const w = philosophyWeights();
-    const pf = pick ? pickFitScore(p,pick) : bestPickFit(p);
-    const raw = w.pick*pf + w.need*needScore(p) + w.action*actionScore(p) + w.risk*riskScore(p);
-    return Math.round(raw * 100);
+    const scores = {
+      pick: pick ? pickFitScore(p,pick) : bestPickFit(p),
+      need: needScore(p),
+      action: actionScore(p),
+      risk: riskScore(p)
+    };
+    const exact = {
+      pick: w.pick*scores.pick*100,
+      need: w.need*scores.need*100,
+      action: w.action*scores.action*100,
+      risk: w.risk*scores.risk*100
+    };
+    const total = Math.round(exact.pick+exact.need+exact.action+exact.risk);
+    const points = {
+      pick: Math.round(exact.pick),
+      need: Math.round(exact.need),
+      action: Math.round(exact.action),
+      risk: Math.round(exact.risk)
+    };
+    // Keep displayed component points mathematically reconciled to displayed Team Fit.
+    points.risk += total-(points.pick+points.need+points.action+points.risk);
+    return {total,points,scores,weights:w};
+  }
+
+  function teamFit(p, pick=null) {
+    return teamFitBreakdown(p,pick).total;
+  }
+
+  function teamFitEquation(p,pick=null) {
+    const b=teamFitBreakdown(p,pick);
+    return "Pick +"+b.points.pick+" · Need +"+b.points.need+" · APEX +"+b.points.action+" · Risk +"+b.points.risk+" = "+b.total;
+  }
+
+  function teamFitDrivers(p,pick=null) {
+    const b=teamFitBreakdown(p,pick);
+    const items=[
+      ["Pick fit",b.points.pick],
+      ["Roster need",b.points.need],
+      ["APEX evidence",b.points.action],
+      ["Risk / confidence",b.points.risk]
+    ].sort((a,b)=>b[1]-a[1]);
+    return "Main drivers: "+items.slice(0,2).map(x=>x[0]+" "+x[1]+" pts").join(" • ");
   }
 
   function pickFitLabel(p,pick) {
@@ -491,6 +530,7 @@
       '<div class="pick-score"><strong>'+teamFit(p,pick)+'</strong><span>Team Fit</span></div>' +
       '<div class="pick-tags"><span class="pick-fit-tag">'+esc(pickFitLabel(p,pick))+'</span><span class="take '+takeClass+'">'+esc(take)+'</span>'+
       (p.ta?'<span class="status '+confClass+'">'+esc(conf)+'</span>':'')+'</div>' +
+      '<div class="fit-breakdown"><strong>'+esc(teamFitEquation(p,pick))+'</strong><span>'+esc(teamFitDrivers(p,pick))+'</span></div>' +
       '<p>'+esc(teamWhy(p,pick))+'</p>' +
     '</button>';
   }
@@ -526,7 +566,7 @@
         '<td>'+esc(pick?pickFitLabel(p,pick)+" · #"+pick:"Set picks")+'</td>' +
         '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
         '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
-        '<td class="why-cell">'+esc(teamWhy(p,pick))+'</td>' +
+        '<td class="why-cell"><div class="fit-equation">'+esc(teamFitEquation(p,pick))+'</div><div>'+esc(teamFitDrivers(p,pick))+'</div><div class="fit-narrative">'+esc(teamWhy(p,pick))+'</div></td>' +
       '</tr>';
     }).join("");
     document.querySelectorAll("#teamBoardBody tr").forEach(tr=>tr.addEventListener("click",()=>{
