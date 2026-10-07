@@ -77,6 +77,74 @@
     return p.tq || p.q || "Continue normal monitoring; no special evidence request is justified yet.";
   }
 
+  function uncertaintyScore(p) {
+    const vals = [p.fg, p.ig, p.rs].filter(v => Number.isFinite(v));
+    return vals.length ? Math.max(...vals) : -1;
+  }
+
+  function warItem(p, detail) {
+    const [take, takeClass] = takeMeta(p.a);
+    const [conf, confClass] = confidenceMeta(p);
+    return '<button class="war-item" type="button" data-rank="'+p.r+'">' +
+      '<span class="war-rank">#'+p.r+'</span>' +
+      '<span class="war-player"><strong>'+esc(p.n)+'</strong><small>'+esc(p.p)+' · '+esc(p.s)+'</small></span>' +
+      '<span class="war-detail">'+esc(detail)+'</span>' +
+      '<span class="war-badges"><span class="take '+takeClass+'">'+esc(take)+'</span>' +
+      (p.ta ? '<span class="status '+confClass+'">'+esc(conf)+'</span>' : '') + '</span>' +
+    '</button>';
+  }
+
+  function warCard(title, copy, players, detailFn, tone) {
+    return '<article class="war-card war-'+tone+'"><div class="war-card-head"><h3>'+esc(title)+'</h3><p>'+esc(copy)+'</p></div>' +
+      '<div class="war-list">'+(players.length ? players.map(p => warItem(p, detailFn(p))).join('') : '<div class="war-empty">No current cases.</div>')+'</div></article>';
+  }
+
+  function renderWarRoom() {
+    const byRank = (a,b) => a.r-b.r;
+    const reviewUp = D.players.filter(p => p.a === "EXECUTIVE_REVIEW_UP")
+      .sort((a,b) => (b.uq ?? b.ee ?? -99) - (a.uq ?? a.ee ?? -99) || byRank(a,b)).slice(0,3);
+    const reviewDown = D.players.filter(p => p.a === "EXECUTIVE_REVIEW_DOWN")
+      .sort((a,b) => (a.uq ?? a.ee ?? 99) - (b.uq ?? b.ee ?? 99) || byRank(a,b)).slice(0,3);
+    const uncertainty = D.players.filter(p => p.ta === "RED" || p.ta === "AMBER")
+      .sort((a,b) => uncertaintyScore(b)-uncertaintyScore(a) || byRank(a,b)).slice(0,3);
+    const scoutFirst = D.players.filter(p => Number.isFinite(p.cr))
+      .sort((a,b) => a.cr-b.cr || byRank(a,b)).slice(0,3);
+
+    $("#warRoomGrid").innerHTML =
+      warCard("Review up", "Where current evidence most deserves a closer look above the market prior.", reviewUp,
+        p => p.ee == null ? "Positive evidence tension" : "Evidence edge "+one(p.ee), "up") +
+      warCard("Review down", "Where evidence is weaker than the market prior — review trigger, not a bust call.", reviewDown,
+        p => p.ee == null ? "Negative evidence tension" : "Evidence edge "+one(p.ee), "down") +
+      warCard("Biggest uncertainty", "Prospects where projection confidence deserves the most caution.", uncertainty,
+        p => p.ctx ? "Question: "+humanContext(p.ctx) : "Multiple uncertainty signals", "uncertain") +
+      warCard("Scout first", "Highest-value work queue right now — not a talent ranking.", scoutFirst,
+        p => p.cr ? "Scout priority #"+p.cr : "High-value follow-up", "scout");
+
+    $(".war-item").forEach(button => button.addEventListener("click", () => {
+      const p = D.players.find(x => x.r === +button.dataset.rank);
+      if (p) openModal(p);
+    }));
+  }
+
+  function populateCompare() {
+    const options = ['<option value="">Choose a prospect…</option>']
+      .concat(D.players.slice().sort((a,b)=>a.r-b.r).map(p =>
+        '<option value="'+p.r+'">#'+p.r+' · '+esc(p.n)+' · '+esc(p.p)+'</option>')).join('');
+    $("#compareA").innerHTML = options;
+    $("#compareB").innerHTML = options;
+    const sync = () => {
+      const a = $("#compareA").value, b = $("#compareB").value;
+      $("#compareButton").disabled = !a || !b || a === b;
+    };
+    $("#compareA").addEventListener("change", sync);
+    $("#compareB").addEventListener("change", sync);
+    $("#compareButton").addEventListener("click", () => {
+      const a = D.players.find(p => p.r === +$("#compareA").value);
+      const b = D.players.find(p => p.r === +$("#compareB").value);
+      if (a && b && a !== b) openCompare(a,b);
+    });
+  }
+
   /* theme */
   $("#themeToggle").addEventListener("click", () => {
     const root = document.documentElement;
@@ -235,6 +303,44 @@
 
   /* modal */
   const backdrop = $("#modalBackdrop"), modal = $("#modal");
+  const compareBackdrop = $("#compareBackdrop"), compareModal = $("#compareModal");
+
+  function compareCell(p, label, value, copy="") {
+    return '<div class="compare-cell"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong>' +
+      (copy ? '<small>'+esc(copy)+'</small>' : '') + '</div>';
+  }
+
+  function compareColumn(p) {
+    const [take] = takeMeta(p.a);
+    const [conf] = confidenceMeta(p);
+    return '<section class="compare-prospect">' +
+      '<div class="compare-prospect-head"><div class="compare-rank">#'+p.r+'</div><div><h3>'+esc(p.n)+'</h3><p>'+esc(p.p)+' · '+esc(p.s)+'</p></div></div>' +
+      compareCell(p,"APEX Take",take,shortWhy(p)) +
+      compareCell(p,"Confidence",conf,p.ta ? "Projection stability, not talent." : "Topology not covered.") +
+      compareCell(p,"Scout priority",p.cr ? "#"+p.cr : "—","Work queue, not talent rank.") +
+      compareCell(p,"Evidence edge",p.ee==null ? "—" : one(p.ee),"Current evidence versus the market prior.") +
+      compareCell(p,"Fragility",p.fg==null ? "—" : pct(p.fg),"Variation across demonstrated contexts.") +
+      compareCell(p,"Information gap",p.ig==null ? "—" : pct(p.ig),"Missing or weakly supported context.") +
+      compareCell(p,"Role sensitivity",p.rs==null ? "—" : pct(p.rs),"Change across paired roles/environments.") +
+      '<div class="compare-question"><span>What would change our mind?</span><strong>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</strong><p>'+esc(nextQuestion(p))+'</p></div>' +
+    '</section>';
+  }
+
+  function openCompare(a,b) {
+    compareModal.innerHTML =
+      '<div class="modal-head"><div><div class="eyebrow">Head-to-head</div><h2 class="modal-name" id="compareModalTitle">'+esc(a.n)+' vs '+esc(b.n)+'</h2><div class="modal-meta">Same APEX surfaces, side-by-side. No synthetic winner.</div></div><button class="modal-close compare-close" aria-label="Close">×</button></div>' +
+      '<div class="compare-grid">'+compareColumn(a)+compareColumn(b)+'</div>';
+    compareBackdrop.hidden = false;
+    document.body.classList.add("modal-open");
+    $(".compare-close",compareModal).focus();
+  }
+  function closeCompare() {
+    compareBackdrop.hidden = true;
+    document.body.classList.remove("modal-open");
+  }
+  compareBackdrop.addEventListener("click", e => {
+    if (e.target === compareBackdrop || e.target.closest(".compare-close")) closeCompare();
+  });
   function metric(label, value, copy, cls="") {
     return '<div class="metric '+cls+'"><div class="metric-label">'+esc(label)+'</div><div class="metric-value">'+esc(value)+'</div><div class="metric-copy">'+esc(copy)+'</div></div>';
   }
@@ -283,14 +389,14 @@
   }
   function tech(k,v){ return '<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>'; }
   function humanContext(ctx) {
-    return String(ctx).replaceAll("_"," ").replace(/w/g, m => m.toUpperCase());
+    return String(ctx).split("_").map(part => part ? part.charAt(0).toUpperCase()+part.slice(1) : "").join(" ");
   }
   function closeModal() {
     backdrop.hidden = true;
     document.body.classList.remove("modal-open");
   }
   backdrop.addEventListener("click", e => { if (e.target === backdrop || e.target.closest(".modal-close")) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeSheet(); closeColumnHelp(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeCompare(); closeSheet(); closeColumnHelp(); } });
 
   /* plain-English sheet */
   const sheet = $("#plainEnglishSheet");
@@ -298,5 +404,7 @@
   function closeSheet(){ sheet.hidden=true; if(backdrop.hidden) document.body.classList.remove("modal-open"); }
   sheet.addEventListener("click", e => { if(e.target===sheet || e.target.closest("[data-close-sheet]")) closeSheet(); });
 
+  renderWarRoom();
+  populateCompare();
   render();
 })();
