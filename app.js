@@ -1667,18 +1667,43 @@
       const out = kind === "steal"
         ? '<span class="badge badge-hit">✓ HIT</span>' + (r.pb ? '<span class="badge badge-pb">★×' + r.pb + "</span>" : "")
         : '<span class="badge badge-none">AV ' + (r.wav ?? 0) + "</span>";
-      return '<div class="story-row"><span class="story-pick">' + r.yr + " · #" + r.pk + '</span>' +
+      const read = kind === "steal" ? "APEX saw more upside" : "APEX saw more risk";
+      return '<div class="story-row"><span class="story-pick">' + r.yr + " · Pick " + r.pk + '</span>' +
         '<span class="story-name">' + esc(r.nm) + ' <span class="story-meta">' + r.pos + " · " + esc(r.cl || r.tm || "") + '</span></span>' +
-        '<span class="story-prob">APEX ' + pct(r.ph) + " vs slot " + pct(r.mh) + '</span>' +
+        '<span class="story-prob"><strong>' + read + '</strong><small>Strong-career chance: APEX ' + pct(r.ph) + " · draft slot " + pct(r.mh) + '</small></span>' +
         '<span class="story-out">' + out + "</span></div>";
     }).join("");
   }
 
   function renderInsights() {
     const dg = D.insights.disagree;
+    const S = D.backtest.summary;
+    const hitEdge = ((S.deploy.hit.auc - S.market.hit.auc) * 100).toFixed(1);
+    const bustEdge = ((S.deploy.bust.auc - S.market.bust.auc) * 100).toFixed(1);
+
+    const track = $("#trackSummary");
+    if (track) {
+      track.innerHTML =
+        '<div class="track-takeaway track-takeaway-primary">' +
+          '<span class="track-kicker">WHEN APEX STRONGLY DISAGREED</span>' +
+          '<strong class="track-big">' + Math.round(dg.win_rate * 100) + '%</strong>' +
+          '<p>APEX&rsquo;s side was right <b>' + dg.model_right + ' of ' + dg.n + '</b> times in historical held-out disagreements.</p>' +
+        '</div>' +
+        '<div class="track-takeaway">' +
+          '<span class="track-kicker">FINDING GOOD PLAYERS</span>' +
+          '<strong class="track-big track-big-words">NFL still sets the bar</strong>' +
+          '<p>APEX improved only <b>' + hitEdge + ' ranking points</b> over draft position in the historical backtest, and newer classes have not shown a clear edge.</p>' +
+        '</div>' +
+        '<div class="track-takeaway">' +
+          '<span class="track-kicker">BEST HISTORICAL SIGNAL</span>' +
+          '<strong class="track-big track-big-words">Spotting misses</strong>' +
+          '<p>The biggest backtest gain was identifying players who underperformed their draft slot (<b>+' + bustEdge + ' points</b>), mostly after Round 1. Newer classes have not confirmed it yet.</p>' +
+        '</div>';
+    }
+
     $("#disagreeHero").innerHTML =
-      '<div><div class="hero-num">' + Math.round(dg.win_rate * 100) + '%</div><div class="tile-label">disagreement win rate</div></div>' +
-      '<div class="hero-copy">In the held-out backtest, whenever APEX moved a player&rsquo;s hit probability <strong>10+ points away from the draft-slot prior</strong>, the model&rsquo;s side of the argument won <strong>' + dg.model_right + " of " + dg.n + "</strong> times. These rows exclude 2000–2002 in-sample fits. Legacy calibration still reused historical labels, so this is a descriptive check.</div>";
+      '<div><div class="hero-num">' + Math.round(dg.win_rate * 100) + '%</div><div class="tile-label">historical disagreement win rate</div></div>' +
+      '<div class="hero-copy">Technical definition: when APEX moved a player&rsquo;s strong-career probability at least <strong>10 percentage points</strong> away from the draft-slot baseline, APEX&rsquo;s side of the disagreement was right <strong>' + dg.model_right + " of " + dg.n + "</strong> times. This is a retrospective held-out ranking check, not proof of future performance.</div>";
     storyList($("#stealsList"), D.insights.steals, "steal");
     storyList($("#skepticList"), D.insights.skeptic, "skeptic");
     renderForward();
