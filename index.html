@@ -7,7 +7,7 @@
 <meta name="description" content="Explore NFL draft classes in plain English: APEX rankings, career outlooks, sleepers, draft-day disagreements and player cards for every class since 2000.">
 <meta name="theme-color" content="#0b1220">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="styles.css?v=20261006-fan">
+<link rel="stylesheet" href="styles.css?v=20261006-track-record">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to draft content</a>
@@ -129,53 +129,107 @@
     </details>
   </section>
 
-  <!-- ============ INSIGHTS ============ -->
+  <!-- ============ TRACK RECORD ============ -->
   <section id="tab-insights" class="tab-panel">
-    <div class="card" id="researchResults"></div>
-    <p class="warn-band">Legacy v10 figures below describe the displayed scores. Their calibration reused historical evaluation labels, so they are not an independent test of probability accuracy. V11 uses separate outer evaluation classes.</p>
-    <div class="insight-hero" id="disagreeHero"></div>
-
-    <div class="card">
-      <h3>Post-training classes — retrospective comparison</h3>
-      <p class="card-sub">These classes are outside the training window. Scores have been revised, including the August 2026 quarterback patch; they are not verified frozen draft-night forecasts. Current careers are incomplete, so these comparisons are provisional.</p>
-      <div id="fwdTable"></div>
-      <p class="fine" id="fwdNote"></p>
+    <div class="track-intro">
+      <p class="eyebrow">TRACK RECORD</p>
+      <h2>Has APEX actually been right?</h2>
+      <p class="track-lead"><strong>There are encouraging signals, but APEX has not yet proven it can consistently beat NFL draft order on new classes.</strong> That is the standard this page uses. No victory laps, no cherry-picking.</p>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <h3>Model vs. market, class by class</h3>
-        <p class="card-sub">AUC for the &ldquo;top-quartile career at position&rdquo; label, each draft class scored with that class held out of training.</p>
-        <div class="chart" id="aucChart"></div>
-        <details class="chart-table"><summary>View as table</summary><div id="aucTable"></div></details>
-      </div>
-      <div class="card">
-        <h3>Do the probabilities mean what they say?</h3>
-        <p class="card-sub">Out-of-fold predicted hit probability vs. what actually happened, 2003&ndash;2021 classes. Dots on the line = perfectly calibrated.</p>
-        <div class="chart" id="calChart"></div>
-        <details class="chart-table"><summary>View as table</summary><div id="calTable"></div></details>
-      </div>
+    <div class="track-summary" id="trackSummary" aria-live="polite"></div>
+
+    <div class="track-rule">
+      <strong>How to use this page:</strong>
+      <span>Start with the three takeaways above. The player examples below show what those ideas look like in real drafts. The full statistical validation is available at the bottom.</span>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <h3>Late-round hits the model liked more than the league did</h3>
-        <p class="card-sub">Round 2+ picks where APEX&rsquo;s held-out hit probability beat the draft-slot prior the most &mdash; and the player hit.</p>
+    <div class="track-section-head">
+      <div>
+        <p class="eyebrow">REAL EXAMPLES</p>
+        <h2>Calls APEX got right</h2>
+      </div>
+      <p>These are historical examples, not proof that every future disagreement will work.</p>
+    </div>
+
+    <div class="grid-2 track-stories">
+      <div class="card track-story-card">
+        <div class="track-story-icon" aria-hidden="true">↑</div>
+        <h3>Players APEX liked more than the NFL</h3>
+        <p class="card-sub">Later picks where APEX saw more upside than draft position alone — and the player went on to hit.</p>
         <div id="stealsList"></div>
       </div>
-      <div class="card">
-        <h3>Early picks the model was right to doubt</h3>
-        <p class="card-sub">Top-20 picks where APEX&rsquo;s held-out probability sat furthest below the draft-slot prior &mdash; and the player never became a starter.</p>
+      <div class="card track-story-card">
+        <div class="track-story-icon" aria-hidden="true">!</div>
+        <h3>Players APEX was right to question</h3>
+        <p class="card-sub">Early picks where APEX was notably more skeptical — and the player did not become a long-term starter.</p>
         <div id="skepticList"></div>
       </div>
     </div>
 
-    <div class="card">
-      <h3>How often do players hit, by round?</h3>
-      <p class="card-sub">Actual outcomes for the 2000&ndash;2021 classes. &ldquo;Hit&rdquo; = top-quartile career value among same-class, same-position peers.</p>
-      <div class="chart" id="roundChart"></div>
-      <details class="chart-table"><summary>View as table</summary><div id="roundTable"></div></details>
+    <div class="card track-bottom-line">
+      <p class="eyebrow">BOTTOM LINE</p>
+      <h2>Use APEX as a second opinion, not an oracle.</h2>
+      <div class="track-bottom-grid">
+        <div>
+          <strong>What it is useful for</strong>
+          <span>Finding players where the measurable profile and NFL draft price tell different stories.</span>
+        </div>
+        <div>
+          <strong>What remains hard</strong>
+          <span>Finding future stars better than NFL draft position. The league&rsquo;s draft order is still an extremely strong signal.</span>
+        </div>
+        <div>
+          <strong>What is not proven</strong>
+          <span>That following APEX would improve a team&rsquo;s drafts going forward. The newer classes have not established that yet.</span>
+        </div>
+      </div>
     </div>
+
+    <details class="track-technical">
+      <summary>
+        <span>
+          <strong>See the full validation data</strong>
+          <small>AUC, calibration, recent classes, methodology notes and historical baselines</small>
+        </span>
+        <span class="track-technical-action">Open</span>
+      </summary>
+      <div class="track-technical-body">
+        <div class="card" id="researchResults"></div>
+        <p class="warn-band"><strong>Important:</strong> legacy v10 figures describe the displayed scores, but their calibration reused historical evaluation labels. They are useful retrospective checks, not independent proof of future probability accuracy. V11 research uses separate outer evaluation classes.</p>
+
+        <div class="insight-hero" id="disagreeHero"></div>
+
+        <div class="card">
+          <h3>What happened in newer classes?</h3>
+          <p class="card-sub">2022+ classes sit outside the original training window. Careers are still incomplete and scores have since been revised, so this is an early retrospective check rather than a frozen draft-night test.</p>
+          <div class="table-scroll" id="fwdTable"></div>
+          <p class="fine" id="fwdNote"></p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>APEX vs NFL draft order, by class</h3>
+            <p class="card-sub">Technical ranking comparison for historical held-out classes. Higher AUC means better ordering of eventual strong careers.</p>
+            <div class="chart" id="aucChart"></div>
+            <details class="chart-table"><summary>View the numbers</summary><div id="aucTable"></div></details>
+          </div>
+          <div class="card">
+            <h3>Did the probabilities match reality?</h3>
+            <p class="card-sub">Predicted strong-career probability versus what actually happened in the historical evaluation classes.</p>
+            <div class="chart" id="calChart"></div>
+            <details class="chart-table"><summary>View the numbers</summary><div id="calTable"></div></details>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Historical NFL hit rate by round</h3>
+          <p class="card-sub">Context for why draft position is such a difficult baseline to beat. Earlier picks succeed more often.</p>
+          <div class="chart" id="roundChart"></div>
+          <details class="chart-table"><summary>View the numbers</summary><div id="roundTable"></div></details>
+        </div>
+      </div>
+    </details>
   </section>
 
   <!-- ============ PROJECTIONS ============ -->
@@ -648,6 +702,6 @@
 <script src="external-research.js?v=20260912"></script>
 <script src="college-context-research.js?v=20260912"></script>
 <script src="chronological-research.js?v=20260920"></script>
-<script src="app.js?v=20260919-matched"></script>
+<script src="app.js?v=20261006-track-record"></script>
 </body>
 </html>
