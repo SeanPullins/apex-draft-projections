@@ -73,7 +73,8 @@
   function takeMeta(action,p) {
     const classes={EXECUTIVE_REVIEW_UP:"take-up",SLEEPER_DISCOVERY:"take-up",
       EXECUTIVE_REVIEW_DOWN:"take-down",HOLD_PRIOR:"take-hold"};
-    return [p?story(p).take:(TAKE[action]?.[0]||"Current view"),classes[action]||"take-data"];
+    const supported=!!(p&&story(p).research);
+    return [p?story(p).take:(TAKE[action]?.[0]||"Current view"),classes[action]||(supported?"take-hold":"take-data")];
   }
   function confidenceMeta(p) {
     if (!p.ta) return ["—","status-na"];
@@ -744,6 +745,16 @@
       '</div>' +
       '<section class="dossier-section"><div class="section-kicker">The APEX view</div><h3>What the current research says</h3><p>'+esc(prof.interpretation)+'</p><p class="fine">Frozen Oct. 7 model action; this explanation does not recalculate a score or update market rank.</p></section>' +
       live2026Section(p) +
+      (prof.research ?
+        '<section class="dossier-section"><div class="section-kicker">Additional research recovered</div>'+
+          '<h3>'+esc(prof.research.kind==="role"?"College position and role":"Available earlier-season history")+'</h3>'+
+          '<p>'+esc(prof.research.detail)+'</p>'+
+          '<p class="fine">'+(prof.contextVerified?
+             'Source-linked public information, separate from the frozen APEX model.':
+             'Supplied Muse research summary; identity, role or source details are not independently verified for model use.')+
+          ' No restricted blocking grades are published.'+
+          (prof.contextVerified&&prof.sourceUrl?' <a href="'+esc(prof.sourceUrl)+'" target="_blank" rel="noopener noreferrer">College source ↗</a>':'')+
+          '</p></section>' : '') +
       pffQBSection(p) +
       '<section class="dossier-section spotlight"><div class="section-kicker">Beyond the box score</div><h3>What these numbers cannot prove</h3><p>'+esc(question)+'</p>' +
         '<div class="swing-note">Earlier APEX research explored position-specific play contexts, but an unverified short or quick-game prompt is not a unique player weakness.</div>' +
