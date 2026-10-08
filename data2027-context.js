@@ -1,12 +1,17 @@
 /* Public-safe 2027 player context; no licensed individual charting grades. */
 window.APEX2027Context={
   "snapshot": "2026-10-08",
-  "description": "Public-safe role/historical context for old purple work-queue entries; NOT new APEX grades, scout charting, or team fit.",
+  "description": "Public-safe source-linked 2027 role, prior-season and availability facts. Verified applies ONLY to the precise cited fact, never to licensed charting grades, current-year comprehensive evaluation or NFL model readiness.",
   "coverage": {
     "old_purple": 44,
     "recovered_muse": 40,
     "official_external_missing": 4,
-    "licensed_blocking_receipts": 35
+    "licensed_blocking_receipts": 35,
+    "independently_checked_facts": 44,
+    "school_official_facts": 38,
+    "reputable_reporting_facts": 6,
+    "model_ready": 0,
+    "original_muse_records_recovered": 40
   },
   "rows": {
     "8": {
@@ -15,7 +20,10 @@ window.APEX2027Context={
       "detail": "Texas 2026: four starts at left tackle",
       "source": "official",
       "verified": true,
-      "url": "https://texaslonghorns.com/sports/football/roster/trevor-goosby/17015"
+      "url": "https://texaslonghorns.com/sports/football/roster/trevor-goosby/17015",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "9": {
       "kind": "role",
@@ -23,28 +31,43 @@ window.APEX2027Context={
       "detail": "LSU 2026 tackle; 22 prior college starts at left tackle",
       "source": "official",
       "verified": true,
-      "url": "https://lsusports.net/sports/fb/roster/player/jordan-seaton"
+      "url": "https://lsusports.net/sports/fb/roster/player/jordan-seaton",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "26": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Missouri: Green played left tackle in 2025 and returned for his senior 2026 season.",
+      "source": "official",
+      "verified": true,
+      "url": "https://mutigers.com/sports/football/roster/season/2026/staff/brandon-jones",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "29": {
       "kind": "history",
-      "role": "Injury absence",
-      "detail": "2026 injury absence; earlier college seasons available in Muse report",
-      "source": "muse_research",
-      "verified": false
+      "role": "RB",
+      "detail": "Oct. 6, 2026: Missouri coach said Hardy had not returned to practice following injury. No 2026 performance is inferred.",
+      "source": "press",
+      "verified": true,
+      "url": "https://sports.yahoo.com/articles/ahmad-hardy-injury-missouri-football-180358043.html",
+      "verified_scope": "2026_availability",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "30": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Iowa 2026: started its first five games at left tackle; started all 13 games at LT in 2025.",
+      "source": "official",
+      "verified": true,
+      "url": "https://hawkeyesports.com/sports/football/roster/player/trevor-lauck",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "38": {
       "kind": "role",
@@ -52,157 +75,241 @@ window.APEX2027Context={
       "detail": "Iowa 2026: five starts at right guard",
       "source": "official",
       "verified": true,
-      "url": "https://hawkeyesports.com/sports/football/roster/player/kade-pieper"
+      "url": "https://hawkeyesports.com/sports/football/roster/player/kade-pieper",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "45": {
       "kind": "role",
       "role": "LG / C",
-      "detail": "2026 guard and center alignment; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Minnesota 2026: started at left guard; also started at center at Washington after 13 center starts in 2024.",
+      "source": "official",
+      "verified": true,
+      "url": "https://gophersports.com/sports/football/roster/greg-johnson/23952",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "46": {
       "kind": "role",
       "role": "RT",
-      "detail": "2026 right tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Texas 2026: started its first four games at right tackle; previously started 13 games at Wake Forest.",
+      "source": "official",
+      "verified": true,
+      "url": "https://texaslonghorns.com/sports/football/roster/melvin-siani/17013",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "48": {
       "kind": "role",
-      "role": "RG",
-      "detail": "2026 moved inside from left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "role": "OL",
+      "detail": "Ohio State 2026: appeared in five games, with 47, 71, 48, 72 and 78 offensive snaps in the official game log. Exact 2026 position varies and is not verified by this page.",
+      "source": "official",
+      "verified": true,
+      "url": "https://ohiostatebuckeyes.com/sports/football/roster/austin-siereveld/13333",
+      "verified_scope": "2026_participation",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "61": {
       "kind": "history",
-      "role": "2026 not playing",
-      "detail": "Earlier QB seasons available in Muse report; current-season stats not appropriate",
-      "source": "muse_research",
-      "verified": false
+      "role": "QB",
+      "detail": "Texas Tech's June 10, 2026 ruling statement confirmed a two-game restriction; later participation depended on recovery. This source does not establish a full-season absence.",
+      "source": "official",
+      "verified": true,
+      "url": "https://texastech.com/news/2026/6/10/football-kirby-hocutt-statement-on-brendan-sorsby?path=football",
+      "verified_scope": "partial_2026_availability",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "63": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://iuhoosiers.com/sports/football/roster/carter-smith/20978"
+      "detail": "Indiana lists 41 consecutive left-tackle starts dating to 2023 and 43 career games in its 2026 bio.",
+      "source": "official",
+      "verified": true,
+      "url": "https://iuhoosiers.com/sports/football/roster/carter-smith/20978",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "66": {
       "kind": "role",
-      "role": "LT",
-      "detail": "2026 moved from right tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "role": "OL",
+      "detail": "SMU: started 13 games in 2025; exact 2026 tackle side is not established by the official bio.",
+      "source": "official",
+      "verified": true,
+      "url": "https://smumustangs.com/sports/football/roster/pj-williams/15593?path=football",
+      "verified_scope": "historical_participation",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "69": {
       "kind": "role",
-      "role": "LT",
-      "detail": "2026 left tackle/rotation; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://gamecocksonline.com/sports/football/roster/player/jacarrius-peak/"
+      "role": "LT / RT",
+      "detail": "South Carolina: 2025 at NC State, started 13 games at LT; 32 career starts total (14 LT, 18 RT). His 2026 side is not confirmed here.",
+      "source": "official",
+      "verified": true,
+      "url": "https://gamecocksonline.com/sports/football/roster/player/jacarrius-peak/",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "70": {
       "kind": "history",
-      "role": "Injury-limited",
-      "detail": "2026 injury; previous seasons recorded. Player alias remains unresolved",
-      "source": "muse_research",
-      "verified": false
+      "role": "CB",
+      "detail": "Miami's 2026 roster lists Romanas 'OJ' Frederique Jr.; October campus reporting documents a shoulder injury in the season opener.",
+      "source": "press",
+      "verified": true,
+      "url": "https://themiamihurricane.com/2026/10/02/miami-football-injury-struggles-open-new-opportunities/",
+      "verified_scope": "2026_availability",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "71": {
       "kind": "history",
-      "role": "Injury-limited",
-      "detail": "2026 abbreviated season, with earlier role history in Muse report",
-      "source": "muse_research",
-      "verified": false
+      "role": "S",
+      "detail": "An October 8 LSU–Kentucky injury report lists Dashawn Spears out. This is an availability report, not a scouting grade.",
+      "source": "press",
+      "verified": true,
+      "url": "https://www.andthevalleyshook.com/sec-football/53977/wednesdays-lsu-vs-kentucky-injury-report",
+      "verified_scope": "2026_availability",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "78": {
       "kind": "role",
       "role": "LG",
-      "detail": "2026 moved inside from left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Notre Dame 2026: started at left guard against Wisconsin (Sept. 6); made 12 left-tackle starts in 2025.",
+      "source": "official",
+      "verified": true,
+      "url": "https://fightingirish.com/sports/football/roster/season/2025-26/player/anthonie-knapp",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "86": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "September 2026 Ohio State reporting identified Moore as the starting left tackle; the official roster confirms his 2026 identity.",
+      "source": "press",
+      "verified": true,
+      "url": "https://www.elevenwarriors.com/ohio-state-football/2026/09/163576/ian-moore-earned-ohio-states-starting-left-tackle-spot-by-doing-his-job-at-a-high-level",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "95": {
       "kind": "role",
       "role": "LG",
-      "detail": "2026 left guard; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Cincinnati: started 13 games at left guard in 2025; the 2026 official bio does not independently confirm his current starting side.",
+      "source": "official",
+      "verified": true,
+      "url": "https://gobearcats.com/sports/football/roster/player/evan-tengesdahl",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "96": {
       "kind": "role",
       "role": "C",
-      "detail": "2026 center; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Oregon 2025: started all 15 games at center and logged 884 snaps there. Do not infer 2026 blocking grades.",
+      "source": "official",
+      "verified": true,
+      "url": "https://goducks.com/sports/football/roster/iapani-laloulu/18311",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "98": {
       "kind": "role",
-      "role": "LT",
-      "detail": "2026 moved from left guard; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "role": "LG",
+      "detail": "Miami 2025: appeared in 16 games with one start and primarily rotated at left guard; 2026 left-tackle assignment is not verified.",
+      "source": "official",
+      "verified": true,
+      "url": "https://miamihurricanes.com/sports/football/roster/season/2025-26/player/samson-okunlola",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "100": {
       "kind": "role",
       "role": "C",
-      "detail": "2026 center; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Ohio State 2026 opener: listed on the starting line at center; in 2023 he made 12 center starts.",
+      "source": "press",
+      "verified": true,
+      "url": "https://www.elevenwarriors.com/ohio-state-football/2026/09/163684/snap-counts-88-buckeyes-play-in-season-opener-as-ohio-state-uses-heavy-rotations-vs-ball-state",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "107": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://ukathletics.com/sports/football/roster/player/lance-heard/"
+      "detail": "Kentucky's 2026 bio: transferred from Tennessee, where he started all 12 games at left tackle in 2025.",
+      "source": "official",
+      "verified": true,
+      "url": "https://ukathletics.com/sports/football/roster/player/lance-heard/",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "112": {
       "kind": "role",
       "role": "LG",
-      "detail": "2026 left guard; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Ohio State 2026: official bio records snaps in five games; the season-opening lineup identified Montgomery at left guard.",
+      "source": "press",
+      "verified": true,
+      "url": "https://www.elevenwarriors.com/ohio-state-football/2026/09/163684/snap-counts-88-buckeyes-play-in-season-opener-as-ohio-state-uses-heavy-rotations-vs-ball-state",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "114": {
       "kind": "role",
       "role": "LG",
-      "detail": "2026 left guard; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Houston Sept. 2, 2026 game preview identifies Hurst as the left guard after transferring from Tulane.",
+      "source": "official",
+      "verified": true,
+      "url": "https://dtnbgpzadn69x.cloudfront.net/news/2026/9/2/football-preview-23-24-houston-hosts-oregon-state-for-h-town-kickoff",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "119": {
       "kind": "role",
       "role": "RT",
-      "detail": "2026 right tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Michigan 2026: started at right tackle against Western Michigan (Sept. 5) and Oklahoma (Sept. 12); later availability requires separate checking.",
+      "source": "official",
+      "verified": true,
+      "url": "https://d4njeax0ev936.cloudfront.net/sports/football/roster/andrew-sprague/28007",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "120": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle when available; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Stanford 2025: started all 12 games at left tackle, the only Cardinal OL to start every game at one spot. 2026 role not established.",
+      "source": "official",
+      "verified": true,
+      "url": "https://gostanford.com/sports/football/roster/player/nikolas-prongos",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "129": {
       "kind": "role",
       "role": "C",
-      "detail": "2026 center; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Nebraska 2026: the official biography reports starts at center in every game so far; 2025 had 13 center starts.",
+      "source": "official",
+      "verified": true,
+      "url": "https://huskers.com/sports/football/roster/player/justin-evans-jenkins",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "134": {
       "kind": "role",
@@ -210,14 +317,21 @@ window.APEX2027Context={
       "detail": "2025: 13 starts at left tackle, per Youngstown State",
       "source": "official",
       "verified": true,
-      "url": "https://ysusports.com/sports/football/roster/desmeal-leigh/8617"
+      "url": "https://ysusports.com/sports/football/roster/desmeal-leigh/8617",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "135": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Virginia 2025: started all 14 games at left tackle. The official 2026 roster confirms he returned, but not every 2026 start.",
+      "source": "official",
+      "verified": true,
+      "url": "https://virginiasports.com/sports/football/roster/player/mckale-boley",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "144": {
       "kind": "history",
@@ -225,7 +339,10 @@ window.APEX2027Context={
       "detail": "2025: 59 tackles and five interceptions, per Tulsa",
       "source": "official",
       "verified": true,
-      "url": "https://tulsahurricane.com/sports/football/roster/elijah-green/12794"
+      "url": "https://tulsahurricane.com/sports/football/roster/elijah-green/12794",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "147": {
       "kind": "history",
@@ -233,72 +350,109 @@ window.APEX2027Context={
       "detail": "2026: listed Colorado defensive-line newcomer; no 2026 game statistics in current feed",
       "source": "official",
       "verified": true,
-      "url": "https://cubuffs.com/news/2026/2/27/a-new-front-colorados-defensive-line-reloads"
+      "url": "https://cubuffs.com/news/2026/2/27/a-new-front-colorados-defensive-line-reloads",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "154": {
       "kind": "role",
       "role": "C",
-      "detail": "2026 center role; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Houston 2026 biography: 2025 Toledo transfer who started 12 games at center; 2026 center role is indicated in school game preview.",
+      "source": "official",
+      "verified": true,
+      "url": "https://uhcougars.com/sports/football/roster/anthony-boswell/10012",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "155": {
       "kind": "role",
       "role": "IOL",
-      "detail": "2026 reserve guard/center; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Texas A&M 2026 bio: transfer from LSU with eight 2025 starts and 772 career snaps, mostly at guard/center.",
+      "source": "official",
+      "verified": true,
+      "url": "https://12thman.com/sports/football/roster/player/coen-echols",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "157": {
       "kind": "role",
       "role": "RG",
-      "detail": "2026 moved inside from tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Texas official 2026 roster: records four starts at right guard (the player bio's season heading is inconsistently dated).",
+      "source": "official",
+      "verified": true,
+      "url": "https://texaslonghorns.com/sports/football/roster/brandon-baker/17014",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "161": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "USC 2026 roster: 25 career games and 20 starts, all at left tackle. Current-season side is not separately game-verified.",
+      "source": "official",
+      "verified": true,
+      "url": "https://d3jycsk0m72ya7.cloudfront.net/sports/football/roster/elijah-paige/18847",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "167": {
       "kind": "role",
-      "role": "C",
-      "detail": "2026 center; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "role": "OL",
+      "detail": "Georgia 2026: school bio says Bobo has started every game this season. Exact center assignment is not established by this source.",
+      "source": "official",
+      "verified": true,
+      "url": "https://georgiadogs.com/sports/football/roster/drew-bobo/10626",
+      "verified_scope": "2026_participation",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "169": {
       "kind": "role",
       "role": "LT / RT",
-      "detail": "2026 starts at both tackle positions; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://mgoblue.com/sports/football/roster/blake-frazier/27891"
+      "detail": "Michigan 2026: started two games at left tackle (Sept. 5 and 12), then three at right tackle (Sept. 19, 26, Oct. 3).",
+      "source": "official",
+      "verified": true,
+      "url": "https://mgoblue.com/sports/football/roster/blake-frazier/27891",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "177": {
       "kind": "role",
       "role": "RT",
-      "detail": "2026 right tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Washington 2026: started every available game at right tackle; also started 11 games in 2025.",
+      "source": "official",
+      "verified": true,
+      "url": "https://gohuskies.com/sports/football/roster/drew-azzopardi/17644",
+      "verified_scope": "2026_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "184": {
       "kind": "role",
       "role": "C",
-      "detail": "2026 center; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://lsusports.net/sports/fb/roster/player/braelin-moore"
+      "detail": "LSU 2026 bio: returning starter at center; started 12 games and played 623 offensive snaps there in 2025.",
+      "source": "official",
+      "verified": true,
+      "url": "https://lsusports.net/sports/fb/roster/player/braelin-moore",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "185": {
       "kind": "role",
-      "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "role": "OL",
+      "detail": "Georgia 2026: the official biography says Greene has started every game in 2026. Left-tackle assignment is not independently established by that entry.",
+      "source": "official",
+      "verified": true,
+      "url": "https://georgiadogs.com/sports/football/roster/earnest-greene-iii/10559",
+      "verified_scope": "2026_participation",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "186": {
       "kind": "history",
@@ -306,29 +460,43 @@ window.APEX2027Context={
       "detail": "Through 2025: 27 games, 26 starts at Penn State, per Indiana",
       "source": "official",
       "verified": true,
-      "url": "https://iuhoosiers.com/sports/football/roster/aj-harris/21045"
+      "url": "https://iuhoosiers.com/sports/football/roster/aj-harris/21045",
+      "model_ready": false,
+      "source_checked_at": "2026-10-08",
+      "verified_scope": "source_linked_history"
     },
     "187": {
       "kind": "history",
-      "role": "Injury absence",
-      "detail": "2026 injury absence; earlier offensive-line history available in Muse report",
-      "source": "muse_research",
-      "verified": false
+      "role": "OL",
+      "detail": "Notre Dame's 2026 bio documents that Jagusah missed the 2025 season due to injury; his 2026 availability is not resolved by the cited bio.",
+      "source": "official",
+      "verified": true,
+      "url": "https://fightingirish.com/sports/football/roster/player/charles-jagusah",
+      "verified_scope": "historical_availability",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "190": {
       "kind": "role",
       "role": "LG",
-      "detail": "2026 left guard; role from Muse research",
-      "source": "muse_research",
-      "verified": false,
-      "url": "https://arkansasrazorbacks.com/roster/malachi-breland/"
+      "detail": "Arkansas bio: started all 12 games at left guard for Memphis in 2025; records five 2026 Arkansas starts without specifying a side.",
+      "source": "official",
+      "verified": true,
+      "url": "https://arkansasrazorbacks.com/roster/malachi-breland/",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     },
     "200": {
       "kind": "role",
       "role": "LT",
-      "detail": "2026 left tackle; role from Muse research",
-      "source": "muse_research",
-      "verified": false
+      "detail": "Florida State 2026 bio: Chaplin started 12 games at left tackle for Auburn in 2025; current FSU starting side is not verified.",
+      "source": "official",
+      "verified": true,
+      "url": "https://seminoles.com/sports/football/roster/xavier-chaplin/8426",
+      "verified_scope": "historical_role",
+      "source_checked_at": "2026-10-08",
+      "model_ready": false
     }
   }
 };
