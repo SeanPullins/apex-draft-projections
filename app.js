@@ -550,7 +550,14 @@
     }
     host.innerHTML=teamState.picks.map(pick=>{
       const alts=uniqueAlternatives(candidatePool(pick),pick);
+      const coveredEnd=Math.max(...D.players.map(p=>p.r));
+      const limit=pick>coveredEnd
+        ? '<div class="live-note live-note-neutral"><strong>Limited late-round coverage:</strong> the current research board ends at rank #'+coveredEnd+'. This is not a complete candidate pool for pick #'+pick+'.</div>'
+        : '';
+      if(!alts.best) return '<article class="pick-card"><div class="pick-card-head"><span>Overall pick</span><strong>#'+pick+'</strong></div>'+
+        '<div class="team-empty"><strong>No supported candidates at this pick yet.</strong><span>APEX only has ranked evidence for the top '+coveredEnd+' prospects. Do not interpret an empty plan as no talent available.</span></div></article>';
       return '<article class="pick-card"><div class="pick-card-head"><span>Overall pick</span><strong>#'+pick+'</strong></div>' +
+        limit +
         pickCandidate("Best team fit",alts.best,pick) +
         pickCandidate("Safer profile",alts.safer,pick) +
         pickCandidate("APEX edge / alternative",alts.edge,pick) +
@@ -725,18 +732,12 @@
     const dataset=window.APEX_PFF_QB_2026;
     if(!dataset) return "";
     const row=dataset.rows.find(x=>x[0]===p.r);
-    if(!row) return '<section class="dossier-section"><div class="section-kicker">2026 PFF QB snapshot</div><h3>No 2026 QB charting row</h3><p>Not available in the supplied October 2026 workbook. Do not infer a passing grade.</p></section>';
-    const [rank,games,grade,btt,twp,adot,ttt,epa,pts,blitzN,blitzEpa]=row;
-    const items=[
-      ["Pass grade",grade.toFixed(1)],["Big-time throw rate",btt.toFixed(1)+"%"],
-      ["Turnover-worthy play rate",twp.toFixed(1)+"%"],["Average target depth",adot.toFixed(1)+" yd"],
-      ["Time to throw",ttt.toFixed(2)+" sec"],["EPA",epa.toFixed(2)],
-      ["Pressure-to-sack",pts.toFixed(1)+"%"],["Blitz dropbacks",String(blitzN)],
-      ["Blitz EPA",blitzEpa.toFixed(2)]
-    ];
-    return '<section class="dossier-section"><div class="section-kicker">New • 2026 quarterback evidence</div><h3>PFF QB charting · '+games+' games</h3>'+
+    if(!row) return '<section class="dossier-section"><div class="section-kicker">2026 QB evidence</div><h3>No QB charting comparison</h3><p>This prospect has no matching row in the October 2026 16-player sample. Missing data is not a negative evaluation.</p></section>';
+    const games=row[1];
+    const items=dataset.columns.slice(2).map((name,i)=>[name,row[i+2]+"th percentile"]);
+    return '<section class="dossier-section"><div class="section-kicker">2026 quarterback evidence</div><h3>Relative QB charting · '+games+' games</h3>'+
       '<div class="pff-metrics">'+items.map(([k,v])=>'<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>').join('')+'</div>'+
-      '<p class="fine">Source: user-provided PFF QB Summary and QB Pressure workbook, Oct 7, 2026. Descriptive snapshot only; these values have not been incorporated into or validated as changes to APEX forecast scores.</p></section>';
+      '<p class="fine">Percentiles compare only the 16 QBs in the supplied October 2026 workbook, with direction adjusted so higher is better. They are <strong>not</strong> national percentiles, success probabilities, or adjustments to APEX forecasts. Exact licensed charting values are kept out of the public site.</p></section>';
   }
 
   function openModal(p) {
