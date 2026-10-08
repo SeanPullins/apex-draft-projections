@@ -40,10 +40,10 @@ try{
   // Browse automated stories by category and position without adding tasks for a fan.
   d.querySelector("#labFocus").value="alerts";
   d.querySelector("#labFocus").dispatchEvent(new w.Event("change",{bubbles:true}));
-  assert(d.querySelector("#labQueue").textContent.includes("Worth questioning"));
+  assert(d.querySelector("#labQueue").textContent.includes("APEX questions consensus"));
   d.querySelector("#labFocus").value="updates";
   d.querySelector("#labFocus").dispatchEvent(new w.Event("change",{bubbles:true}));
-  assert(d.querySelector("#labQueue").textContent.includes("New data being checked"));
+  assert(d.querySelector("#labQueue").textContent.includes("2026 college season"));
   d.querySelector("#labPosition").value="OL";
   d.querySelector("#labPosition").dispatchEvent(new w.Event("change",{bubbles:true}));
   assert([...d.querySelectorAll(".lab-case-school")].every(el=>el.textContent.includes("OL")));
@@ -57,6 +57,8 @@ try{
   first.click();
   assert.equal(fan.current().rank,rank);
   assert(d.querySelector("#labCurrentWhy").textContent.length>15);
+  assert(d.querySelector("#labQueue .fan-card-fact"),"Every card shows an observed season fact or honest absence");
+  assert(!d.querySelector("#labQueue").textContent.includes("Acquire scouting-grade evidence"),"Fan cards must not show generic scouting tasks");
   assert(d.querySelector("#labQuestion").textContent.length>10);
   assert(d.querySelector("#labCurrentStatus").textContent.length>3);
   assert(d.querySelector("#labCurrentSource").textContent.length>6);
