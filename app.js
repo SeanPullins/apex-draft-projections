@@ -720,6 +720,25 @@
       '<div class="uncertainty-value">'+(v==null?'—':Math.round(v*100)+'%')+'</div>' +
       '<div class="uncertainty-track"><i style="width:'+(v==null?0:Math.round(v*100))+'%"></i></div></div>';
   }
+  function pffQBSection(p) {
+    if(p.p !== "QB") return "";
+    const dataset=window.APEX_PFF_QB_2026;
+    if(!dataset) return "";
+    const row=dataset.rows.find(x=>x[0]===p.r);
+    if(!row) return '<section class="dossier-section"><div class="section-kicker">2026 PFF QB snapshot</div><h3>No 2026 QB charting row</h3><p>Not available in the supplied October 2026 workbook. Do not infer a passing grade.</p></section>';
+    const [rank,games,grade,btt,twp,adot,ttt,epa,pts,blitzN,blitzEpa]=row;
+    const items=[
+      ["Pass grade",grade.toFixed(1)],["Big-time throw rate",btt.toFixed(1)+"%"],
+      ["Turnover-worthy play rate",twp.toFixed(1)+"%"],["Average target depth",adot.toFixed(1)+" yd"],
+      ["Time to throw",ttt.toFixed(2)+" sec"],["EPA",epa.toFixed(2)],
+      ["Pressure-to-sack",pts.toFixed(1)+"%"],["Blitz dropbacks",String(blitzN)],
+      ["Blitz EPA",blitzEpa.toFixed(2)]
+    ];
+    return '<section class="dossier-section"><div class="section-kicker">New • 2026 quarterback evidence</div><h3>PFF QB charting · '+games+' games</h3>'+
+      '<div class="pff-metrics">'+items.map(([k,v])=>'<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>').join('')+'</div>'+
+      '<p class="fine">Source: user-provided PFF QB Summary and QB Pressure workbook, Oct 7, 2026. Descriptive snapshot only; these values have not been incorporated into or validated as changes to APEX forecast scores.</p></section>';
+  }
+
   function openModal(p) {
     const [take,takeClass]=takeMeta(p.a);
     const [conf,confClass]=confidenceMeta(p);
@@ -734,6 +753,7 @@
       '</div>' +
       '<section class="dossier-section"><div class="section-kicker">The short version</div><h3>Why APEX is paying attention</h3><p>'+esc(p.why || shortWhy(p))+'</p></section>' +
       live2026Section(p) +
+      pffQBSection(p) +
       '<section class="dossier-section spotlight"><div class="section-kicker">What would change our mind?</div><h3>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</h3><p>'+esc(question)+'</p>' +
         (p.ctx ? '<div class="swing-note">This is the context with the greatest estimated ability to change the topology under the frozen weak-vs-strong evidence test.</div>' : '') +
       '</section>' +

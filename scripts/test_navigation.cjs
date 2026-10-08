@@ -18,6 +18,8 @@ const {JSDOM} = require('jsdom');
   }
 
   assert(w.APEX2027,'2027 payload must load');
+  assert(w.APEX_PFF_QB_2026,'PFF QB workbook data must load');
+  assert.equal(w.APEX_PFF_QB_2026.rows.length,16);
   assert(w.APEX2026,'2026 live-detail payload must load');
   assert.equal(Object.keys(w.APEX2026.players).length,201);
   assert.equal(w.APEX2026.coverage.identified,199);
@@ -25,7 +27,7 @@ const {JSDOM} = require('jsdom');
   assert.notEqual(w.APEX2027.players.find(p=>p.r===19).a,'URGENT_DATA_GAP','Tae Johnson must use refreshed 2026 evidence');
   assert.equal(w.APEX2027.players.find(p=>p.r===70).a,'SCOUT_MORE','OJ Frederique should use refreshed 2026 evidence');
   assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data4'));
-  assert([...d.querySelectorAll('script[src]')].every(s=>s.getAttribute('src').includes('?v=20261007-data4')),'All JS assets must be cache-busted');
+  assert([...d.querySelectorAll('script[src]')].every(s=>/\?v=20261007-(?:data4|pff2)$/.test(s.getAttribute('src'))),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
   assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
@@ -137,6 +139,8 @@ const {JSDOM} = require('jsdom');
   assert.equal(d.querySelector('#modalBackdrop').hidden,false);
   assert(d.querySelector('#modal').textContent.includes('What would change our mind?'));
   assert(d.querySelector('#modal').textContent.includes('Topology freshness'));
+  assert(d.querySelector('#modal').textContent.includes('PFF QB charting'));
+  assert(d.querySelector('#modal').textContent.includes('Turnover-worthy play rate'));
   assert(d.querySelector('#modal').textContent.includes('2026 season'));
   assert(d.querySelector('#modal').textContent.includes('664'));
   assert(d.querySelector('#modal').textContent.includes('Pass yds'));
