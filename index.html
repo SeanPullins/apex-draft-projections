@@ -6,7 +6,7 @@
 <title>APEX — 2027 NFL Draft Intelligence</title>
 <meta name="description" content="APEX turns the 2027 NFL Draft board into decision intelligence: where the market stands, where evidence disagrees, how confident the projection is, and what would change our mind.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
-<link rel="stylesheet" href="styles.css?v=20261007-data7">
+<link rel="stylesheet" href="styles.css?v=20261008-board1">
 <link rel="stylesheet" href="decision-lab.css?v=20261008-fan1">
 </head>
 <body>
@@ -30,8 +30,8 @@
     <div class="hero">
       <div class="hero-copy">
         <div class="eyebrow">2027 NFL Draft · Live research board</div>
-        <h1>Know the player.<br>Know the uncertainty.</h1>
-        <p>APEX is not another mock draft. It starts with the market, checks current football evidence, then tells you <strong>where the projection is fragile and what would change the decision.</strong></p>
+        <h1>Know the prospects.<br>See what matters.</h1>
+        <p>Start with the 2027 board, then see <strong>real 2026 production, where APEX differs from consensus, and what the stats can’t prove.</strong> No scouting homework.</p>
         <div class="hero-meta">
           <span>201 prospects</span>
           <span>104 offensive topology dossiers</span>
@@ -50,11 +50,11 @@
         </div>
         <div class="guide-step">
           <span class="guide-num">2</span>
-          <div><strong>APEX Take</strong><span>Hold, review up/down, or get more evidence.</span></div>
+          <div><strong>APEX View</strong><span>Aligned, possible upside, or market caution.</span></div>
         </div>
         <div class="guide-step">
           <span class="guide-num">3</span>
-          <div><strong>Confidence</strong><span>How fragile the projection is — not whether the player is good.</span></div>
+          <div><strong>2026 Snapshot</strong><span>Real season totals, with clear limits on what they measure.</span></div>
         </div>
       </div>
     </div>
@@ -71,8 +71,8 @@
       <div class="war-room-head">
         <div>
           <div class="eyebrow">APEX War Room</div>
-          <h2 id="warRoomTitle">Who deserves your attention right now?</h2>
-          <p>Four fast views of the same 2027 board — no new ranking, just the highest-value decisions and questions.</p>
+          <h2 id="warRoomTitle">Four stories shaping the 2027 board</h2>
+          <p>Possible risers, market disagreements, uncertainty, and actual 2026 production — open any player to learn why.</p>
         </div>
       </div>
       <div class="war-room-grid" id="warRoomGrid"></div>
@@ -82,7 +82,7 @@
       <div class="compare-copy">
         <div class="eyebrow">Head-to-head</div>
         <h2 id="compareTitle">Compare two prospects</h2>
-        <p>See market rank, APEX take, confidence, uncertainty, and the next scouting question side-by-side.</p>
+        <p>See each player’s 2026 numbers, APEX market view, and assessment limits side-by-side.</p>
       </div>
       <div class="compare-controls">
         <label><span>Prospect 1</span><select id="compareA" aria-label="First prospect"></select></label>
@@ -101,9 +101,9 @@
         <span class="control-label">Show</span>
         <select id="attentionSelect" aria-label="Attention filter">
           <option value="all">All prospects</option>
-          <option value="attention">Frozen scouting watch</option>
-          <option value="evidence_review">New source under review</option>
-          <option value="evidence_missing">Needs history or film</option>
+          <option value="attention">Notable APEX signals</option>
+          <option value="season">2026 production available</option>
+          <option value="limited">Limited 2026 public stats</option>
           <option value="red">RED confidence only</option>
           <option value="topology">Topology covered</option>
         </select>
@@ -120,7 +120,7 @@
       <div class="board-headline">
         <div>
           <h2>2027 Board</h2>
-          <p>Rank and underlying APEX take are frozen. The evidence column separately shows newer research received after the snapshot.</p>
+          <p>2027 market order with APEX’s frozen view and 2026 college production. Season numbers are observations, not new NFL success projections.</p>
         </div>
         <button class="text-button" id="plainEnglishButton" type="button">What do these labels mean?</button>
       </div>
@@ -132,15 +132,14 @@
               <th class="sortable" data-sort="n"><span class="th-label">Player <button class="column-help" data-help="player" type="button" aria-label="What does Player mean?" title="What does Player mean?">ⓘ</button></span></th>
               <th class="sortable" data-sort="a"><span class="th-label">APEX Take <button class="column-help" data-help="take" type="button" aria-label="What does APEX Take mean?" title="What does APEX Take mean?">ⓘ</button></span></th>
               <th class="sortable" data-sort="ta"><span class="th-label">Confidence <button class="column-help" data-help="confidence" type="button" aria-label="What does Confidence mean?" title="What does Confidence mean?">ⓘ</button></span></th>
-              <th><span class="th-label">2026 Evidence <button class="column-help" data-help="evidence" type="button" aria-label="What does 2026 Evidence mean?" title="What does 2026 Evidence mean?">ⓘ</button></span></th>
-              <th><span class="th-label">Why it matters <button class="column-help" data-help="why" type="button" aria-label="What does Why it matters mean?" title="What does Why it matters mean?">ⓘ</button></span></th>
-              <th class="num sortable" data-sort="cr"><span class="th-label">Scout priority <button class="column-help" data-help="priority" type="button" aria-label="What does Scout priority mean?" title="What does Scout priority mean?">ⓘ</button></span></th>
+              <th><span class="th-label">2026 Snapshot <button class="column-help" data-help="evidence" type="button" aria-label="What does 2026 Snapshot mean?" title="What does 2026 Snapshot mean?">ⓘ</button></span></th>
+              <th><span class="th-label">APEX Summary <button class="column-help" data-help="why" type="button" aria-label="What does APEX Summary mean?" title="What does APEX Summary mean?">ⓘ</button></span></th>
             </tr>
           </thead>
           <tbody id="boardBody"></tbody>
         </table>
       </div>
-      <p class="table-hint">Tap a player for the full APEX dossier: evidence tension, uncertainty, role sensitivity, and the next question that matters.</p>
+      <p class="table-hint">Select a player for actual season statistics, APEX’s market view, and an explanation of what the available data can and cannot establish.</p>
     </div>
   </section>
 
@@ -457,10 +456,10 @@
       <button class="modal-close" data-close-sheet aria-label="Close">×</button>
     </div>
     <div class="plain-list">
-      <div><strong>Market looks reasonable</strong><span>No current evidence is strong enough to justify special review.</span></div>
-      <div><strong>Review up ↑</strong><span>Current evidence is stronger than the market prior and deserves a closer look.</span></div>
-      <div><strong>Review down ↓</strong><span>Current evidence is weaker than the market prior. It is a review trigger, not a bust prediction.</span></div>
-      <div><strong>Need more evidence</strong><span>The decision matters, but APEX does not have enough trustworthy information yet.</span></div>
+      <div><strong>In line with consensus</strong><span>APEX sees no compelling current reason to depart from the market view.</span></div>
+      <div><strong>Possible upside</strong><span>APEX flags a positive difference from consensus, not a proven star.</span></div>
+      <div><strong>Market caution</strong><span>APEX is more cautious than consensus. It is not a bust prediction.</span></div>
+      <div><strong>2026 grade unavailable</strong><span>Box scores, injury or incomplete data do not support an individual verdict. Missing is not poor performance.</span></div>
       <div><strong>Sleeper watch</strong><span>Positive evidence is appearing outside the premium part of the market board.</span></div>
     </div>
   </div>
@@ -501,7 +500,8 @@
 <script src="data2027.js?v=20261007-data7"></script>
 <script src="data2026.js?v=20261007-data7"></script>
 <script src="pffqb2026.js?v=20261007-pff5"></script>
-<script src="app.js?v=20261008-fan1"></script>
-<script src="decision-lab.js?v=20261008-fan1"></script>
+<script src="scouting-stories.js?v=20261008-board1"></script>
+<script src="app.js?v=20261008-board1"></script>
+<script src="decision-lab.js?v=20261008-board1"></script>
 </body>
 </html>
