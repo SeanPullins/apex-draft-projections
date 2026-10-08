@@ -2,6 +2,8 @@
 (function(){
   "use strict";
   const LIVE=(window.APEX2026 && window.APEX2026.players)||{};
+  const RESEARCH=(window.APEX2027Context && window.APEX2027Context.rows)||{};
+  const context=p=>RESEARCH[p.r]||null;
   const OFF=["OUT_INJURY_2026","LIMITED_INJURY_2026","SITTING_OUT_2026","ELIGIBILITY_NO_2026_GAMES"];
   const has=x=>typeof x==="number"&&Number.isFinite(x);
   const num=x=>Number(x).toLocaleString("en-US",{maximumFractionDigits:1});
@@ -31,7 +33,7 @@
         l.status==="SITTING_OUT_2026"?"Not playing in 2026":"No 2026 games";
       return {label:info,kind:"limited"};
     }
-    if(p.p==="OL")return {label:"Individual OL production isn't in public box scores",kind:"ol"};
+    if(p.p==="OL")return {label:context(p)?"Role research available":"Individual OL grade unavailable",kind:"ol"};
     if(l.ds==="LIVE_2026_SCORED" && stats(p).length)return {label:"2026 college season",kind:"season"};
     return {label:"2026 individual sample limited",kind:"limited"};
   }
@@ -45,9 +47,11 @@
     SCOUT_MORE:"Evaluation still limited"
   };
   function take(p){
-    const l=LIVE[p.r];
+    const l=LIVE[p.r],c=context(p);
     if(p.a==="URGENT_DATA_GAP"||p.a==="DATA_GAP"||p.a==="SCOUT_MORE"){
+      if(c&&c.kind==="history")return c.verified?"Previous seasons confirmed":"Earlier seasons documented";
       if(l&&OFF.includes(l.status))return "Limited 2026 opportunity";
+      if(c&&c.kind==="role")return l?.muse_private_blocking_received?"Blocking research received":"College role documented";
       if(p.p==="OL")return "No public OL grade";
       return "No supported 2026 verdict";
     }
@@ -55,8 +59,13 @@
   }
   function factLine(p){
     const l=LIVE[p.r],s=stats(p),st=status(p);
-    if(st.kind==="limited")return st.label;
+    const c=context(p);
+    if(st.kind==="limited")return c&&c.kind==="history"?c.detail:st.label;
     if(st.kind==="ol"){
+      if(c&&c.kind==="role"){
+        if(c.verified)return c.detail+" · individual blocking grade not published";
+        return "Reported 2026 "+c.role+" · individual blocking grade not published";
+      }
       const measurements=[];
       if(l && l.rp && l.rp!=="OL")measurements.push("listed "+l.rp);
       if(l && has(l.h)){
@@ -95,8 +104,13 @@
       p.a==="HOLD_PRIOR"?
       "APEX currently has no strong reason to depart from consensus.":
       "The public season data cannot support a firm updated APEX conclusion.";
+    const c=context(p);
+    if(c && (p.a==="URGENT_DATA_GAP"||p.a==="DATA_GAP"||p.a==="SCOUT_MORE")){
+      return line+". "+(c.verified?"This public-school information is source-linked. ":"This role/history is from the supplied Muse research and has not been independently cross-checked. ")+
+        "The frozen model has no newly validated NFL projection for this evidence.";
+    }
     if(st.kind==="limited")return line+". "+market;
-    if(st.kind==="ol")return "An OL's individual blocking cannot be evaluated from public team box scores. "+market;
+    if(st.kind==="ol")return line+". Individual blocking cannot be graded from team box scores. "+market;
     return line+". "+market;
   }
   function profile(p){
@@ -110,7 +124,10 @@
       note:LIVE[p.r]?.muse_private_blocking_received ?
         "A private blocking source was received but has not been independently reconciled; no public grade or forecast was updated.":
         "The 2027 model snapshot has not been updated from this editorial summary.",
-      stable:p.ta||null
+      stable:p.ta||null,
+      research:context(p),
+      sourceUrl:context(p)?.url||null,
+      contextVerified:context(p)?.verified||false
     };
   }
   window.APEX_STORIES={profile,stats,status,take,factLine,footballContext,interpretation};
