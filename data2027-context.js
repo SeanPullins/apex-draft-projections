@@ -35,7 +35,7 @@ window.APEX2027Context={
     "29": {
       "kind": "history",
       "role": "Injury absence",
-      "detail": "2026 inactive; earlier college seasons available in Muse report",
+      "detail": "2026 injury absence; earlier college seasons available in Muse report",
       "source": "muse_research",
       "verified": false
     },
@@ -311,7 +311,7 @@ window.APEX2027Context={
     "187": {
       "kind": "history",
       "role": "Injury absence",
-      "detail": "2026 inactive; earlier offensive-line history available in Muse report",
+      "detail": "2026 injury absence; earlier offensive-line history available in Muse report",
       "source": "muse_research",
       "verified": false
     },
