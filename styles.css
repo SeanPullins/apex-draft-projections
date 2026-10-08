@@ -69,3 +69,14 @@ select,input[type=search]{height:40px;border:1px solid var(--line);border-radius
 @media(max-width:460px){.tiles,.layer-grid,.validation-grid{grid-template-columns:1fr}.hero-meta{flex-direction:column;gap:5px}.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.tabs .tab:nth-child(3){display:none}.tab[data-tab="team"]{display:block!important}}
 
 .pff-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}.pff-metrics>div{border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface-2)}.pff-metrics span{display:block;color:var(--muted);font-size:10px}.pff-metrics strong{display:block;font-size:15px;margin-top:2px}@media(max-width:700px){.pff-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 2027 player-first board: real season production is the primary supporting fact. */
+#boardTable .statline-cell{min-width:180px;max-width:260px;font-weight:750;font-size:12px;line-height:1.55;color:var(--ink)}
+#boardTable .why-cell{min-width:240px;max-width:350px;font-size:12px;line-height:1.55}
+.war-detail{font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+#boardTable .take{white-space:normal}
+@media(max-width:700px){
+  #boardTable .statline-cell{min-width:190px;font-size:12px}
+  #boardTable .why-cell{min-width:220px}
+  .war-detail{font-size:11px;line-height:1.4}
+}
