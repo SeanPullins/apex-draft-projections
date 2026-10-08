@@ -6,7 +6,7 @@ const vm=require("node:vm");
 const root=path.resolve(__dirname,"..");
 const context={window:{}};
 vm.createContext(context);
-for(const file of ["data2027.js","data2026.js","scouting-stories.js"]){
+for(const file of ["data2027.js","data2026.js","data2027-context.js","scouting-stories.js"]){
   vm.runInContext(fs.readFileSync(path.join(root,file),"utf8"),context,{filename:file});
 }
 const d=context.window.APEX2027.players;
@@ -19,7 +19,7 @@ assert(stats.profile(player(1)).fact.includes("823 receiving yards"),"Jeremiah S
 assert(stats.profile(player(5)).fact.includes("passing yards"),"Quarterbacks use passing totals");
 assert(stats.profile(player(3)).fact.includes("sacks"),"EDGE players use pass-rush stats");
 assert.equal(stats.profile(player(8)).kind,"ol");
-assert(stats.profile(player(8)).fact.includes("no public blocking grade"),"Public OL grades must not be invented");
+assert(stats.profile(player(8)).fact.includes("individual blocking grade not published"),"Public OL grades must not be invented");
 assert(stats.profile(player(8)).note.includes("not been independently reconciled"),"Private OL receipt remains unverified");
 assert.equal(stats.profile(player(29)).kind,"limited","Injured player cannot have fabricated current-season performance");
 assert(stats.profile(player(29)).fact.includes("injury"),"Reason for missing snaps is explicit");
