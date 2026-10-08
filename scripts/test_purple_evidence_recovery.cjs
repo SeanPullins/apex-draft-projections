@@ -16,7 +16,11 @@ assert.equal(purple.length,44,"Original count of purple records must remain froz
 assert.equal(Object.keys(C.rows).length,44,"Every old purple record should have an evidence record");
 assert(purple.every(p=>C.rows[p.r]),"Source records cannot silently skip a purple player");
 assert.equal(purple.filter(p=>p.p==="OL"&&L.players[p.r]?.muse_private_blocking_received).length,35);
-assert.equal(Object.values(C.rows).filter(r=>r.verified===true).length,7);
+assert.equal(Object.values(C.rows).filter(r=>r.verified===true).length,44,"All 44 public facts are now independently corroborated");
+assert.equal(Object.values(C.rows).filter(r=>r.source==="official").length,38);
+assert.equal(Object.values(C.rows).filter(r=>r.source==="press").length,6);
+assert(Object.values(C.rows).every(r=>r.model_ready===false),"Dated player history is not a model-validated grade");
+assert(Object.values(C.rows).every(r=>r.source_checked_at==="2026-10-08"));
 assert.equal(C.rows[134].source,"official");
 assert.equal(C.rows[144].source,"official");
 assert.equal(C.rows[147].source,"official");
@@ -33,11 +37,21 @@ for(const p of purple) {
   }
   if(r.verified){
     assert(r.url&&r.url.startsWith("https://"),"Only source-linked facts may be called independently checked");
+    assert(["official","press"].includes(r.source));
+    assert(r.verified_scope&&r.verified_scope.length,"Every checked fact must have its dated evidence scope");
   } else {
     assert(!r.verified,"Unreviewed Muse research cannot be labeled independently checked");
   }
 }
-assert(S.profile(purple.find(p=>p.r===8)).take.includes("research received"));
+assert(S.profile(purple.find(p=>p.r===8)).take.includes("corroborated"));
+assert(S.profile(purple.find(p=>p.r===30)).fact.includes("five games at left tackle"));
+assert(S.profile(purple.find(p=>p.r===46)).fact.includes("four games at right tackle"));
+assert(S.profile(purple.find(p=>p.r===98)).fact.includes("2025") && S.profile(purple.find(p=>p.r===98)).fact.includes("left guard"));
+assert(!S.profile(purple.find(p=>p.r===98)).fact.includes("2026 left tackle"));
+assert(S.profile(purple.find(p=>p.r===61)).fact.includes("two-game restriction"));
+assert(!S.profile(purple.find(p=>p.r===61)).status.includes("Not playing in 2026"));
+assert(S.profile(purple.find(p=>p.r===169)).fact.includes("two games at left tackle"));
+assert(S.profile(purple.find(p=>p.r===187)).status.includes("2026 availability requires verification"));
 assert(S.profile(purple.find(p=>p.r===134)).fact.includes("2025: 13 starts"));
 assert(S.profile(purple.find(p=>p.r===144)).fact.includes("five interceptions"));
 assert(S.profile(purple.find(p=>p.r===186)).fact.includes("27 games"));
@@ -56,8 +70,8 @@ try{
  assert.equal(w.document.querySelectorAll("#boardBody tr").length,201);
  const marked=[...w.document.querySelectorAll("#boardBody tr")].filter(tr=>tr.querySelector(".take-data"));
  assert.equal(marked.length,0,"No old work-queue purple badges remain once sourced context is on file");
- assert(w.document.querySelector('#boardBody tr[data-rank="8"]').textContent.includes("research received"));
+ assert(w.document.querySelector('#boardBody tr[data-rank="8"]').textContent.includes("corroborated"));
  assert(w.document.querySelector('#boardBody tr[data-rank="134"]').textContent.includes("2025: 13 starts"));
  assert(!w.document.querySelector("#boardBody").textContent.includes("PFF pass-block grade"),"Do not leak restricted numeric columns");
- console.log("PASS: all 44 purple records audited, 35 OL receipts preserved, 7 school-linked profiles, no private metrics, no false green grades");
+ console.log("PASS: all 44 legacy purple records have scoped public-source corroboration (38 school / 6 press), 35 OL receipts preserved, zero model-ready grades");
 }finally{dom.window.close();}
