@@ -18,6 +18,8 @@ const {JSDOM} = require('jsdom');
   }
 
   assert(w.APEX2027,'2027 payload must load');
+  assert(w.APEX_PFF_QB_2026,'PFF QB workbook data must load');
+  assert.equal(w.APEX_PFF_QB_2026.rows.length,16);
   assert(w.APEX2026,'2026 live-detail payload must load');
   assert.equal(Object.keys(w.APEX2026.players).length,201);
   assert.equal(w.APEX2026.coverage.identified,199);
@@ -137,6 +139,8 @@ const {JSDOM} = require('jsdom');
   assert.equal(d.querySelector('#modalBackdrop').hidden,false);
   assert(d.querySelector('#modal').textContent.includes('What would change our mind?'));
   assert(d.querySelector('#modal').textContent.includes('Topology freshness'));
+  assert(d.querySelector('#modal').textContent.includes('PFF QB charting'));
+  assert(d.querySelector('#modal').textContent.includes('Turnover-worthy play rate'));
   assert(d.querySelector('#modal').textContent.includes('2026 season'));
   assert(d.querySelector('#modal').textContent.includes('664'));
   assert(d.querySelector('#modal').textContent.includes('Pass yds'));
