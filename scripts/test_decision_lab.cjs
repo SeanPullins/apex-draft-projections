@@ -22,8 +22,8 @@ try{
   assert(lab,"public Decision Lab module must initialize");
   assert.equal(d.querySelector(".tab-panel.is-active").id,"tab-lab","Direct link must work");
   assert.equal(d.querySelectorAll(".tab").length,5,"Lab is a first-class section");
-  assert.equal(d.querySelector("#labPosition option").length,11);
-  assert.equal(d.querySelector("#labPlayer option").length,201);
+  assert.equal(d.querySelectorAll("#labPosition option").length,11);
+  assert.equal(d.querySelectorAll("#labPlayer option").length,201);
   assert(d.querySelector("#labQueue .lab-case"),"Lab should show real player assignments");
   const sources=d.querySelectorAll(".lab-source");
   assert(sources.length>0);
