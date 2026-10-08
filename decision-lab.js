@@ -109,6 +109,23 @@
     return board.players.filter(p => FOCI[UI.focus].accept(p) &&
       (UI.position==="ALL"||p.p===UI.position)).sort(compareKey);
   }
+  function planAssignments(candidates, capacity) {
+    // Real research teams need positional breadth. No invented ROI or talent scores.
+    if (UI.position !== "ALL") return candidates.slice(0,capacity);
+    const picked=[], counts=new Map(), maxPerRole=Math.max(1,Math.ceil(capacity/3));
+    for(const p of candidates) {
+      if((counts.get(p.p)||0)>=maxPerRole) continue;
+      picked.push(p);counts.set(p.p,(counts.get(p.p)||0)+1);
+      if(picked.length===capacity) return picked;
+    }
+    // If the entire mission only has one or two eligible roles, fill remaining slots.
+    for(const p of candidates) {
+      if(picked.some(x=>x.r===p.r))continue;
+      picked.push(p);
+      if(picked.length===capacity) break;
+    }
+    return picked;
+  }
   function status(p) {
     return p.ta ? p.ta+" (forecast stability)" : "Not covered (forecast stability)";
   }
@@ -116,8 +133,7 @@
     const m=evidence(p);
     const selected=UI.selected.has(p.r);
     const label=selected?"Remove from scouting desk":"Add to scouting desk";
-    const flag = m.kind==="review"?"Needs verification":m.kind==="history"?"History-only review":
-      m.kind==="missing"?"Missing football evidence":"2026 information available";
+    const flag = m.label;
     return '<article class="lab-case" data-lab-rank="'+p.r+'">'+
       '<div class="lab-case-top"><span class="lab-rank">Market #'+p.r+'</span><span class="lab-source lab-source-'+esc(m.kind)+'">'+esc(flag)+'</span></div>'+
       '<h3>'+esc(p.n)+'</h3><p class="lab-case-school">'+esc(p.p)+' · '+esc(p.s)+'</p>'+
@@ -223,7 +239,7 @@
   get("labCapacity").addEventListener("change",e=>{UI.count=+e.target.value;renderQueue();});
   get("labBuild").addEventListener("click",()=>{
     // Rebuild deliberately, so the selected research question determines the desk.
-    UI.selected=new Set(pool().slice(0,UI.count).map(p=>p.r));
+    UI.selected=new Set(planAssignments(pool(),UI.count).map(p=>p.r));
     save();renderQueue();
     get("labPlan").scrollIntoView?.({behavior:"smooth",block:"nearest"});
   });
