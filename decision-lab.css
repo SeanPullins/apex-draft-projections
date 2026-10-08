@@ -121,3 +121,7 @@
   .fan-controls{grid-template-columns:1fr}
   .fan-card .lab-case-actions button{flex:1}
 }
+
+.fan-card-fact{display:block;padding:10px 12px;background:color-mix(in srgb,var(--blue) 5%,var(--surface));border:1px solid var(--line);border-radius:9px;color:var(--ink);font-size:13px;line-height:1.5;font-weight:800;font-variant-numeric:tabular-nums}
+.fan-card .lab-source{max-width:100%;white-space:normal}
+.fan-card .lab-docket p{font-size:12.5px;line-height:1.6}
