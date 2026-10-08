@@ -18,3 +18,5 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm test
+      - name: Validate Muse evidence intake unit tests
+        run: python3 -m unittest discover -s tests -p 'test_validate_muse_evidence.py' -v
