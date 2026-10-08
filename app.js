@@ -734,7 +734,7 @@
     const row=dataset.rows.find(x=>x[0]===p.r);
     if(!row) return '<section class="dossier-section"><div class="section-kicker">2026 QB evidence</div><h3>No QB charting comparison</h3><p>This prospect has no matching row in the October 2026 16-player sample. Missing data is not a negative evaluation.</p></section>';
     const games=row[1];
-    const items=dataset.columns.slice(2).map((name,i)=>[name,row[i+2]+"th percentile"]);
+    const items=dataset.columns.slice(2).map((name,i)=>[name,"P"+row[i+2]]);
     return '<section class="dossier-section"><div class="section-kicker">2026 quarterback evidence</div><h3>Relative QB charting · '+games+' games</h3>'+
       '<div class="pff-metrics">'+items.map(([k,v])=>'<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>').join('')+'</div>'+
       '<p class="fine">Percentiles compare only the 16 QBs in the supplied October 2026 workbook, with direction adjusted so higher is better. They are <strong>not</strong> national percentiles, success probabilities, or adjustments to APEX forecasts. Exact licensed charting values are kept out of the public site.</p></section>';
