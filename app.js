@@ -227,10 +227,12 @@
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
   const initial = (location.hash || "#board").slice(1);
-  if (["board","team","how","validation"].includes(initial)) setTab(initial);
+  if (["board","team","lab","how","validation"].includes(initial)) setTab(initial);
 
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
+  const labLauncher = $("#openDecisionLab");
+  if (labLauncher) labLauncher.addEventListener("click", () => setTab("lab"));
 
   /* position filters */
   const positions = ["ALL", ...Array.from(new Set(D.players.map(p => p.p))).sort()];
@@ -840,6 +842,12 @@
   $("#plainEnglishButton").addEventListener("click", () => { sheet.hidden=false; document.body.classList.add("modal-open"); });
   function closeSheet(){ sheet.hidden=true; if(backdrop.hidden) document.body.classList.remove("modal-open"); }
   sheet.addEventListener("click", e => { if(e.target===sheet || e.target.closest("[data-close-sheet]")) closeSheet(); });
+
+  window.addEventListener("apex:open-dossier", event => {
+    const rank=Number(event && event.detail && event.detail.rank);
+    const prospect=D.players.find(p=>p.r===rank);
+    if (prospect) openModal(prospect);
+  });
 
   renderWarRoom();
   populateCompare();
