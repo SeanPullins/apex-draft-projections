@@ -56,7 +56,17 @@
   function factLine(p){
     const l=LIVE[p.r],s=stats(p),st=status(p);
     if(st.kind==="limited")return st.label;
-    if(st.kind==="ol")return "Offensive line · public box scores don't grade blocking";
+    if(st.kind==="ol"){
+      const measurements=[];
+      if(l && l.rp && l.rp!=="OL")measurements.push("listed "+l.rp);
+      if(l && has(l.h)){
+        const total=Math.round(l.h);
+        measurements.push(Math.floor(total/12)+"′"+(total%12)+"″");
+      }
+      if(l && has(l.w))measurements.push(num(l.w)+" lb");
+      return measurements.length ? "2026 roster: "+measurements.join(" · ")+" · no public blocking grade" :
+        "Offensive line · public box scores don't grade blocking";
+    }
     if(!s.length)return "2026 stats not yet usable for this position";
     const gp=has(l.gp)?" ("+num(l.gp)+" game"+(l.gp===1?"":"s")+")":"";
     return s.slice(0,p.p==="RB"?3:2).map(v=>num(v.value)+" "+v.label).join(" · ")+gp;
