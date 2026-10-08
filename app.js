@@ -31,41 +31,12 @@
   };
 
   const COLUMN_HELP = {
-    rank: {
-      title: "Rank",
-      body: "The current consensus 2027 draft-board rank. This is the market starting point, not an APEX-generated talent rank.",
-      note: "APEX keeps the market visible so users can see when evidence agrees, disagrees, or is still incomplete."
-    },
-    player: {
-      title: "Player",
-      body: "The prospect's name, position, and school.",
-      note: "Tap any player row to open the full APEX dossier."
-    },
-    take: {
-      title: "APEX Take",
-      body: "The action APEX recommends taking with the current market opinion: hold it, review the player up or down, gather more evidence, or watch for a sleeper.",
-      note: "The underlying APEX decision is frozen as of October 7. For a former gap, the UI can display a newer source-received state without claiming the forecast was recalculated."
-    },
-    evidence: {
-      title: "2026 Evidence",
-      body: "What research is actually on hand today: position-relevant box-score statistics, a newly received licensed source awaiting validation, historical-only evidence because 2026 is unavailable, or an unresolved scouting gap.",
-      note: "Evidence status and GREEN/AMBER/RED forecast stability are different. Source received is NOT model-validated, and existing APEX forecasts stay frozen."
-    },
-    confidence: {
-      title: "Confidence",
-      body: "How stable or fragile the projection looks based on validated Translation Topology uncertainty signals.",
-      note: "GREEN, AMBER, and RED describe projection confidence — not player quality. RED means learn more before being confident."
-    },
-    why: {
-      title: "Why it matters",
-      body: "A one-line explanation of why APEX is holding the market view, questioning it, or asking for more evidence.",
-      note: "The full dossier shows the underlying evidence tension and the next question that could change the decision."
-    },
-    priority: {
-      title: "Scout priority",
-      body: "Where the player ranks in APEX's scouting and research work queue — who deserves more investigation first.",
-      note: "Scout Priority #1 does not mean APEX's #1 player. High draft stakes, uncertainty, disagreement, or missing evidence can all raise scouting priority."
-    }
+    rank:{title:"Market rank",body:"The current 2027 consensus order. This is not an APEX talent rank.",note:"It is kept separate from the APEX research signal."},
+    player:{title:"Player",body:"Name, college and listed position.",note:"Select any row for the full player dossier."},
+    take:{title:"APEX View",body:"The frozen October 7 research assessment: aligned with consensus, a possible upside signal, market caution, or no supported current-season grade.",note:"No action label is a forecast that a player will succeed or fail."},
+    evidence:{title:"2026 Snapshot",body:"Recorded individual season production for that position and the number of available games. Offensive-line box scores do not provide individual grades.",note:"Totals are not an opponent-adjusted NFL forecast. Privately received sources are not presented as independently verified."},
+    confidence:{title:"Stability",body:"GREEN/AMBER/RED is the older APEX offensive context stability view, not scouting talent quality.",note:"A dash means a defensive or other unmodeled topology profile; it does not mean RED."},
+    why:{title:"APEX Summary",body:"A brief explanation of how the frozen APEX market comparison relates to the player's observed production.",note:"This editorial layer does not change the underlying model, ranks or confidence scores."}
   };
 
   const NFL_TEAMS = [
