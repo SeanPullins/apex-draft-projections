@@ -3,6 +3,9 @@
   "use strict";
   const D = window.APEX2027;
   const L26 = window.APEX2026 || {coverage:{},players:{}};
+  const Stories=window.APEX_STORIES;
+  if (!Stories) throw new Error("APEX 2027 stories must load before app");
+  const story=p=>Stories.profile(p);
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
   const state = { tab: "board", pos: "ALL", attention: "all", q: "", sort: "r", dir: 1 };
@@ -18,12 +21,12 @@
   const live2026 = p => (L26.players && L26.players[p.r]) || null;
 
   const TAKE = {
-    HOLD_PRIOR: ["Market looks reasonable", "take-hold"],
-    EXECUTIVE_REVIEW_UP: ["Review up ↑", "take-up"],
-    EXECUTIVE_REVIEW_DOWN: ["Review down ↓", "take-down"],
-    URGENT_DATA_GAP: ["Need more evidence", "take-data"],
-    DATA_GAP: ["Need more evidence", "take-data"],
-    SCOUT_MORE: ["Scout more", "take-data"],
+    HOLD_PRIOR: ["In line with consensus", "take-hold"],
+    EXECUTIVE_REVIEW_UP: ["Possible upside", "take-up"],
+    EXECUTIVE_REVIEW_DOWN: ["Market caution", "take-down"],
+    URGENT_DATA_GAP: ["2026 grade unavailable", "take-data"],
+    DATA_GAP: ["2026 grade unavailable", "take-data"],
+    SCOUT_MORE: ["Limited assessment", "take-data"],
     SLEEPER_DISCOVERY: ["Sleeper watch", "take-up"]
   };
 
@@ -89,52 +92,27 @@
     return !!l && ["OUT_INJURY_2026","LIMITED_INJURY_2026","SITTING_OUT_2026","ELIGIBILITY_NO_2026_GAMES"].includes(l.status);
   }
 
-  // Fresh research state is separate from the frozen October 7 forecast.
+  // Main-board editorial uses dated facts; reconciliation stays in dossier details.
   function evidenceMeta(p) {
-    const l=live2026(p);
-    if (!l) return ["Identity check","status-amber","identity"];
-    if (l.muse_private_blocking_received) return ["Source received","status-amber","review"];
-    if (isNo2026Opportunity(p) && l.ds==="LIVE_2026_SCORED") return ["Short sample · injury","status-amber","limited"];
-    if (isNo2026Opportunity(p)) return ["2026 unavailable","status-na","history"];
-    if (l.ds==="LIVE_2026_SCORED") return ["2026 stats","status-green","scored"];
-    if (l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE") return ["Film needed","status-red","missing"];
-    return ["More scouting","status-amber","missing"];
+    const prof=story(p);
+    if(prof.kind==="season")return ["2026 sample","status-green","scored"];
+    if(prof.kind==="ol")return ["OL role","status-na","ol"];
+    return [prof.status,"status-na","limited"];
   }
-
   function takeMeta(action,p) {
-    if (p && p.a && p.a.includes("DATA_GAP") && live2026(p)?.muse_private_blocking_received)
-      return ["New evidence · review","take-data"];
-    if (p && ["DATA_GAP","URGENT_DATA_GAP","SCOUT_MORE"].includes(action) && isNo2026Opportunity(p))
-      return ["Historical review","take-data"];
-    return TAKE[action] || ["Monitor","take-hold"];
+    const classes={EXECUTIVE_REVIEW_UP:"take-up",SLEEPER_DISCOVERY:"take-up",
+      EXECUTIVE_REVIEW_DOWN:"take-down",HOLD_PRIOR:"take-hold"};
+    return [p?story(p).take:(TAKE[action]?.[0]||"Current view"),classes[action]||"take-data"];
   }
-
   function confidenceMeta(p) {
-    if (!p.ta) return ["Not covered", "status-na"];
-    return [p.ta, "status-" + p.ta.toLowerCase()];
+    if (!p.ta) return ["—","status-na"];
+    return [p.ta,"status-"+p.ta.toLowerCase()];
   }
-
   function shortWhy(p) {
-    if (live2026(p)?.muse_private_blocking_received)
-      return "New 2026 blocking records received; validation pending. The frozen snapshot still flags the earlier gap.";
-    if (["DATA_GAP","URGENT_DATA_GAP","SCOUT_MORE"].includes(p.a) && isNo2026Opportunity(p))
-      return "Limited or no 2026 opportunity; use prior seasons and verified availability instead of treating missing games as bad play.";
-    if (p.a === "EXECUTIVE_REVIEW_UP") return "Current evidence is stronger than the market prior.";
-    if (p.a === "EXECUTIVE_REVIEW_DOWN") return "Current evidence is weaker than the market prior — review, not a bust call.";
-    if (p.a === "URGENT_DATA_GAP" || p.a === "DATA_GAP" || p.a === "SCOUT_MORE")
-      return "The decision matters, but trustworthy evidence is incomplete.";
-    if (p.a === "SLEEPER_DISCOVERY") return "Positive evidence is surfacing outside the premium board.";
-    if (p.ta === "RED") return "The market looks reasonable, but the projection has multiple uncertainty flags.";
-    if (p.ta === "AMBER") return "The market looks reasonable, with one elevated uncertainty signal.";
-    return "No strong evidence currently justifies moving off the market.";
+    return story(p).interpretation;
   }
-
   function nextQuestion(p) {
-    if (live2026(p)?.muse_private_blocking_received)
-      return "Validate the supplied licensed blocking export against season, position, snaps and opponent context. Retest the frozen data-gap assessment prospectively; do not silently overwrite it.";
-    if (isNo2026Opportunity(p))
-      return "Use earlier-season graded film and workload, verify return/eligibility status and record 2026 nonparticipation separately. Never treat missed games as a zero performance grade.";
-    return p.tq || p.q || "Continue normal monitoring; no special evidence request is justified yet.";
+    return story(p).context;
   }
 
   function uncertaintyScore(p) {
@@ -160,26 +138,24 @@
   }
 
   function renderWarRoom() {
-    const byRank = (a,b) => a.r-b.r;
-    const reviewUp = D.players.filter(p => p.a === "EXECUTIVE_REVIEW_UP")
-      .sort((a,b) => (b.uq ?? b.ee ?? -99) - (a.uq ?? a.ee ?? -99) || byRank(a,b)).slice(0,3);
-    const reviewDown = D.players.filter(p => p.a === "EXECUTIVE_REVIEW_DOWN")
-      .sort((a,b) => (a.uq ?? a.ee ?? 99) - (b.uq ?? b.ee ?? 99) || byRank(a,b)).slice(0,3);
-    const uncertainty = D.players.filter(p => p.ta === "RED" || p.ta === "AMBER")
-      .sort((a,b) => uncertaintyScore(b)-uncertaintyScore(a) || byRank(a,b)).slice(0,3);
-    const scoutFirst = D.players.filter(p => Number.isFinite(p.cr))
-      .sort((a,b) => a.cr-b.cr || byRank(a,b)).slice(0,3);
-
-    $("#warRoomGrid").innerHTML =
-      warCard("Review up", "Where current evidence most deserves a closer look above the market prior.", reviewUp,
-        p => p.ee == null ? "Positive evidence tension" : "Evidence edge "+one(p.ee), "up") +
-      warCard("Review down", "Where evidence is weaker than the market prior — review trigger, not a bust call.", reviewDown,
-        p => p.ee == null ? "Negative evidence tension" : "Evidence edge "+one(p.ee), "down") +
-      warCard("Biggest uncertainty", "Prospects where projection confidence deserves the most caution.", uncertainty,
-        p => p.ctx ? "Question: "+humanContext(p.ctx) : "Multiple uncertainty signals", "uncertain") +
-      warCard("Scout first", "Highest-value work queue right now — not a talent ranking.", scoutFirst,
-        p => p.cr ? "Scout priority #"+p.cr : "High-value follow-up", "scout");
-
+    const byRank=(a,b)=>a.r-b.r;
+    const positive=D.players.filter(p=>["EXECUTIVE_REVIEW_UP","SLEEPER_DISCOVERY"].includes(p.a))
+      .sort((a,b)=>(b.uq??b.ee??0)-(a.uq??a.ee??0)||byRank(a,b)).slice(0,3);
+    const caution=D.players.filter(p=>p.a==="EXECUTIVE_REVIEW_DOWN")
+      .sort((a,b)=>(a.uq??a.ee??0)-(b.uq??b.ee??0)||byRank(a,b)).slice(0,3);
+    const volatile=D.players.filter(p=>p.ta==="RED").sort(byRank).slice(0,3);
+    const season=D.players.filter(p=>story(p).kind==="season"&&p.r<=64
+      &&!positive.some(x=>x.r===p.r)&&!caution.some(x=>x.r===p.r)&&!volatile.some(x=>x.r===p.r))
+      .sort(byRank).slice(0,3);
+    $("#warRoomGrid").innerHTML=
+      warCard("Possible risers", "APEX sees possible upside compared with consensus — not guaranteed sleepers.",positive,
+        p=>story(p).fact,"up")+
+      warCard("Market cautions", "Where APEX's current research is more cautious than the market.",caution,
+        p=>story(p).fact,"down")+
+      warCard("More uncertainty", "Important names with less-stable context assessments.",volatile,
+        p=>story(p).fact,"uncertain")+
+      warCard("2026 at a glance", "Real college production, with draft projections kept separate.",season,
+        p=>story(p).fact,"scout");
     document.querySelectorAll(".war-item").forEach(button => button.addEventListener("click", () => {
       const p = D.players.find(x => x.r === +button.dataset.rank);
       if (p) openModal(p);
