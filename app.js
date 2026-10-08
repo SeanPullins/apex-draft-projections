@@ -286,7 +286,7 @@
       tile("Prospects shown", rows.length, "of "+D.summary.board+" on the 2027 board")+
       tile("2026 production", stats, "with position-specific public stats")+
       tile("Possible upside", possible, "frozen APEX signals, not draft guarantees")+
-      tile("Offensive linemen", role, "box scores do not grade individual blocking");
+      tile("OL roster snapshots", role, "without individual blocking grades");
   }
   function tile(label,value,sub){
     return '<div class="tile"><div class="tile-label">'+esc(label)+'</div><div class="tile-value">'+esc(value)+'</div><div class="tile-sub">'+esc(sub)+'</div></div>';
