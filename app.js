@@ -819,9 +819,15 @@
         tech("Market tension",p.mt || "—") +
         tech("Priority driver",p.driver ? p.driver.replaceAll("_"," ") : "Existing front-office layer") +
         tech("Topology freshness",topo ? "through 2025" : "not covered") +
-      '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>';
+      '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>' +
+      '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">Investigate in Decision Lab →</button><span class="fine">Build a source-check mission, not an unverified new grade.</span></div>';
     backdrop.hidden = false;
     document.body.classList.add("modal-open");
+    $("#modalInvestigate",modal).addEventListener("click", () => {
+      closeModal();
+      setTab("lab");
+      window.dispatchEvent(new CustomEvent("apex:focus-lab-player",{detail:{rank:p.r}}));
+    });
     $(".modal-close",modal).focus();
   }
   function tech(k,v){ return '<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>'; }
