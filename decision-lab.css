@@ -82,3 +82,7 @@
   .tabs .tab[data-tab="how"]{display:none}
   .tabs .tab{font-size:10px;padding:9px 2px}
 }
+
+.dossier-lab-cta{display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin:15px 0 4px;padding:16px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}
+.dossier-lab-cta .primary-button{min-height:42px}
+@media(max-width:460px){.dossier-lab-cta .primary-button{width:100%}}
