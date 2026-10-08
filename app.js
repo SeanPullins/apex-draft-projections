@@ -94,6 +94,7 @@
     const l=live2026(p);
     if (!l) return ["Identity check","status-amber","identity"];
     if (l.muse_private_blocking_received) return ["Source received","status-amber","review"];
+    if (isNo2026Opportunity(p) && l.ds==="LIVE_2026_SCORED") return ["Short sample · injury","status-amber","limited"];
     if (isNo2026Opportunity(p)) return ["2026 unavailable","status-na","history"];
     if (l.ds==="LIVE_2026_SCORED") return ["2026 stats","status-green","scored"];
     if (l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE") return ["Film needed","status-red","missing"];
@@ -330,7 +331,7 @@
 
   function renderTiles(rows) {
     const states=rows.map(evidenceMeta);
-    const scored=states.filter(m => m[2]==="scored").length;
+    const scored=states.filter(m => ["scored","limited"].includes(m[2])).length;
     const received=states.filter(m => m[2]==="review").length;
     const other=states.filter(m => ["missing","history","identity"].includes(m[2])).length;
     $("#boardTiles").innerHTML =
