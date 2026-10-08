@@ -50,7 +50,7 @@ const {JSDOM} = require('jsdom');
   assert.equal(d.querySelector('#classSelect'),null,'historical class selector must stay hidden');
   assert.equal(d.querySelectorAll('#boardBody tr').length,201);
   assert(d.querySelector('#boardBody tr[data-rank="1"]').textContent.includes('823 receiving yards'),'Jeremiah Smith must have actual 2026 production on the board');
-  assert(d.querySelector('#boardBody tr[data-rank="8"]').textContent.includes('public box scores'),'OL must never get an invented blocking grade');
+  assert(d.querySelector('#boardBody tr[data-rank="8"]').textContent.includes('no public blocking grade'),'OL must never get an invented blocking grade');
   assert(d.querySelector('#boardBody tr[data-rank="187"]').textContent.includes('2026'),'Injury or nonparticipation must remain distinguishable');
   assert(!d.querySelector('#boardBody').textContent.includes('New evidence · review'),'Do not put internal intake status on fan-facing cards');
   assert.equal(d.querySelectorAll('#boardTable th').length,6,'Simplified board has six meaningful columns');
