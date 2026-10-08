@@ -246,8 +246,8 @@
     let rows = D.players.slice();
     if (state.pos !== "ALL") rows = rows.filter(p => p.p === state.pos);
     if (state.attention === "attention") rows = rows.filter(needsAttention);
-    if (state.attention === "evidence_review") rows = rows.filter(p => evidenceMeta(p)[2]==="review");
-    if (state.attention === "evidence_missing") rows = rows.filter(p => ["missing","history","identity"].includes(evidenceMeta(p)[2]));
+    if (state.attention === "season") rows = rows.filter(p => story(p).kind==="season");
+    if (state.attention === "limited") rows = rows.filter(p => story(p).kind!=="season");
     if (state.attention === "red") rows = rows.filter(p => p.ta === "RED");
     if (state.attention === "topology") rows = rows.filter(p => !!p.ta);
     if (state.q) rows = rows.filter(p =>
@@ -308,15 +308,14 @@
   });
 
   function renderTiles(rows) {
-    const states=rows.map(evidenceMeta);
-    const scored=states.filter(m => ["scored","limited"].includes(m[2])).length;
-    const received=states.filter(m => m[2]==="review").length;
-    const other=states.filter(m => ["missing","history","identity"].includes(m[2])).length;
+    const stats=rows.filter(p=>story(p).kind==="season").length;
+    const role=rows.filter(p=>story(p).kind==="ol").length;
+    const possible=rows.filter(p=>["EXECUTIVE_REVIEW_UP","SLEEPER_DISCOVERY"].includes(p.a)).length;
     $("#boardTiles").innerHTML =
-      tile("Prospects shown", rows.length, "of " + D.summary.board + " on the frozen 2027 board") +
-      tile("2026 stats available", scored, "position-relevant public season evidence") +
-      tile("New source received", received, "licensed OL data under private validation") +
-      tile("Scouting / history", other, "missing live data, injury or no 2026 opportunity");
+      tile("Prospects shown", rows.length, "of "+D.summary.board+" on the 2027 board")+
+      tile("2026 production", stats, "with position-specific public stats")+
+      tile("Possible upside", possible, "frozen APEX signals, not draft guarantees")+
+      tile("Offensive linemen", role, "box scores do not grade individual blocking");
   }
   function tile(label,value,sub){
     return '<div class="tile"><div class="tile-label">'+esc(label)+'</div><div class="tile-value">'+esc(value)+'</div><div class="tile-sub">'+esc(sub)+'</div></div>';
@@ -329,15 +328,14 @@
     body.innerHTML = rows.map(p => {
       const [take, takeClass] = takeMeta(p.a,p);
       const [conf, confClass] = confidenceMeta(p);
-      const [evidence,evidenceClass] = evidenceMeta(p);
+      const prof=story(p);
       return '<tr data-rank="'+p.r+'">' +
         '<td class="num rank-cell">#'+p.r+'</td>' +
         '<td><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">'+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
         '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
         '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
-        '<td><span class="status '+evidenceClass+'">'+esc(evidence)+'</span></td>' +
-        '<td class="why-cell">'+esc(shortWhy(p))+'</td>' +
-        '<td class="num">'+(p.cr ? "#"+p.cr : "—")+'</td>' +
+        '<td class="statline-cell">'+esc(prof.fact)+'</td>' +
+        '<td class="why-cell">'+esc(prof.interpretation.replace(prof.fact+". ",""))+'</td>' +
       '</tr>';
     }).join("");
     $$("tr", body).forEach(tr => tr.addEventListener("click", () => {
@@ -713,12 +711,12 @@
       '<div class="compare-prospect-head"><div class="compare-rank">#'+p.r+'</div><div><h3>'+esc(p.n)+'</h3><p>'+esc(p.p)+' · '+esc(p.s)+'</p></div></div>' +
       compareCell(p,"APEX Take",take,shortWhy(p)) +
       compareCell(p,"Confidence",conf,p.ta ? "Projection stability, not talent." : "Topology not covered.") +
-      compareCell(p,"Scout priority",p.cr ? "#"+p.cr : "—","Work queue, not talent rank.") +
+      compareCell(p,"2026 snapshot",story(p).fact,"Public season data where available; no new player grade.") +
       compareCell(p,"Evidence edge",p.ee==null ? "—" : one(p.ee),"Current evidence versus the market prior.") +
       compareCell(p,"Fragility",p.fg==null ? "—" : pct(p.fg),"Variation across demonstrated contexts.") +
       compareCell(p,"Information gap",p.ig==null ? "—" : pct(p.ig),"Missing or weakly supported context.") +
       compareCell(p,"Role sensitivity",p.rs==null ? "—" : pct(p.rs),"Change across paired roles/environments.") +
-      '<div class="compare-question"><span>What would change our mind?</span><strong>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</strong><p>'+esc(nextQuestion(p))+'</p></div>' +
+      '<div class="compare-question"><span>What the totals cannot tell you</span><strong>'+esc(p.p+" position context")+'</strong><p>'+esc(nextQuestion(p))+'</p></div>' +
     '</section>';
   }
 
@@ -762,7 +760,7 @@
   function openModal(p) {
     const [take,takeClass]=takeMeta(p.a,p);
     const [conf,confClass]=confidenceMeta(p);
-    const [evidence]=evidenceMeta(p);
+    const prof=story(p);
     const topo = !!p.ta;
     const question = nextQuestion(p);
     modal.innerHTML =
@@ -770,14 +768,14 @@
       '<div class="dossier-grid">' +
         metric("APEX Take",take,shortWhy(p),takeClass) +
         metric("Confidence",conf,topo ? "Projection stability, not talent." : "Topology coverage is not available for this prospect.",confClass) +
-        metric("2026 Evidence",evidence,"Research status, not forecast certainty.") +
-        metric("Scout priority",p.cr ? "#"+p.cr : "—","Where this player sits in the combined work queue.") +
+        metric("2026 snapshot",prof.fact,"Recorded production, not an NFL forecast.") +
+        metric("Data context",prof.kind==="season" ? "Season stats" : "Limited sample",prof.status) +
       '</div>' +
-      '<section class="dossier-section"><div class="section-kicker">The short version</div><h3>Why APEX is paying attention</h3><p>'+esc(shortWhy(p))+'</p><p class="fine">Frozen Oct. 7 take: '+esc(TAKE[p.a]?.[0] || "Monitor")+'. New evidence has not been scored against the forecast or used to change market rank.</p></section>' +
+      '<section class="dossier-section"><div class="section-kicker">The APEX view</div><h3>What the current research says</h3><p>'+esc(prof.interpretation)+'</p><p class="fine">Frozen Oct. 7 model action; this explanation does not recalculate a score or update market rank.</p></section>' +
       live2026Section(p) +
       pffQBSection(p) +
-      '<section class="dossier-section spotlight"><div class="section-kicker">What would change our mind?</div><h3>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</h3><p>'+esc(question)+'</p>' +
-        (p.ctx ? '<div class="swing-note">This is the context with the greatest estimated ability to change the topology under the frozen weak-vs-strong evidence test.</div>' : '') +
+      '<section class="dossier-section spotlight"><div class="section-kicker">Beyond the box score</div><h3>What these numbers cannot prove</h3><p>'+esc(question)+'</p>' +
+        '<div class="swing-note">Earlier APEX research explored position-specific play contexts, but an unverified short or quick-game prompt is not a unique player weakness.</div>' +
       '</section>' +
       (topo ?
         '<section class="dossier-section"><div class="section-kicker">Projection uncertainty</div><h3>Where the projection is fragile</h3>' +
@@ -793,9 +791,10 @@
         tech("Live evidence confidence",pct(p.ec)) +
         tech("Evidence edge",p.ee==null?"—":one(p.ee)) +
         tech("Market tension",p.mt || "—") +
-        tech("Priority driver",p.driver ? p.driver.replaceAll("_"," ") : "Existing front-office layer") +
+        tech("Priority driver",p.driver ? p.driver.replaceAll("_"," ") : "Existing research layer") +
+        tech("Legacy research focus",p.ctx ? humanContext(p.ctx) : "Not available") +
         tech("Topology freshness",topo ? "through 2025" : "not covered") +
-      '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>' +
+      '</div><p class="fine">'+esc(prof.note)+' Live 2026 evidence is a separate sensor. Translation Topology still uses college history through 2025.</p></details>' +
       '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">See the APEX player verdict →</button><span class="fine">Read the verdict and follow your favorite prospects. No new grade is created.</span></div>';
     backdrop.hidden = false;
     document.body.classList.add("modal-open");
