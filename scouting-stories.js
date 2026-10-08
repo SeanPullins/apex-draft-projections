@@ -28,6 +28,11 @@
     const l=LIVE[p.r];
     if(!l)return {label:"2026 snapshot unavailable",kind:"limited"};
     if(OFF.includes(l.status)){
+      const c=context(p);
+      if(c?.verified_scope==="partial_2026_availability")
+        return {label:"2026 participation still unresolved",kind:"limited"};
+      if(c?.verified_scope==="historical_availability")
+        return {label:"Historical injury documented; 2026 availability requires verification",kind:"limited"};
       const info=l.status==="OUT_INJURY_2026"?"2026 injury absence":
         l.status==="LIMITED_INJURY_2026"?"2026 injury-limited season":
         l.status==="SITTING_OUT_2026"?"Not playing in 2026":"No 2026 games";
@@ -51,7 +56,7 @@
     if(p.a==="URGENT_DATA_GAP"||p.a==="DATA_GAP"||p.a==="SCOUT_MORE"){
       if(c&&c.kind==="history")return c.verified?"Previous seasons confirmed":"Earlier seasons documented";
       if(l&&OFF.includes(l.status))return "Limited 2026 opportunity";
-      if(c&&c.kind==="role")return l?.muse_private_blocking_received?"Blocking research received":"College role documented";
+      if(c&&c.kind==="role")return c.verified?"College record corroborated":l?.muse_private_blocking_received?"Blocking research received":"College role documented";
       if(p.p==="OL")return "No public OL grade";
       return "No supported 2026 verdict";
     }
@@ -106,8 +111,10 @@
       "The public season data cannot support a firm updated APEX conclusion.";
     const c=context(p);
     if(c && (p.a==="URGENT_DATA_GAP"||p.a==="DATA_GAP"||p.a==="SCOUT_MORE")){
-      return line+". "+(c.verified?"This public-school information is source-linked. ":"This role/history is from the supplied Muse research and has not been independently cross-checked. ")+
-        "The frozen model has no newly validated NFL projection for this evidence.";
+      return line+". "+(c.verified?
+          (c.source==="official"?"The cited school source corroborates this specific fact. ":"Independent reporting supports this specific dated fact. "):
+          "This role/history is from Muse research and has not been independently cross-checked. ")+
+        "This does not verify 2026 performance grades or update the frozen NFL projection.";
     }
     if(st.kind==="limited")return line+". "+market;
     if(st.kind==="ol")return line+". Individual blocking cannot be graded from team box scores. "+market;
@@ -127,7 +134,9 @@
       stable:p.ta||null,
       research:context(p),
       sourceUrl:context(p)?.url||null,
-      contextVerified:context(p)?.verified||false
+      contextVerified:context(p)?.verified||false,
+      modelReady:context(p)?.model_ready===true,
+      verifiedScope:context(p)?.verified_scope||null
     };
   }
   window.APEX_STORIES={profile,stats,status,take,factLine,footballContext,interpretation};
