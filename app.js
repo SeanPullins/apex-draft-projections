@@ -820,7 +820,7 @@
         tech("Priority driver",p.driver ? p.driver.replaceAll("_"," ") : "Existing front-office layer") +
         tech("Topology freshness",topo ? "through 2025" : "not covered") +
       '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>' +
-      '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">See the APEX player verdict →</button><span class="fine">Build a source-check mission, not an unverified new grade.</span></div>';
+      '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">See the APEX player verdict →</button><span class="fine">Read the verdict and follow your favorite prospects. No new grade is created.</span></div>';
     backdrop.hidden = false;
     document.body.classList.add("modal-open");
     $("#modalInvestigate",modal).addEventListener("click", () => {
