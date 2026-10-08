@@ -41,7 +41,12 @@
     take: {
       title: "APEX Take",
       body: "The action APEX recommends taking with the current market opinion: hold it, review the player up or down, gather more evidence, or watch for a sleeper.",
-      note: "This is a decision label, not a second draft ranking."
+      note: "The underlying APEX decision is frozen as of October 7. For a former gap, the UI can display a newer source-received state without claiming the forecast was recalculated."
+    },
+    evidence: {
+      title: "2026 Evidence",
+      body: "What research is actually on hand today: position-relevant box-score statistics, a newly received licensed source awaiting validation, historical-only evidence because 2026 is unavailable, or an unresolved scouting gap.",
+      note: "Evidence status and GREEN/AMBER/RED forecast stability are different. Source received is NOT model-validated, and existing APEX forecasts stay frozen."
     },
     confidence: {
       title: "Confidence",
@@ -79,8 +84,28 @@
     needs: new Set()
   };
 
-  function takeMeta(action) {
-    return TAKE[action] || ["Monitor", "take-hold"];
+  function isNo2026Opportunity(p) {
+    const l=live2026(p);
+    return !!l && ["OUT_INJURY_2026","LIMITED_INJURY_2026","SITTING_OUT_2026","ELIGIBILITY_NO_2026_GAMES"].includes(l.status);
+  }
+
+  // Fresh research state is separate from the frozen October 7 forecast.
+  function evidenceMeta(p) {
+    const l=live2026(p);
+    if (!l) return ["Identity check","status-amber","identity"];
+    if (l.muse_private_blocking_received) return ["Source received","status-amber","review"];
+    if (isNo2026Opportunity(p)) return ["2026 unavailable","status-na","history"];
+    if (l.ds==="LIVE_2026_SCORED") return ["2026 stats","status-green","scored"];
+    if (l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE") return ["Film needed","status-red","missing"];
+    return ["More scouting","status-amber","missing"];
+  }
+
+  function takeMeta(action,p) {
+    if (p && p.a && p.a.includes("DATA_GAP") && live2026(p)?.muse_private_blocking_received)
+      return ["New evidence · review","take-data"];
+    if (p && ["DATA_GAP","URGENT_DATA_GAP","SCOUT_MORE"].includes(action) && isNo2026Opportunity(p))
+      return ["Historical review","take-data"];
+    return TAKE[action] || ["Monitor","take-hold"];
   }
 
   function confidenceMeta(p) {
@@ -89,6 +114,10 @@
   }
 
   function shortWhy(p) {
+    if (live2026(p)?.muse_private_blocking_received)
+      return "New 2026 blocking records received; validation pending. The frozen snapshot still flags the earlier gap.";
+    if (["DATA_GAP","URGENT_DATA_GAP","SCOUT_MORE"].includes(p.a) && isNo2026Opportunity(p))
+      return "Limited or no 2026 opportunity; use prior seasons and verified availability instead of treating missing games as bad play.";
     if (p.a === "EXECUTIVE_REVIEW_UP") return "Current evidence is stronger than the market prior.";
     if (p.a === "EXECUTIVE_REVIEW_DOWN") return "Current evidence is weaker than the market prior — review, not a bust call.";
     if (p.a === "URGENT_DATA_GAP" || p.a === "DATA_GAP" || p.a === "SCOUT_MORE")
@@ -100,6 +129,10 @@
   }
 
   function nextQuestion(p) {
+    if (live2026(p)?.muse_private_blocking_received)
+      return "Validate the supplied licensed blocking export against season, position, snaps and opponent context. Retest the frozen data-gap assessment prospectively; do not silently overwrite it.";
+    if (isNo2026Opportunity(p))
+      return "Use earlier-season graded film and workload, verify return/eligibility status and record 2026 nonparticipation separately. Never treat missed games as a zero performance grade.";
     return p.tq || p.q || "Continue normal monitoring; no special evidence request is justified yet.";
   }
 
@@ -109,7 +142,7 @@
   }
 
   function warItem(p, detail) {
-    const [take, takeClass] = takeMeta(p.a);
+    const [take, takeClass] = takeMeta(p.a,p);
     const [conf, confClass] = confidenceMeta(p);
     return '<button class="war-item" type="button" data-rank="'+p.r+'">' +
       '<span class="war-rank">#'+p.r+'</span>' +
@@ -234,6 +267,8 @@
     let rows = D.players.slice();
     if (state.pos !== "ALL") rows = rows.filter(p => p.p === state.pos);
     if (state.attention === "attention") rows = rows.filter(needsAttention);
+    if (state.attention === "evidence_review") rows = rows.filter(p => evidenceMeta(p)[2]==="review");
+    if (state.attention === "evidence_missing") rows = rows.filter(p => ["missing","history","identity"].includes(evidenceMeta(p)[2]));
     if (state.attention === "red") rows = rows.filter(p => p.ta === "RED");
     if (state.attention === "topology") rows = rows.filter(p => !!p.ta);
     if (state.q) rows = rows.filter(p =>
@@ -294,15 +329,15 @@
   });
 
   function renderTiles(rows) {
-    const covered = rows.filter(p => !!p.ta);
-    const red = covered.filter(p => p.ta === "RED").length;
-    const attention = rows.filter(needsAttention).length;
-    const topoDriven = rows.filter(p => p.driver === "TOPOLOGY_UNCERTAINTY").length;
+    const states=rows.map(evidenceMeta);
+    const scored=states.filter(m => m[2]==="scored").length;
+    const received=states.filter(m => m[2]==="review").length;
+    const other=states.filter(m => ["missing","history","identity"].includes(m[2])).length;
     $("#boardTiles").innerHTML =
       tile("Prospects shown", rows.length, "of " + D.summary.board + " on the frozen 2027 board") +
-      tile("Needs attention", attention, "review, data gap, or elevated uncertainty") +
-      tile("RED confidence", red, "multiple uncertainty signals — not a talent grade") +
-      tile("Topology changed priority", topoDriven, "cases where uncertainty raised scouting priority");
+      tile("2026 stats available", scored, "position-relevant public season evidence") +
+      tile("New source received", received, "licensed OL data under private validation") +
+      tile("Scouting / history", other, "missing live data, injury or no 2026 opportunity");
   }
   function tile(label,value,sub){
     return '<div class="tile"><div class="tile-label">'+esc(label)+'</div><div class="tile-value">'+esc(value)+'</div><div class="tile-sub">'+esc(sub)+'</div></div>';
@@ -313,13 +348,15 @@
     renderTiles(rows);
     const body = $("#boardBody");
     body.innerHTML = rows.map(p => {
-      const [take, takeClass] = takeMeta(p.a);
+      const [take, takeClass] = takeMeta(p.a,p);
       const [conf, confClass] = confidenceMeta(p);
+      const [evidence,evidenceClass] = evidenceMeta(p);
       return '<tr data-rank="'+p.r+'">' +
         '<td class="num rank-cell">#'+p.r+'</td>' +
         '<td><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">'+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
         '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
         '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
+        '<td><span class="status '+evidenceClass+'">'+esc(evidence)+'</span></td>' +
         '<td class="why-cell">'+esc(shortWhy(p))+'</td>' +
         '<td class="num">'+(p.cr ? "#"+p.cr : "—")+'</td>' +
       '</tr>';
@@ -530,7 +567,7 @@
 
   function pickCandidate(kind,p,pick) {
     if(!p) return '<div class="pick-candidate empty">No qualifying alternative.</div>';
-    const [take,takeClass]=takeMeta(p.a), [conf,confClass]=confidenceMeta(p);
+    const [take,takeClass]=takeMeta(p.a,p), [conf,confClass]=confidenceMeta(p);
     return '<button class="pick-candidate" type="button" data-rank="'+p.r+'">' +
       '<span class="pick-kind">'+esc(kind)+'</span>' +
       '<div class="pick-player"><strong>#'+p.r+' '+esc(p.n)+'</strong><span>'+esc(p.p)+' · '+esc(p.s)+'</span></div>' +
@@ -571,7 +608,7 @@
   function renderTeamBoard() {
     const rows=D.players.slice().sort((a,b)=>teamFit(b)-teamFit(a) || a.r-b.r).slice(0,24);
     $("#teamBoardBody").innerHTML=rows.map(p=>{
-      const [take,takeClass]=takeMeta(p.a), [conf,confClass]=confidenceMeta(p);
+      const [take,takeClass]=takeMeta(p.a,p), [conf,confClass]=confidenceMeta(p);
       const pick=teamState.picks.length ? teamState.picks.slice().sort((a,b)=>pickFitScore(p,b)-pickFitScore(p,a))[0] : null;
       return '<tr data-rank="'+p.r+'">' +
         '<td class="num team-fit-score">'+teamFit(p)+'</td>' +
@@ -691,7 +728,7 @@
   }
 
   function compareColumn(p) {
-    const [take] = takeMeta(p.a);
+    const [take] = takeMeta(p.a,p);
     const [conf] = confidenceMeta(p);
     return '<section class="compare-prospect">' +
       '<div class="compare-prospect-head"><div class="compare-rank">#'+p.r+'</div><div><h3>'+esc(p.n)+'</h3><p>'+esc(p.p)+' · '+esc(p.s)+'</p></div></div>' +
@@ -744,8 +781,9 @@
   }
 
   function openModal(p) {
-    const [take,takeClass]=takeMeta(p.a);
+    const [take,takeClass]=takeMeta(p.a,p);
     const [conf,confClass]=confidenceMeta(p);
+    const [evidence]=evidenceMeta(p);
     const topo = !!p.ta;
     const question = nextQuestion(p);
     modal.innerHTML =
@@ -753,9 +791,10 @@
       '<div class="dossier-grid">' +
         metric("APEX Take",take,shortWhy(p),takeClass) +
         metric("Confidence",conf,topo ? "Projection stability, not talent." : "Topology coverage is not available for this prospect.",confClass) +
+        metric("2026 Evidence",evidence,"Research status, not forecast certainty.") +
         metric("Scout priority",p.cr ? "#"+p.cr : "—","Where this player sits in the combined work queue.") +
       '</div>' +
-      '<section class="dossier-section"><div class="section-kicker">The short version</div><h3>Why APEX is paying attention</h3><p>'+esc(p.why || shortWhy(p))+'</p></section>' +
+      '<section class="dossier-section"><div class="section-kicker">The short version</div><h3>Why APEX is paying attention</h3><p>'+esc(shortWhy(p))+'</p><p class="fine">Frozen Oct. 7 take: '+esc(TAKE[p.a]?.[0] || "Monitor")+'. New evidence has not been scored against the forecast or used to change market rank.</p></section>' +
       live2026Section(p) +
       pffQBSection(p) +
       '<section class="dossier-section spotlight"><div class="section-kicker">What would change our mind?</div><h3>'+esc(p.ctx ? humanContext(p.ctx) : "Next evidence request")+'</h3><p>'+esc(question)+'</p>' +
