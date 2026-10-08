@@ -43,6 +43,8 @@ try{
   d.querySelector("#labBuild").click();
   assert.equal(d.querySelectorAll("#labPlan li:not(.lab-no-plan)").length,3);
   assert.equal(lab.current().chosen.length,3);
+  assert(new Set(lab.current().chosen.map(rank=>w.APEX2027.players.find(p=>p.r===rank).p)).size>=2,
+    "Default scout dispatch must cover multiple positions");
   assert.equal(d.querySelector("#labExport").disabled,false);
   assert.equal(JSON.parse(w.localStorage.getItem("apex-decision-lab-plan-v1")).length,3);
 
