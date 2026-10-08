@@ -265,6 +265,14 @@
   playerSelect.addEventListener("change",e=>{UI.player=+e.target.value;renderFocus();});
   get("labFinding").addEventListener("change",e=>{UI.finding=e.target.value;renderFocus();});
   get("labViewDossier").addEventListener("click",()=>dispatchDossier(UI.player));
+  window.addEventListener("apex:focus-lab-player", event => {
+    const rank=Number(event && event.detail && event.detail.rank);
+    if(!PLAYERS.has(rank))return;
+    UI.player=rank;
+    playerSelect.value=String(rank);
+    renderFocus();
+    get("labCaseFile").scrollIntoView?.({behavior:"smooth",block:"start"});
+  });
   get("labExport").addEventListener("click",downloadBrief);
   renderQueue();
   renderFocus();
