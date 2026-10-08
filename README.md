@@ -25,8 +25,7 @@ Run `npm ci && npm test` before publishing. Checks cover score provenance and ra
 - [RAS.football](https://ras.football) (Kent Lee Platte) — Relative Athletic Scores
 - [Jack Lichtenstein / ESPN](https://github.com/JackLich10/nfl-draft-data) — historical prospect grades
 - [Lee Sharpe / nfldata](https://github.com/nflverse/nfldata) — draft pick value curves
-- PFF-derived college data informs the model; only derived percentiles (never raw
-  PFF values) appear in this repository or on the site.
+- PFF-derived college data informs the model. The active site files display only derived within-sample percentiles, not exact charting values. An earlier publication included exact values in Git history; replacing the current file does not erase that history. Access and redistribution rights must be checked separately.
 
 Independent research project. Not affiliated with the NFL, PFF, ESPN, or any team.
 Approximate Value courtesy of Pro-Football-Reference via nflverse.
