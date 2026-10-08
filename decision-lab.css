@@ -86,3 +86,38 @@
 .dossier-lab-cta{display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin:15px 0 4px;padding:16px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}
 .dossier-lab-cta .primary-button{min-height:42px}
 @media(max-width:460px){.dossier-lab-cta .primary-button{width:100%}}
+
+/* Fan-first Draft Advisor: answers and watchlists replace scouting homework. */
+.fan-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 12%,var(--surface)) 0%,var(--surface) 74%)}
+.fan-hero-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:20px}
+.fan-hero-actions .lab-primary{min-height:46px}
+.fan-controls{grid-template-columns:minmax(190px,2fr) minmax(135px,1fr)}
+.fan-card{gap:9px}
+.fan-card .lab-docket{flex:1}
+.fan-card .lab-docket p{font-size:13px;color:var(--ink)}
+.fan-card .lab-case-actions{padding-top:10px}
+.fan-card .lab-case-actions button{min-height:40px;font-size:12px}
+.fan-card .lab-case-actions .lab-primary{background:var(--blue)}
+.fan-explanation{margin-top:15px}
+.fan-explanation>div{background:var(--surface-2)}
+.fan-explanation p{font-size:13px;line-height:1.65}
+.fan-actions{margin-top:17px}
+.fan-compare-controls{grid-template-columns:1fr 1fr}
+.fan-favorites{display:grid;gap:9px;margin-top:8px}
+.fan-favorite{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:center;padding:12px 13px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
+.fan-favorite>div{min-width:0;display:grid;gap:3px}
+.fan-favorite strong{font-size:13px}
+.fan-favorite span{color:var(--muted);font-size:11px}
+.fan-favorite button{font-size:11px;font-weight:700;white-space:nowrap}
+@media(max-width:700px){
+  .fan-controls{grid-template-columns:1fr 1fr}
+  .fan-compare-controls{grid-template-columns:1fr}
+  .fan-hero-actions{align-items:stretch}
+  .fan-hero-actions .lab-primary{width:100%}
+  .fan-favorite{grid-template-columns:1fr auto}
+  .fan-favorite>div{grid-column:1/-1}
+}
+@media(max-width:460px){
+  .fan-controls{grid-template-columns:1fr}
+  .fan-card .lab-case-actions button{flex:1}
+}
