@@ -28,11 +28,24 @@ const {JSDOM} = require('jsdom');
   assert.equal(w.APEX2026.coverage.liveScored,159);
   assert.notEqual(w.APEX2027.players.find(p=>p.r===19).a,'URGENT_DATA_GAP','Tae Johnson must use refreshed 2026 evidence');
   assert.equal(w.APEX2027.players.find(p=>p.r===70).a,'SCOUT_MORE','OJ Frederique should use refreshed 2026 evidence');
-  assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data5'));
-  assert([...d.querySelectorAll('script[src]')].every(s=>/\?v=20261007-(?:data5|pff3)$/.test(s.getAttribute('src'))),'All JS assets must be cache-busted');
+  assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261007-data6'));
+  assert([...d.querySelectorAll('script[src]')].every(s=>/\?v=20261007-(?:data6|pff4)$/.test(s.getAttribute('src'))),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
   assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
+  assert.equal(w.APEX2026.muse_receipt.blocking_received,35);
+  for(const rank of [8,9,26,38,45,46,63]){
+    assert.equal(w.APEX2026.players[rank].muse_private_blocking_received,true,'Urgent OL has new licensed-source receipt');
+  }
+  for(const rank of [70,71,144,187]){
+    assert.equal(w.APEX2026.players[rank].status,'OUT_INJURY_2026','Injury status corrected');
+  }
+  assert(!w.APEX2026.players[134].muse_private_blocking_received,'FCS OL should remain missing validated 2026 blocking source');
+  assert(!w.APEX2026.players[187].muse_private_blocking_received,'Injured OL has no 2026 blocking source');
+  assert(!JSON.stringify(w.APEX2026).includes('"pass_block_grade"'),'No licensed blocking grades may be serialized into public payload');
+  d.querySelector('#boardBody tr[data-rank="8"]').click();
+  assert(d.querySelector('#modal').textContent.includes('New 2026 blocking evidence received.'));
+  d.querySelector('.modal-close').click();
   assert.equal(w.APEX2027.players.length,201);
   assert.equal(d.querySelector('#classSelect'),null,'historical class selector must stay hidden');
   assert.equal(d.querySelectorAll('#boardBody tr').length,201);
@@ -158,8 +171,8 @@ const {JSDOM} = require('jsdom');
   await new Promise(resolve=>w.setTimeout(resolve,130));
   assert.equal(d.querySelectorAll('#boardBody tr').length,1);
   d.querySelector('#boardBody tr').click();
-  assert(d.querySelector('#modal').textContent.includes('Why no 2026 OL score?'));
-  assert(d.querySelector('#modal').textContent.includes('do not provide a trustworthy individual offensive-line performance grade'));
+  assert(d.querySelector('#modal').textContent.includes('New 2026 blocking evidence received.'));
+  assert(d.querySelector('#modal').textContent.includes('Private licensed source records are under validation'));
   assert(d.querySelector('#modal').textContent.includes('6′7″'));
   assert(d.querySelector('#modal').textContent.includes('325 lb'));
   d.querySelector('#modal .modal-close').click();

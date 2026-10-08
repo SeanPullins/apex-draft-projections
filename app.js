@@ -613,6 +613,7 @@
     if (status==="LIMITED_INJURY_2026") return ["LIMITED — INJURY","live-status-warn"];
     if (status==="SITTING_OUT_2026") return ["SITTING OUT 2026","live-status-warn"];
     if (status==="ELIGIBILITY_NO_2026_GAMES") return ["ELIGIBILITY — NO 2026 GAMES","live-status-warn"];
+    if (l.muse_private_blocking_received) return ["NEW DATA UNDER REVIEW","live-status-neutral"];
     if (l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE") return ["2026 ROSTER DATA","live-status-neutral"];
     if (l.ds==="PARTIAL_2026_DATA") return ["PARTIAL 2026 DATA","live-status-warn"];
     if (l.ds==="LIVE_2026_SCORED") return ["2026 LIVE","live-status-good"];
@@ -665,16 +666,18 @@
       ? '<div class="live-evidence-line"><span>Peer-relative 2026 production</span><strong>'+pct(l.peer)+'</strong><span>Evidence confidence</span><strong>'+pct(l.conf)+'</strong></div>'
       : '';
     const note=l.note ? '<div class="live-note">'+esc(l.note)+'</div>' : '';
-    const olNote=l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE"
-      ? '<div class="live-note live-note-neutral"><strong>Why no 2026 OL score?</strong> Public box scores do not provide a trustworthy individual offensive-line performance grade, so APEX shows current roster data without inventing one.</div>'
-      : '';
+    const olNote=l.muse_private_blocking_received
+      ? '<div class="live-note live-note-neutral"><strong>New 2026 blocking evidence received.</strong> Private licensed source records are under validation, so the frozen evaluation and public grades are unchanged. Missing data no longer means a source was not supplied.</div>'
+      : l.ds==="OL_NO_TRUSTWORTHY_INDIVIDUAL_BOX_SCORE"
+        ? '<div class="live-note live-note-neutral"><strong>No validated 2026 OL evidence.</strong> Public box scores do not provide reliable individual blocking grades. More scouting evidence is required; missing is not a negative score.</div>'
+        : '';
     return '<section class="dossier-section live-season">' +
       '<div class="live-season-head"><div><div class="section-kicker">2026 season</div><h3>Current evidence</h3></div><span class="live-status '+statusClass+'">'+esc(status)+'</span></div>' +
       (bio?'<div class="live-bio">'+bio+'</div>':'') +
       (l.gp!=null?'<div class="live-games">'+whole(l.gp)+' games with box-score data</div>':'') +
       (stats.length?'<div class="live-stat-grid">'+stats.map(([k,v])=>liveStat(k,v)).join("")+'</div>':'') +
       evidence+note+olNote+
-      '<div class="live-source">Updated Oct. 7, 2026 · '+esc(l.source || "ESPN live roster/box data")+'</div>' +
+      '<div class="live-source">Source snapshot: Oct. 7, 2026 · '+(l.source_url?'<a href="'+esc(l.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(l.source || "Source report")+'</a>':esc(l.source || "ESPN live roster/box data"))+'</div>' +
     '</section>';
   }
 
