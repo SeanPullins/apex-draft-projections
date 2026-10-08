@@ -750,9 +750,11 @@
           '<h3>'+esc(prof.research.kind==="role"?"College position and role":"Available earlier-season history")+'</h3>'+
           '<p>'+esc(prof.research.detail)+'</p>'+
           '<p class="fine">'+(prof.contextVerified?
-             'Source-linked public information, separate from the frozen APEX model.':
-             'Supplied Muse research summary; identity, role or source details are not independently verified for model use.')+
-          ' No restricted blocking grades are published.'+
+             (prof.research.source==="official"?
+                'Checked against a school athletics source for this particular dated fact.':
+                'Checked against independent reporting for this particular dated fact.'):
+             'Supplied Muse research summary; role/source details have not been independently cross-checked.')+
+          ' This does not verify licensed blocking metrics or make the prospect model-ready. No restricted grades are published.'+
           (prof.contextVerified&&prof.sourceUrl?' <a href="'+esc(prof.sourceUrl)+'" target="_blank" rel="noopener noreferrer">College source ↗</a>':'')+
           '</p></section>' : '') +
       pffQBSection(p) +
