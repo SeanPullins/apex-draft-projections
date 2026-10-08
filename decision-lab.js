@@ -3,6 +3,8 @@
 (function () {
   "use strict";
   const D=window.APEX2027;
+  const Stories=window.APEX_STORIES;
+  if(!Stories)throw new Error("APEX player editorial data is required");
   if (!D || !Array.isArray(D.players) || !document.getElementById("tab-lab")) return;
   const L=(window.APEX2026 && window.APEX2026.players) || {};
   const $=id=>document.getElementById(id);
@@ -20,9 +22,9 @@
     EXECUTIVE_REVIEW_DOWN:"Worth questioning",
     SLEEPER_DISCOVERY:"Sleeper watch",
     HOLD_PRIOR:"Market looks reasonable",
-    URGENT_DATA_GAP:"More evidence needed",
-    DATA_GAP:"More evidence needed",
-    SCOUT_MORE:"Still researching"
+    URGENT_DATA_GAP:"No public 2026 grade",
+    DATA_GAP:"No public 2026 grade",
+    SCOUT_MORE:"Limited 2026 snapshot"
   };
   const VERDICT={
     EXECUTIVE_REVIEW_UP:"APEX sees a positive disagreement with the current market. It merits another look, but it is not a proven bargain.",
@@ -45,22 +47,11 @@
       return {kind:"missing",label:"Individual film/context missing",details:"Public box scores cannot independently grade an offensive lineman."};
     return {kind:"missing",label:"Evidence incomplete",details:"Additional usable 2026 individual evidence has not been established."};
   }
-  function reasons(p) {
-    const ev=evidence(p);
-    if(ev.kind==="review")return ev.details;
-    if(ev.kind==="history")return ev.details;
-    const take=VERDICT[p.a]||"The available research does not support a stronger conclusion.";
-    if(p.a==="HOLD_PRIOR"&&(p.ta==="RED"||p.ta==="AMBER"))
-      return take+" The context model nevertheless flags uncertainty.";
-    return take;
+  function reasons(p){
+    return Stories.profile(p).interpretation;
   }
   function next(p){
-    const q=p.tq||p.q;
-    if(q && q.trim())return q.trim();
-    const ev=evidence(p);
-    if(ev.kind==="review")return "APEX still needs to validate the source, player identity, 2026 games and comparable blocking snaps.";
-    if(ev.kind==="history")return "A fair update requires verified opportunity and comparable earlier seasons.";
-    return "An updated, timestamped and independently checked football sample would help settle this case.";
+    return Stories.profile(p).context;
   }
   const MODES={
     sleepers:{title:"Potential sleepers",desc:"Players beyond the first 32 on the market board where APEX flagged a positive signal. These are watch candidates, not confirmed hidden stars.",
@@ -69,8 +60,8 @@
       match:p=>p.a==="EXECUTIVE_REVIEW_DOWN"},
     uncertain:{title:"Where the evidence is fragile",desc:"High-uncertainty profiles and genuine source gaps. A lack of information is not a negative talent grade.",
       match:p=>p.ta==="RED"||evidence(p).kind==="missing"||evidence(p).kind==="review"||evidence(p).kind==="identity"},
-    updates:{title:"2026 evidence status",desc:"Current-season data already reflected in the October 2026 research payload. Newly received sources remain under review—not a live news feed.",
-      match:p=>evidence(p).kind==="review"||evidence(p).kind==="scored"},
+    updates:{title:"2026 season numbers",desc:"Actual public 2026 production, grouped by position. Different roles and game counts are not directly comparable.",
+      match:p=>Stories.profile(p).kind==="season"},
     top:{title:"The board's biggest names",desc:"The current consensus top 32, with APEX's existing take and data limitations shown alongside the rank.",
       match:p=>p.r<=32}
   };
@@ -82,19 +73,11 @@
       const pb=b.ta==="RED"?0:b.ta==="AMBER"?1:2;
       return pa-pb||(a.cr||999)-(b.cr||999)||a.r-b.r;
     });
-    else if(mode==="updates")out.sort((a,b)=>(evidence(a).kind==="review"?0:1)-(evidence(b).kind==="review"?0:1)||a.r-b.r);
+    else if(mode==="updates")out.sort((a,b)=>a.r-b.r);
     else out.sort((a,b)=>a.r-b.r);
     return out;
   }
-  function flag(p){
-    const ev=evidence(p);
-    if(ev.kind==="review")return "New data being checked";
-    if(ev.kind==="history")return "Limited 2026 playing time";
-    if(ev.kind==="missing"||ev.kind==="identity")return "More information needed";
-    if(p.ta==="RED")return "Uncertainty: elevated";
-    if(p.ta==="AMBER")return "Uncertainty: moderate";
-    return "Evidence available";
-  }
+  function flag(p){return Stories.profile(p).status;}
   function stability(p) {
     return p.ta==="GREEN"?"Relatively stable":p.ta==="AMBER"?"Some uncertainty":p.ta==="RED"?"Significant uncertainty":"Not assessed";
   }
@@ -103,8 +86,9 @@
     return '<article class="lab-case fan-card">'+
       '<div class="lab-case-top"><span class="lab-rank">Market #'+p.r+'</span><span class="lab-source">'+esc(flag(p))+'</span></div>'+
       '<h3>'+esc(p.n)+'</h3><p class="lab-case-school">'+esc(p.p)+' · '+esc(p.s)+'</p>'+
-      '<div class="lab-chips"><span>'+esc(TAKE[p.a]||"Monitor")+'</span><span>'+esc(stability(p))+'</span></div>'+
-      '<div class="lab-docket"><strong>APEX take</strong><p>'+esc(reasons(p))+'</p></div>'+
+      '<div class="lab-chips"><span>'+esc(Stories.take(p))+'</span><span>'+esc(stability(p))+'</span></div>'+
+      '<div class="fan-card-fact">'+esc(Stories.factLine(p))+'</div>'+
+      '<div class="lab-docket"><strong>What APEX sees</strong><p>'+esc(reasons(p).replace(Stories.factLine(p)+". ",""))+'</p></div>'+
       '<div class="lab-case-actions">'+
       '<button type="button" class="lab-primary" data-fan-action="open" data-rank="'+p.r+'">Why this player? →</button>'+
       '<button type="button" class="lab-secondary" data-fan-action="follow" data-rank="'+p.r+'" aria-pressed="'+followed+'">'+(followed?"Following ✓":"+ Follow")+'</button>'+
@@ -116,7 +100,7 @@
     $("labMatchCount").textContent=list.length+" players match";
     $("labStats").innerHTML=
       '<div><strong>'+list.length+'</strong><span>'+esc(mode.title)+'</span></div>'+
-      '<div><strong>'+list.filter(p=>evidence(p).kind==="review").length+'</strong><span>Source updates being verified</span></div>'+
+      '<div><strong>'+list.filter(p=>Stories.profile(p).kind==="season").length+'</strong><span>2026 season summaries</span></div>'+
       '<div><strong>'+ui.favorites.size+'</strong><span>Players you follow</span></div>';
     $("labQueue").innerHTML=list.length?list.slice(0,8).map(card).join("") :
       '<div class="lab-empty">No prospects match these filters. Try another position or storyline.</div>';
@@ -127,9 +111,9 @@
     const p=PLAYERS.get(rank),ev=evidence(p);
     $("labPlayer").value=String(rank);
     $("labSelectedName").textContent=p.n+" · "+p.p+" · "+p.s;
-    $("labCurrentTake").textContent=TAKE[p.a]||"Monitor";
+    $("labCurrentTake").textContent=Stories.take(p);
     $("labCurrentStatus").textContent=stability(p);
-    $("labCurrentSource").textContent=ev.label;
+    $("labCurrentSource").textContent=Stories.profile(p).status;
     $("labCurrentWhy").textContent=reasons(p);
     $("labQuestion").textContent=next(p);
     $("fanFollow").textContent=ui.favorites.has(rank)?"Following ✓":"Follow this player";
