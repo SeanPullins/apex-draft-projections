@@ -7,7 +7,7 @@
 <meta name="description" content="APEX turns the 2027 NFL Draft board into decision intelligence: where the market stands, where evidence disagrees, how confident the projection is, and what would change our mind.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <link rel="stylesheet" href="styles.css?v=20261007-data7">
-<link rel="stylesheet" href="decision-lab.css?v=20261008-lab1">
+<link rel="stylesheet" href="decision-lab.css?v=20261008-fan1">
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +18,7 @@
   <nav class="tabs" role="tablist" aria-label="APEX sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">2027 Board</button>
     <button class="tab" data-tab="team" role="tab" aria-selected="false">Team Mode</button>
-    <button class="tab" data-tab="lab" role="tab" aria-selected="false">Decision Lab</button>
+    <button class="tab" data-tab="lab" role="tab" aria-selected="false">Draft Advisor</button>
     <button class="tab" data-tab="how" role="tab" aria-selected="false">How APEX Works</button>
     <button class="tab" data-tab="validation" role="tab" aria-selected="false">Validation</button>
   </nav>
@@ -39,7 +39,7 @@
         </div>
         <div class="hero-actions">
           <button id="openTeamMode" class="primary-button hero-team-button" type="button">Open Team Mode →</button>
-          <button id="openDecisionLab" class="text-button" type="button">Enter Decision Lab →</button>
+          <button id="openDecisionLab" class="text-button" type="button">Explore Draft Advisor →</button>
           <span>Build a Browns or any-team draft room with your picks, needs, philosophy, and risk tolerance.</span>
         </div>
       </div>
@@ -242,114 +242,110 @@
     </div>
   </section>
 
-  <section id="tab-lab" class="tab-panel" aria-labelledby="labTitle">
-    <div class="lab-hero">
+  <section id="tab-lab" class="tab-panel" aria-labelledby="fanTitle">
+    <div class="lab-hero fan-hero">
       <div>
-        <div class="eyebrow">APEX Decision Lab · Public front-office experience</div>
-        <h1 id="labTitle">Don't just rank players.<br>Decide what to learn next.</h1>
-        <p>You're running the scouting meeting. Give your staff a real decision problem, choose how many cases they can investigate, and build a research desk. Every mission is linked to the frozen APEX board — not an invented new grade.</p>
+        <div class="eyebrow">APEX Draft Advisor · 2027</div>
+        <h1 id="fanTitle">You follow football.<br>APEX does the homework.</h1>
+        <p>No scouting assignments. No film to grade. Choose what you're curious about and see the players APEX has already flagged, why they matter, and where the evidence is still uncertain.</p>
+        <div class="fan-hero-actions">
+          <button id="fanTeamMode" class="lab-primary" type="button">Build my team's draft board →</button>
+          <span class="fine">Team Mode uses your selected needs and picks—not a claimed live NFL roster feed.</span>
+        </div>
       </div>
       <div class="lab-rules">
-        <strong>The rules of this room</strong>
-        <span><em>Real:</em> Frozen market rank, APEX action, evidence receipt and documented scouting question.</span>
-        <span><em>Research:</em> Your assignments and hypothetical evidence challenges.</span>
-        <span><em>Never implied:</em> Verified NFL success probability, actual draft availability, or a validated coaching impact.</span>
+        <strong>The fan-friendly version</strong>
+        <span><em>Get an answer:</em> Players worth watching, market disagreements and red flags.</span>
+        <span><em>See why:</em> Existing APEX evidence and what is or isn't verified.</span>
+        <span><em>Make it yours:</em> Follow favorites and compare any two players.</span>
+        <span class="fine">Current 2027 analysis is a frozen research snapshot, not a guaranteed NFL prediction.</span>
       </div>
     </div>
 
-    <section class="lab-shell" aria-labelledby="labMissionTitle">
+    <section class="lab-shell" aria-labelledby="fanDiscoverTitle">
       <div class="lab-head">
         <div>
-          <div class="eyebrow">01 / Set your mission</div>
-          <h2 id="labMissionTitle">You have a limited scouting staff.</h2>
-          <p>Choose the one question that matters most. APEX assembles an assignment queue from the real 2027 research board.</p>
+          <div class="eyebrow">01 / What are you curious about?</div>
+          <h2 id="fanDiscoverTitle">APEX found the storylines. Pick one.</h2>
+          <p>These lists are assembled automatically from the existing 2027 board. You don't need to do any scouting.</p>
         </div>
-        <span id="labMatchCount" class="lab-count">201 prospects</span>
+        <span id="labMatchCount" class="lab-count">2027 board</span>
       </div>
-      <div class="lab-controls">
-        <label>Front-office question
-          <select id="labFocus" aria-label="Scouting mission">
-            <option value="premium">Protect premium capital</option>
-            <option value="challenge">Challenge the consensus</option>
-            <option value="gaps">Close evidence gaps</option>
-            <option value="surprise">Find overlooked talent</option>
+      <div class="lab-controls fan-controls">
+        <label>Show me
+          <select id="labFocus" aria-label="What to explore">
+            <option value="sleepers">Potential sleepers</option>
+            <option value="alerts">Big names APEX questions</option>
+            <option value="uncertain">Players with shaky evidence</option>
+            <option value="updates">2026 evidence updates</option>
+            <option value="top">Top names on the board</option>
           </select>
         </label>
         <label>Position
-          <select id="labPosition" aria-label="Scouting position"></select>
-        </label>
-        <label>Staff capacity
-          <select id="labCapacity" aria-label="Scouting assignments per cycle">
-            <option value="3">3 assignments</option>
-            <option value="5" selected>5 assignments</option>
-            <option value="8">8 assignments</option>
-          </select>
+          <select id="labPosition" aria-label="Position to explore"></select>
         </label>
       </div>
       <p id="labContext" class="lab-explainer" aria-live="polite"></p>
       <div id="labStats" class="lab-stats" aria-live="polite"></div>
-      <div class="lab-actions">
-        <button id="labBuild" type="button" class="lab-primary">Build my scouting desk →</button>
-        <span class="fine">Order follows source-review urgency and existing scouting priority, not predicted return on investment.</span>
-      </div>
-      <div id="labQueue" class="lab-queue" aria-label="Suggested prospect scouting cases"></div>
+      <div id="labQueue" class="lab-queue" aria-label="APEX prospect storylines"></div>
     </section>
 
-    <section class="lab-shell lab-case-file" id="labCaseFile" aria-labelledby="labCaseTitle">
+    <section class="lab-shell lab-case-file" id="fanPlayerFile" aria-labelledby="fanPlayerTitle">
       <div class="lab-head">
         <div>
-          <div class="eyebrow">02 / Red-team the call</div>
-          <h2 id="labCaseTitle">What evidence would change your mind?</h2>
-          <p>A simulated review process — not a simulated performance result. Pick a player and test how the research decision should respond.</p>
+          <div class="eyebrow">02 / Get the full picture</div>
+          <h2 id="fanPlayerTitle">What does APEX think of this player?</h2>
+          <p>A clear summary drawn from the current APEX record—not an invented scouting report or another statistic to decode.</p>
         </div>
       </div>
       <div class="lab-case-topline">
-        <div><h3 id="labSelectedName">Select a player</h3></div>
-        <label class="lab-case-select">Prospect
-          <select id="labPlayer" aria-label="Prospect to investigate"></select>
+        <h3 id="labSelectedName">Select a player</h3>
+        <label class="lab-case-select">2027 prospect
+          <select id="labPlayer" aria-label="Choose a prospect"></select>
         </label>
       </div>
       <div class="lab-insight-grid">
-        <div><span>Frozen APEX Take</span><strong id="labCurrentTake"></strong></div>
-        <div><span>Forecast stability (not talent)</span><strong id="labCurrentStatus"></strong></div>
-        <div><span>Evidence status</span><strong id="labCurrentSource"></strong></div>
+        <div><span>APEX's current take</span><strong id="labCurrentTake"></strong></div>
+        <div><span>How stable is the assessment?</span><strong id="labCurrentStatus"></strong></div>
+        <div><span>What evidence exists?</span><strong id="labCurrentSource"></strong></div>
       </div>
-      <div class="lab-test">
-        <div><h4>Working case</h4><p id="labCurrentWhy"></p><p id="labQuestion" style="margin-top:10px"></p></div>
-        <div><h4>How to falsify it</h4><p id="labPositionCheck"></p><p class="fine" style="margin-top:10px">Look for comparable snaps, source dates, opponent strength and a legitimate denominator.</p></div>
+      <div class="lab-test fan-explanation">
+        <div><h4>Why APEX says this</h4><p id="labCurrentWhy"></p></div>
+        <div><h4>What could change the outlook?</h4><p id="labQuestion"></p></div>
       </div>
-      <div class="lab-scenario">
-        <label class="lab-case-select">New observation (hypothetical, not a real result)
-          <select id="labFinding" aria-label="Hypothetical scouting finding">
-            <option value="unverified">We cannot verify the evidence</option>
-            <option value="verified">Independent film supports the working case</option>
-            <option value="contradiction">Independent film contradicts the case</option>
-          </select>
-        </label>
-        <p id="labScenarioResult" aria-live="polite"></p>
-        <strong id="labScenarioBadge"></strong>
+      <div class="lab-actions fan-actions">
+        <button id="labViewDossier" class="lab-secondary" type="button">See detailed player breakdown →</button>
+        <button id="fanFollow" class="lab-primary" type="button">Follow this player</button>
       </div>
-      <div class="lab-actions" style="margin-top:15px">
-        <button id="labViewDossier" class="lab-secondary" type="button">Open complete player dossier →</button>
-      </div>
-      <p class="lab-disclaimer">This sandbox only changes your scouting workflow. It never alters market rank, the frozen APEX Take, forecast confidence, NFL outcome projections, or Team Mode settings.</p>
+      <p class="lab-disclaimer">GREEN/AMBER/RED measures historical projection stability, not player talent. A pending or missing source never means a player performed poorly.</p>
     </section>
 
-    <section class="lab-shell lab-desk" aria-labelledby="labDeskTitle">
+    <section class="lab-shell" aria-labelledby="fanCompareTitle">
       <div class="lab-head">
         <div>
-          <div class="eyebrow">03 / Leave with a decision brief</div>
-          <h2 id="labDeskTitle">Your scouting desk</h2>
-          <p>Save up to 12 assignments on this device, then export a readable research brief with questions, source status and review gates.</p>
+          <div class="eyebrow">03 / Settle a draft debate</div>
+          <h2 id="fanCompareTitle">Compare any two prospects.</h2>
+          <p>APEX puts their existing cases side by side. It won't invent a winner or pretend that unlike positions can be compared precisely.</p>
         </div>
-        <span id="labPlanCount" class="lab-count">0 selected</span>
       </div>
-      <ol id="labPlan" aria-label="Saved scouting missions"></ol>
-      <div class="lab-actions">
-        <button id="labExport" class="lab-primary" type="button" disabled>Download scouting brief</button>
-        <button id="labClear" class="lab-secondary" type="button">Clear desk</button>
+      <div class="lab-controls fan-compare-controls">
+        <label>First player<select id="fanCompareA" aria-label="First comparison prospect"></select></label>
+        <label>Second player<select id="fanCompareB" aria-label="Second comparison prospect"></select></label>
       </div>
-      <p class="lab-disclaimer">Scouting cases are deterministic research assignments, not predicted draft outcomes. Saved locally in your browser; nothing is uploaded to a server. Licensed PFF/CFBD raw values are not included.</p>
+      <button id="fanCompare" type="button" class="lab-primary" disabled>Compare players →</button>
+    </section>
+
+    <section class="lab-shell" aria-labelledby="fanWatchlistTitle">
+      <div class="lab-head">
+        <div>
+          <div class="eyebrow">04 / Your draft watchlist</div>
+          <h2 id="fanWatchlistTitle">Keep track of your guys.</h2>
+          <p>Follow prospects you care about. Open their APEX breakdowns whenever you return to this device.</p>
+        </div>
+        <span id="fanFavoriteCount" class="lab-count">0 followed</span>
+      </div>
+      <div id="fanFavorites" class="fan-favorites" aria-live="polite"></div>
+      <p class="lab-disclaimer">Saved only in this browser. Following a player doesn't trigger future alerts or live news updates.</p>
     </section>
   </section>
 
@@ -505,7 +501,7 @@
 <script src="data2027.js?v=20261007-data7"></script>
 <script src="data2026.js?v=20261007-data7"></script>
 <script src="pffqb2026.js?v=20261007-pff5"></script>
-<script src="app.js?v=20261008-lab1"></script>
-<script src="decision-lab.js?v=20261008-lab1"></script>
+<script src="app.js?v=20261008-fan1"></script>
+<script src="decision-lab.js?v=20261008-fan1"></script>
 </body>
 </html>

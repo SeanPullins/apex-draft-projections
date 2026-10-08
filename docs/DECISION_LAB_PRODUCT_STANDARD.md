@@ -1,52 +1,27 @@
-# APEX public front-office product standard (October 8, 2026)
+# APEX 2027 — fan-first Draft Advisor (2026-10-08)
 
-**Goal:** A public visitor should get a genuinely useful draft decision workflow within one minute, without needing an NFL analytics background or a paid data license. Product ambition is front-office-grade *process*, not unsupported claims of front-office-grade forecast accuracy.
+## Product correction
 
-## Differentiation, not another mock draft
+**Fans cannot go scout. APEX must give fans the result, not assign scouting work to them.** The October 8 Decision Lab created a research-task interface. That can remain an internal research workflow, but it was inappropriate as the public product.
 
-Existing public platforms already cover customizable boards, team needs, mocks and premium stats. APEX should compete by exposing **why a draft decision remains unresolved**, what specific observation would change a scout's mind, and what the user should investigate next. A different color scheme or an undisclosed synthetic grade cannot create a predictive edge.
+The public `#lab` route now opens **Draft Advisor**. It immediately answers questions using the *already established* 201-player 2027 snapshot:
 
-The first implemented module, **Decision Lab**, uses the 201-player frozen 2027 dataset, public-safe source receipts, and existing APEX dossier questions. It adds:
+- **Potential sleepers:** market rank outside the first 32 with an existing `SLEEPER_DISCOVERY` or `EXECUTIVE_REVIEW_UP` flag. **Not** a validated player-success forecast.
+- **Big names APEX questions:** existing `EXECUTIVE_REVIEW_DOWN` research actions, **not** a declaration someone will be a bust.
+- **Players with shaky evidence:** elevated topology uncertainty or independently incomplete source receipts, **not** a low talent grade.
+- **2026 evidence updates:** separates new licensed source receipts from public 2026 statistics, **not** breaking real-time news.
+- **Top board:** top 32 current market prospects with accessible APEX verdict context.
+- **Player explainer:** read-only natural-language explanation of the existing APEX action and unsettled football question.
+- **Compare two:** opens the same research-backed comparison shown elsewhere on APEX; no fabricated winner.
+- **Follow players:** up to 25 prospect bookmarks stored only in browser localStorage. No future push alerts implied.
+- **Build my team's board:** uses existing Team Mode, explicitly powered by user-provided needs and picks.
 
-1. **Decision-first missions:** premium capital; challenge consensus; evidence gaps; overlooked prospects.
-2. **Constrained scout dispatch:** 3/5/8 available assignments, default positional diversification, and explicit evidence-review urgency before frozen scouting priority. Assignment ordering is a transparent heuristic, **not statistical expected return**, real-team headcount, or a new talent rank.
-3. **Red-team case file:** a working thesis, position-specific falsification test, and three explicitly hypothetical source outcomes. None change real scores.
-4. **Scouting desk:** users may save up to 12 assignments locally, open the existing dossier and download a text brief with source-check and temporal validation requirements.
-5. **Privacy and model lineage:** new source received is never called independently verified; forecast GREEN / AMBER / RED retains its earlier definition; no private numerical PFF/CFBD data enters public static JavaScript.
+## Accuracy and rights guardrails
 
-## The full experience we should ultimately earn
+The same frozen player data, APEX confidence, research actions, market ranking, and Team Mode calculations remain unchanged. The simplified experience does *not* launch a live AI agent to watch tape, scrape sources in real time, refresh metrics, build novel probabilities or apply untested X1 coefficients. It exposes prior research in consumer-readable form.
 
-| User question | Proposed signature experience | Status / proof required |
-| --- | --- | --- |
-| Who deserves attention? | APEX Scouting Desk that allocates limited scouting effort based on data gaps, model uncertainty, draft stakes and mission | **Implemented as a rules-based research queue**; no claim of calibrated scouting ROI |
-| Why should I doubt the market? | Contrarian council: consensus, PURE talent and independent scout each make a traceable, dissent-friendly case | Only grounded frozen APEX actions and qualitative review cases; neither E1 nor E2 passed promotion tests |
-| What skill survives in the NFL? | Translation Genome: performance across pressure, role, alignment and opponent difficulty, with reliable context-specific distributions | Historical E3 topology had positive uncertainty/error detection but upside and capital protection **failed**. Do not portray as a validated talent ranking |
-| What would change my mind? | Counterevidence engine: source-backed observation, provenance, matching denominator, independently quantified sensitivity | **Current sandbox is hypothetical workflow-only**; no synthetic projection delta until calibrated with historical counterfactual experiments |
-| What about *my* team? | Decision Theater: actual validated pick inventory, positional roster opportunity, scheme assignments, cap and fit constraints, trade options | Existing Team Mode is **user-configured**, does **not** know official team picks or cap fit. Future work requires dated sources |
-| Is APEX actually better? | Time Machine: exact historical as-of cutoffs, frozen forecasts, independent outcomes, calibration and failed experiments side by side | Requires genuinely untouched draft-time snapshots. Current research has retrospective source caveats |
-| Why trust a conclusion? | Evidence Passport: canonical athlete ID, transfer path, original source rights, snapshot week, opportunity denominator, conflict state | Await complete 201-player Muse export + authorized private receipts. No all-green by fiat |
+The public site ships no raw restricted PFF blocking grades. User watchlists are stored locally. The underlying forecast quality is still limited by retrospective training and source-timing gaps documented in the model notes. The source-received status may indicate private licensed data awaiting verification, not newly validated player performance.
 
-## Readability and public access rules
+## Next-stage differentiator
 
-- **First 10 seconds:** one choice, one plain-English explanation, one actionable question.
-- **Progressive disclosure:** explanatory labels on cards, historical formulas behind a deliberate technical detail action, not on every row.
-- **Mobile-first:** primary Board, Team, Decision Lab and Validation remain accessible on narrow iPhones. All actions operate through accessible buttons and selects with labels.
-- **No false precision:** never generate scouting grades, projected NFL career dollars, expected trade values, supposed percent odds, coach uplift or "what-if" score swings without an audited, validated source and applicable model.
-- **Missing isn't bad:** injured, sitting-out and historical-only prospects remain eligible for earlier-season review; never zero their contributions.
-- **No licensing shortcuts:** exact restricted PFF-derived rows and metric values are not in public assets, exported briefs or GitHub Pages.
-- **Read-only frozen APEX:** decision-lab plans, what-if choices and team-specific preferences may change *workflow* but not underlying public APEX player facts.
-- **No hidden personalization:** scouting desk is saved only in localStorage; no server or private conversation data.
-- **Be falsifiable:** register target, available features, reliability and promotion gates before analyzing the historical NFL results.
-
-## Next technical milestones
-
-- Add a versioned public-safe `evidence_passport` extract **only after** original licensed scouting data are reconciled and authorized for distribution.
-- Build a real team-needs/pick-inventory connector with exact dates, change history and a disclosed source. Until then Team Mode must state users provide picks.
-- Extend private historical NFL outcome and college-context coverage so football-specific specialists can vote in a chronological no-draft-slot experiment. X1's first 2015–18 backtest showed small mixed gains but only its athletic specialist was eligible.
-- Evaluate marginal **scouting value of information** against frozen front-office decisions and historical scouting-cost proxies. The present sorting heuristic is a research tool, not a trained value-of-information model.
-- Investigate contextual out-of-distribution translation and potential coaching/scheme impact using actual changes of role and personnel, not just hypothesized transformations. No causal claims without matched evidence and uncertainty calibration.
-- Hold a reproducible iPhone/desktop visual accessibility audit, including screen reader focus management, color-contrast verification and downloadable text quality, before declaring a "best in class" finished product.
-
-## Release gate
-
-No alteration to the existing live 2027 rankings, confidence labels, underlying model parameters or Team Mode computations in this Decision Lab release. All new assertions must come from visible frozen player metadata or explicitly be called an illustrative scouting process. The full model remains research-only until a legitimate out-of-sample forecast improvement is demonstrated.
+Build a real recurring source-verified evidence ingestion and analytical synthesis pipeline, then publish source timestamp, change log, independent cross-check and recalculated model score **only after the relevant historical validation gates pass**. For consumers, make a memorable, repeatable question-answer experience, not a professional scouting job checklist.
