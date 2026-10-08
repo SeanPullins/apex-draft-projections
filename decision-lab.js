@@ -104,7 +104,7 @@
       '<div class="lab-case-top"><span class="lab-rank">Market #'+p.r+'</span><span class="lab-source">'+esc(flag(p))+'</span></div>'+
       '<h3>'+esc(p.n)+'</h3><p class="lab-case-school">'+esc(p.p)+' · '+esc(p.s)+'</p>'+
       '<div class="lab-chips"><span>'+esc(TAKE[p.a]||"Monitor")+'</span><span>'+esc(stability(p))+'</span></div>'+
-      '<div class="lab-docket"><strong>APEX's take</strong><p>'+esc(reasons(p))+'</p></div>'+
+      '<div class="lab-docket"><strong>APEX take</strong><p>'+esc(reasons(p))+'</p></div>'+
       '<div class="lab-case-actions">'+
       '<button type="button" class="lab-primary" data-fan-action="open" data-rank="'+p.r+'">Why this player? →</button>'+
       '<button type="button" class="lab-secondary" data-fan-action="follow" data-rank="'+p.r+'" aria-pressed="'+followed+'">'+(followed?"Following ✓":"+ Follow")+'</button>'+
