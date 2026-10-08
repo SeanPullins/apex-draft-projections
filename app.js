@@ -227,10 +227,12 @@
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
   const initial = (location.hash || "#board").slice(1);
-  if (["board","team","how","validation"].includes(initial)) setTab(initial);
+  if (["board","team","lab","how","validation"].includes(initial)) setTab(initial);
 
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
+  const labLauncher = $("#openDecisionLab");
+  if (labLauncher) labLauncher.addEventListener("click", () => setTab("lab"));
 
   /* position filters */
   const positions = ["ALL", ...Array.from(new Set(D.players.map(p => p.p))).sort()];
@@ -817,9 +819,15 @@
         tech("Market tension",p.mt || "—") +
         tech("Priority driver",p.driver ? p.driver.replaceAll("_"," ") : "Existing front-office layer") +
         tech("Topology freshness",topo ? "through 2025" : "not covered") +
-      '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>';
+      '</div><p class="fine">Live 2026 evidence is a separate current-season sensor. Translation Topology for this frozen snapshot uses college history through 2025.</p></details>' +
+      '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">Investigate in Decision Lab →</button><span class="fine">Build a source-check mission, not an unverified new grade.</span></div>';
     backdrop.hidden = false;
     document.body.classList.add("modal-open");
+    $("#modalInvestigate",modal).addEventListener("click", () => {
+      closeModal();
+      setTab("lab");
+      window.dispatchEvent(new CustomEvent("apex:focus-lab-player",{detail:{rank:p.r}}));
+    });
     $(".modal-close",modal).focus();
   }
   function tech(k,v){ return '<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>'; }
@@ -840,6 +848,12 @@
   $("#plainEnglishButton").addEventListener("click", () => { sheet.hidden=false; document.body.classList.add("modal-open"); });
   function closeSheet(){ sheet.hidden=true; if(backdrop.hidden) document.body.classList.remove("modal-open"); }
   sheet.addEventListener("click", e => { if(e.target===sheet || e.target.closest("[data-close-sheet]")) closeSheet(); });
+
+  window.addEventListener("apex:open-dossier", event => {
+    const rank=Number(event && event.detail && event.detail.rank);
+    const prospect=D.players.find(p=>p.r===rank);
+    if (prospect) openModal(prospect);
+  });
 
   renderWarRoom();
   populateCompare();
