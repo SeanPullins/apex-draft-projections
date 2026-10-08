@@ -82,7 +82,11 @@ try{
   d.querySelector("#labViewDossier").click();
   assert.equal(d.querySelector("#modalBackdrop").hidden,false,"Lab opens real player dossier");
   assert(d.querySelector("#modal").textContent.includes("Trevor Goosby"));
-  d.querySelector("#modal .modal-close").click();
+  assert(d.querySelector("#modalInvestigate"),"Every dossier needs a direct investigation action");
+  d.querySelector("#modalInvestigate").click();
+  assert.equal(d.querySelector("#modalBackdrop").hidden,true);
+  assert.equal(d.querySelector(".tab-panel.is-active").id,"tab-lab");
+  assert(d.querySelector("#labSelectedName").textContent.includes("Trevor Goosby"));
 
   // Fan can pivot to sleepers without recomputing the actual board.
   d.querySelector("#labFocus").value="surprise";
