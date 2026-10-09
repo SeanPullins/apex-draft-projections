@@ -1,102 +1,105 @@
-/* APEX Player DNA + Model Lab — explanatory UI only, no new predictions. */
-(function () {
+/* APEX Player DNA v3 — full 201 prospect index + clear evidence-first profile.
+ * No changes to models, rankings, or private source payloads. */
+(function(){
   "use strict";
-  const data=window.APEX2027, stories=window.APEX_STORIES, current=(window.APEX2026||{}).players||{};
-  const root=document.getElementById("playerDNAApp"), lab=document.getElementById("modelLabApp");
-  if(!data||!Array.isArray(data.players)||!stories||!root||!lab)return;
-  const players=data.players.slice().sort((a,b)=>a.r-b.r);
+  const D=window.APEX2027, Stories=window.APEX_STORIES;
+  const live=(window.APEX2026&&window.APEX2026.players)||{};
+  const root=document.getElementById("playerDNAApp"),lab=document.getElementById("modelLabApp");
+  if(!D||!Array.isArray(D.players)||!Stories||!root||!lab)return;
+  const players=D.players.slice().sort((a,b)=>a.r-b.r);
   const byRank=new Map(players.map(p=>[p.r,p]));
-  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const cleanURL=v=>/^https:\/\/[a-z0-9.-]+\//i.test(String(v||""))?v:null;
-  const titleCase=v=>String(v||"").toLowerCase().replace(/(^|\s)\S/g,x=>x.toUpperCase());
-  const state={rank:players[0].r,pos:"ALL",query:"",limit:12};
-  const positions=["ALL",...new Set(players.map(p=>p.p))].sort((a,b)=>a==="ALL"?-1:b==="ALL"?1:a.localeCompare(b));
-  function panel(label,value,detail,kind=""){
-    return '<article class="intel-evidence '+kind+'"><span class="intel-evidence-label">'+esc(label)+'</span><strong>'+esc(value)+'</strong><p>'+esc(detail)+'</p></article>';
-  }
-  function usableStats(p){
-    const info=stories.profile(p);
-    return info.kind==="season" ? stories.stats(p).filter(x=>typeof x.value==="number"&&Number.isFinite(x.value)).slice(0,4):[];
-  }
+  const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const norm=v=>String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const safeUrl=v=>/^https:\/\/[a-z0-9.-]+\/[^"'<>]*$/i.test(String(v||""))?v:null;
+  const state={rank:players[0].r,position:"ALL",query:"",view:"browse"};
+  const positions=["ALL",...Array.from(new Set(players.map(p=>p.p))).sort()];
+  const titleByPos={QB:"Quarterbacks",RB:"Running backs",WR:"Wide receivers",TE:"Tight ends",OL:"Offensive line",ED:"Edge",DT:"Defensive line",LB:"Linebackers",CB:"Cornerbacks",S:"Safeties"};
+  const take=p=>({
+    HOLD_PRIOR:"Aligned with consensus",
+    EXECUTIVE_REVIEW_UP:"Upside worth reviewing",
+    SLEEPER_DISCOVERY:"Sleeper watch",
+    EXECUTIVE_REVIEW_DOWN:"More cautious than consensus",
+    DATA_GAP:"Need more evidence",
+    URGENT_DATA_GAP:"Need more evidence",
+    SCOUT_MORE:"Need more evidence"
+  })[p.a]||"Research in progress";
+  const label=p=>p.p==="OL"?"OL data limited":Stories.profile(p).kind==="season"?"2026 stats":Stories.profile(p).kind==="limited"?"Limited activity":"Needs context";
+  const statsFor=p=>Stories.profile(p).kind==="season"?Stories.stats(p).filter(x=>typeof x.value==="number"&&Number.isFinite(x.value)).slice(0,4):[];
   function available(p){
-    const l=current[p.r],info=stories.profile(p);
-    return {
-      l,info,stats:usableStats(p),
-      research:info.research||null,
-      source:info.contextVerified?"Corroborated dated fact":info.research?"Research on file":"No independent role receipt",
-      trend:p.a==="EXECUTIVE_REVIEW_UP"?"Possible upside vs consensus":
-        p.a==="SLEEPER_DISCOVERY"?"Sleeper watch":
-        p.a==="EXECUTIVE_REVIEW_DOWN"?"More cautious than consensus":
-        p.a==="HOLD_PRIOR"?"In line with consensus":"Still needs evidence"
-    };
+    const info=Stories.profile(p);
+    return {l:live[p.r],info,stats:statsFor(p),research:info.research||null,trend:take(p)};
   }
-  function list(){
-    const q=state.query.toLowerCase().trim();
-    return players.filter(p=>(state.pos==="ALL"||p.p===state.pos) &&
-      (!q||[p.n,p.s,p.p,String(p.r)].some(v=>String(v).toLowerCase().includes(q))));
+  function matches(){
+    const q=norm(state.query);
+    return players.filter(p=>(state.position==="ALL"||p.p===state.position)&&
+      (!q||norm([p.n,p.s,p.p,p.r].join(" ")).includes(q)||
+       [p.n,p.s,p.p,String(p.r)].some(x=>norm(x).includes(q))));
   }
   function drawDirectory(){
-    const options=list(),host=document.getElementById("intelDirectory");
-    if(!host)return;
-    document.getElementById("intelCount").textContent=options.length+" prospects";
-    if(!options.length){host.innerHTML='<div class="intel-empty">No matches. Try another name, school, or position.</div>';return;}
-    host.innerHTML=options.slice(0,state.limit).map(p=>{
-      const note=stories.profile(p),active=p.r===state.rank;
-      return '<button class="intel-player-row'+(active?' is-selected':'')+'" type="button" data-intel-rank="'+p.r+'" aria-pressed="'+active+'">' +
-        '<span class="intel-list-rank">'+p.r+'</span><span class="intel-list-person"><strong>'+esc(p.n)+'</strong><small>'+esc(p.s)+' · '+esc(p.p)+'</small></span>'+
-        '<span class="intel-list-indicator">'+(note.kind==="season"?"Stats":"Review")+'</span></button>';
-    }).join("");
-    document.getElementById("intelMore").hidden=options.length<=state.limit;
-    const chosen=host.querySelector(".is-selected");
-    if(chosen)chosen.setAttribute("aria-current","true");
+    const rows=matches(),host=document.getElementById("intelDirectory");
+    const count=rows.length;
+    document.getElementById("intelCount").textContent=count+" prospect"+(count===1?"":"s");
+    document.getElementById("intelShown").textContent=count+" of "+players.length+" shown";
+    host.innerHTML=rows.length?rows.map(p=>{
+      const selected=p.r===state.rank;
+      return '<button class="dna-result'+(selected?' is-selected':'')+'" type="button" data-intel-rank="'+p.r+'" aria-pressed="'+selected+'">' +
+        '<span class="dna-result-rank">'+p.r+'</span>'+
+        '<span class="dna-result-name"><strong>'+esc(p.n)+'</strong><small>'+esc(p.s)+' <span aria-hidden="true">·</span> '+esc(p.p)+'</small></span>'+
+        '<span class="dna-result-state">'+esc(label(p))+'</span>'+
+        '<span class="dna-result-arrow" aria-hidden="true">›</span></button>';
+    }).join(""):'<p class="dna-empty">No players match. Try a different school, name, or position.</p>';
+  }
+  function statText(n){return typeof n==="number"&&Number.isFinite(n)?n.toLocaleString("en-US",{maximumFractionDigits:1}):"—"}
+  function evidenceCard(eyebrow,headline,detail,status,extra=""){
+    return '<article class="dna-evidence-card"><div class="dna-evidence-meta"><span>'+esc(eyebrow)+'</span><span class="dna-evidence-status">'+esc(status)+'</span></div>'+
+      '<strong>'+esc(headline)+'</strong><p>'+esc(detail)+'</p>'+extra+'</article>';
   }
   function drawProfile(){
     const p=byRank.get(state.rank);if(!p)return;
-    const e=available(p),l=e.l,info=e.info,c=e.research;
-    const hasStats=e.stats.length>0;
-    const numberText=hasStats?e.stats.map(x=>Number(x.value).toLocaleString("en-US")+" "+x.label).join(" · "):"No individual box-score production supported";
-    const contextLine=c?.detail||"No corroborated player-specific role or historical source is on file.";
-    const sourceLink=info.contextVerified&&cleanURL(info.sourceUrl)?
-      '<a class="intel-source-link" href="'+esc(info.sourceUrl)+'" target="_blank" rel="noopener noreferrer">View original source ↗</a>':"";
-    const next=info.context||"Which NFL-relevant skills are not captured by college box scores?";
-    const opinion=info.interpretation;
-    const stable=p.ta ? p.ta==="GREEN"?"Relatively stable":p.ta==="AMBER"?"Some uncertainty":"More uncertainty":"Not assessed";
-    const stableHelp=p.ta ?
-      "Historical offensive context stability through 2025. Not a player talent grade.":
-      "APEX has no validated context-stability measure for this position.";
-    const stage=l?.gp!=null?l.gp+" recorded box-score games":"Game count unconfirmed";
+    const d=available(p),info=d.info,stat=d.stats,c=d.research;
+    const enough=stat.length>0;
+    const production=enough?stat.slice(0,3).map(x=>statText(x.value)+" "+x.label).join(" · "):
+      p.p==="OL"?"No individual blocking grade from box scores":"No usable individual 2026 stat line";
+    const next=info.context||"What is missing from this player's available college evidence?";
+    const extra=c&&info.contextVerified&&safeUrl(info.sourceUrl)?
+      '<a class="dna-source" href="'+esc(info.sourceUrl)+'" target="_blank" rel="noopener noreferrer">See source ↗</a>':"";
+    const researchLine=c?.detail||"We have not verified a separate player-specific role or development claim.";
+    const researchStatus=c?info.contextVerified?"Source checked":"Needs independent check":"Not available";
+    const contextStatus=p.ta==="GREEN"?"More stable":p.ta==="AMBER"?"Some uncertainty":p.ta==="RED"?"Higher uncertainty":"Not evaluated";
+    const contextDetail=p.ta?"Older offensive context-stability assessment; not a talent grade.":"No comparable historical context-stability measure for this position.";
+    const pg=typeof d.l?.gp==="number"?d.l.gp+" recorded-stat games":"Recorded-game count unavailable";
+    const index=players.findIndex(x=>x.r===p.r);
     document.getElementById("intelProfile").innerHTML=
-      '<div class="intel-profile-banner"><div><span class="intel-label">PLAYER DNA / MARKET #'+p.r+'</span>'+
-      '<h2 id="dnaPlayerName">'+esc(p.n)+'</h2><p>'+esc(p.p)+' · '+esc(p.s)+'</p></div>'+
-      '<div class="intel-take"><span>Current APEX view</span><strong>'+esc(e.trend)+'</strong><small>Frozen research action, not an NFL success probability</small></div></div>'+
-      '<div class="intel-kpis">'+
-        panel("2027 market rank","#"+p.r,"Consensus order, not a new APEX talent score.")+
-        panel("Context stability",stable,stableHelp)+
-        panel("2026 public snapshot",info.kind==="season"?"Stats on file":info.kind==="ol"?"OL box score limited":"Limited evidence",
-            "October 7 ESPN-derived summary; not the privately verified CFBD research archive.")+
+      '<div class="dna-profile-nav"><button id="dnaBack" type="button">← All prospects</button>'+
+        '<div class="dna-step"><button id="dnaPrev" type="button" '+(index===0?'disabled':'')+' aria-label="Previous prospect">←</button>'+
+        '<span>'+ (index+1)+' / '+players.length+'</span>'+
+        '<button id="dnaNext" type="button" '+(index===players.length-1?'disabled':'')+' aria-label="Next prospect">→</button></div></div>'+
+      '<div class="dna-identity"><div><span class="dna-kicker">2027 DRAFT / CONSENSUS #'+p.r+'</span>'+
+      '<h2 id="dnaPlayerName">'+esc(p.n)+'</h2><p>'+esc(p.s)+' <span aria-hidden="true">·</span> '+esc(p.p)+'</p></div>'+
+      '<span class="dna-profile-position">'+esc(p.p)+'</span></div>'+
+      '<div class="dna-verdict"><div><span>THE APEX READ</span><strong>'+esc(d.trend)+'</strong>'+
+      '<p>'+esc(info.interpretation)+'</p></div>'+
+      '<span class="dna-verdict-note">Research view · not an NFL success probability</span></div>'+
+      '<div class="dna-quickfacts">'+
+        '<div><span>MARKET RANK</span><strong>#'+p.r+'</strong><small>Consensus, not an APEX talent grade</small></div>'+
+        '<div><span>2026 PRODUCTION</span><strong>'+esc(enough?"Recorded":p.p==="OL"?"Unmeasured":"Limited")+'</strong><small>'+esc(pg)+'</small></div>'+
+        '<div><span>CONTEXT STABILITY</span><strong>'+esc(contextStatus)+'</strong><small>'+esc(contextDetail)+'</small></div></div>'+
+      '<div class="dna-section-title"><span>01 / FACT CHECK</span><h3>What do we actually know?</h3></div>'+
+      '<div class="dna-evidence-grid">'+
+        evidenceCard("ON THE FIELD",production,enough?pg+" · ESPN-derived Oct. 7 public summary":info.status,enough?"Recorded":"Incomplete")+
+        evidenceCard("ROLE & BACKGROUND",researchLine,c?"Verification applies only to this individual dated fact.":"No evidence is not a negative grade.",researchStatus,extra)+
       '</div>'+
-      '<section class="intel-insight"><div class="intel-section-head"><span>01 / THE READ</span><h3>What APEX sees so far</h3></div>'+
-        '<p class="intel-big-copy">'+esc(opinion)+'</p>'+
-        '<div class="intel-disclosure">A market-relative view is not a prediction of NFL success. APEX has not deployed the X9/X10 workload models.</div>'+
-      '</section>'+
-      '<section class="intel-sources"><div class="intel-section-head"><span>02 / THE EVIDENCE</span><h3>Follow the facts, not just a grade</h3></div>'+
-        '<div class="intel-source-grid">'+
-          '<article class="intel-source-tile"><div class="intel-source-top"><span class="intel-source-pill '+(hasStats?'has-evidence':'')+'">'+(hasStats?'Recorded':'Limited')+'</span><span>2026 production</span></div>'+
-            '<strong>'+esc(hasStats?numberText:"No reliable individual stat line")+'</strong>'+
-            '<p>'+esc(hasStats?stage+" · "+info.status:info.kind==="ol"?"Individual OL blocking grades are not supplied by public box scores.":info.status)+'</p>'+
-            '<small>Source: public ESPN-derived Oct. 7 snapshot; descriptive statistics only</small></article>'+
-          '<article class="intel-source-tile"><div class="intel-source-top"><span class="intel-source-pill '+(info.contextVerified?'has-evidence':'')+'">'+esc(info.contextVerified?"Source checked":c?"Research filed":"Not recorded")+'</span><span>Role & background</span></div>'+
-            '<strong>'+esc(contextLine)+'</strong><p>'+esc(c?(info.contextVerified?"Verified only for this dated fact; not a complete scouting grade.":"Research summary has not been independently checked."):"No player-specific official role evidence available yet.")+'</p>'+sourceLink+'</article>'+
-          '<article class="intel-source-tile"><div class="intel-source-top"><span class="intel-source-pill">Evaluation gap</span><span>NFL translation</span></div>'+
-            '<strong>What the numbers cannot answer</strong><p>'+esc(next)+'</p><small>No inferred PFF grades, fake film ratings, or made-up probabilities.</small></article>'+
-        '</div></section>'+
-      '<div id="intelDevelopment"></div>'+
-      '<section class="intel-next"><div><span class="intel-label">06 / NEXT SCOUTING QUESTION</span><h3>What would change the assessment?</h3>'+
-        '<p>'+esc(next)+'</p><small>Position-specific research question; not an identified weakness or a guaranteed score change.</small></div>'+
-        '<div class="intel-profile-actions"><button type="button" class="intel-action primary" id="intelDossier">Full player dossier ↗</button>'+
-          '<button type="button" class="intel-action" id="intelAdvisor">View in Draft Advisor →</button></div></section>'+
-      '<div class="intel-freshness"><strong>Know the data boundary.</strong> Public box scores: Oct. 7, 2026 secondary snapshot. Context receipts: through Oct. 8, 2026. Licensed 2026 CFBD and historical model experiments are being researched privately and are not represented as current live player probabilities.</div>';
+      '<div class="dna-question"><div><span>02 / THE QUESTION</span><h3>What still needs to be proved?</h3><p>'+esc(next)+'</p>'+
+        '<small>Scouting question, not a diagnosed weakness.</small></div></div>'+
+      '<details class="dna-expand" id="dnaMoreResearch"><summary><span>03 / GO DEEPER</span><strong>Historical comparisons & development</strong><span class="dna-expand-icon" aria-hidden="true">+</span></summary>'+
+        '<p class="dna-expand-intro">Position peers and size-only comparisons are context, not look-alike career forecasts. This section has more detailed source limitations.</p><div id="intelDevelopment"></div></details>'+
+      '<div class="dna-actions"><button id="intelDossier" class="dna-button dna-primary" type="button">Open full dossier →</button>'+
+      '<button id="intelAdvisor" class="dna-button" type="button">Explore Draft Advisor →</button></div>'+
+      '<p class="dna-bottom-note"><strong>Source boundary:</strong> 2026 public statistics reflect an ESPN-derived Oct. 7 snapshot. The independently replayed private CFBD Week 5 dataset and historical NFL experiments are not published as new player grades. Missing is not poor performance.</p>';
     window.APEX_DEVELOP?.render(p);
+    document.getElementById("dnaBack").addEventListener("click",()=>{state.view="browse";root.dataset.view="browse";document.getElementById("intelSearch").focus()});
+    document.getElementById("dnaPrev").addEventListener("click",()=>{if(index>0)select(players[index-1].r)});
+    document.getElementById("dnaNext").addEventListener("click",()=>{if(index<players.length-1)select(players[index+1].r)});
     document.getElementById("intelDossier").addEventListener("click",()=>{
       window.dispatchEvent(new CustomEvent("apex:open-dossier",{detail:{rank:p.r}}));
     });
@@ -106,49 +109,50 @@
     });
   }
   function select(rank){
-    if(!byRank.has(Number(rank)))return;
-    state.rank=Number(rank);
+    rank=Number(rank);if(!byRank.has(rank))return;
+    state.rank=rank;
+    state.view="profile";root.dataset.view="profile";
     drawDirectory();drawProfile();
-    const announce=document.getElementById("intelAnnouncement");
-    if(announce)announce.textContent="Showing Player DNA for "+byRank.get(state.rank).n;
+    const a=document.getElementById("intelAnnouncement");
+    if(a)a.textContent="Selected "+byRank.get(rank).n+" ("+rank+" of "+players.length+")";
   }
+  const withStat=players.filter(p=>statsFor(p).length>0).length;
+  root.className="dna-v3";
+  root.dataset.view="browse";
   root.innerHTML=
-    '<div class="intel-hero"><div><span class="intel-overline">APEX / 2027 SCOUTING INTELLIGENCE</span>'+
-    '<h1>Don’t just see a ranking.<br><em>Understand the player.</em></h1>'+
-    '<p>Every prospect has a story. Explore the evidence behind the current APEX view, see where it comes from, and learn what we still need to know.</p>'+
-    '<div class="intel-hero-chips"><span>201 prospects</span><span>Source-aware</span><span>No invented grades</span></div></div>'+
-    '<aside class="intel-hero-note"><span>HOW TO USE PLAYER DNA</span><strong>Read → Verify → Question</strong>'+
-    '<p>Start with the current evidence, check the source, then ask what would actually change your mind.</p></aside></div>'+
-    '<div class="intel-layout"><aside class="intel-sidebar" aria-label="Choose a prospect">'+
-      '<div class="intel-picker-title"><h2>Find a prospect</h2><small id="intelCount">201 prospects</small></div>'+
-      '<label class="intel-field"><span>Search by player or school</span><input id="intelSearch" type="search" placeholder="e.g. Jeremiah Smith" autocomplete="off"></label>'+
-      '<label class="intel-field"><span>Position</span><select id="intelPosition">'+positions.map(p=>'<option value="'+esc(p)+'">'+esc(p==="ALL"?"All positions":p)+'</option>').join("")+'</select></label>'+
-      '<div class="intel-directory" id="intelDirectory" aria-label="Prospect results"></div>'+
-      '<button id="intelMore" class="intel-more" type="button">Show more prospects ↓</button></aside>'+
-      '<div class="intel-profile" id="intelProfile" aria-live="off"></div></div>'+
-      '<div id="intelAnnouncement" class="intel-visually-hidden" aria-live="polite"></div>';
+    '<header class="dna-header"><div><span class="dna-kicker">APEX SCOUTING / 2027</span>'+
+      '<h1>The player comes first.</h1><p>Explore every prospect. Clear evidence, real context, no mystery scores.</p></div>'+
+      '<div class="dna-header-count"><strong>'+players.length+'</strong><span>prospects on the board</span><small>'+withStat+' with position stats in the public snapshot</small></div></header>'+
+    '<div class="dna-browser"><aside class="dna-list" aria-label="All 2027 prospects"><div class="dna-directory-head">'+
+      '<div><strong>Find your player</strong><span id="intelShown">'+players.length+' of '+players.length+' shown</span></div>'+
+      '<small id="intelCount">'+players.length+' prospects</small></div>'+
+      '<label class="dna-search"><span class="dna-sr">Search every 2027 prospect</span><input id="intelSearch" type="search" placeholder="Search name, team, rank..." autocomplete="off" aria-label="Search every prospect"></label>'+
+      '<label class="dna-position"><span>POSITION</span><select id="intelPosition" aria-label="Filter by position">'+positions.map(x=>
+        '<option value="'+esc(x)+'">'+esc(x==="ALL"?"All positions":titleByPos[x]||x)+'</option>').join("")+'</select></label>'+
+      '<div class="dna-list-help">All '+players.length+' prospects are listed below. Scroll or search to find anyone.</div>'+
+      '<div id="intelDirectory" class="dna-all-players" aria-label="Complete prospect directory"></div></aside>'+
+      '<section id="intelProfile" class="dna-profile" aria-label="Selected prospect"></section></div>'+
+    '<div id="intelAnnouncement" class="dna-sr" aria-live="polite"></div>';
   root.addEventListener("click",event=>{
-    const b=event.target.closest("[data-intel-rank]");
-    if(b)select(Number(b.dataset.intelRank));
+    const button=event.target.closest("[data-intel-rank]");
+    if(button)select(button.dataset.intelRank);
   });
   document.getElementById("intelSearch").addEventListener("input",event=>{
-    state.query=event.target.value;state.limit=12;drawDirectory();
+    state.query=event.target.value;drawDirectory();
   });
   document.getElementById("intelPosition").addEventListener("change",event=>{
-    state.pos=event.target.value;state.limit=12;drawDirectory();
-  });
-  document.getElementById("intelMore").addEventListener("click",()=>{
-    state.limit+=24;drawDirectory();
+    state.position=event.target.value;drawDirectory();
   });
   window.addEventListener("apex:focus-dna-player",event=>{
-    const rank=Number(event?.detail?.rank);if(byRank.has(rank)){
-      state.pos="ALL";state.query="";state.limit=Math.max(12,rank);
+    const rank=Number(event?.detail?.rank);
+    if(byRank.has(rank)){
+      state.position="ALL";state.query="";
       document.getElementById("intelPosition").value="ALL";
       document.getElementById("intelSearch").value="";
       select(rank);
     }
   });
-  select(state.rank);
+  drawDirectory();drawProfile();
 
   const outcomes=[
     {id:"role",name:"Earns an NFL role",desc:"At least one season with 25%+ offensive or defensive snap share in the first four NFL seasons.",scores:[0.22772,0.21905,0.21345,0.21919]},
