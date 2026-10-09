@@ -77,3 +77,20 @@ Shipped source-aware **non-predictive** comparison widgets. These do not impleme
 **Tests**
 - Existing 201-player navigation and all privacy tests preserved.
 - New browser-simulation tests cover physical match gates, 2026 same-position comparison, OL abstention, missing-measurement fallback, verified 2025 evidence, no private NFL success label, and mobile stacking.
+
+## v3 UX redesign and explicit full-board requirement — October 9, 2026
+
+User feedback: initial large-gradient dashboard, heavy text hierarchy, and apparent missing players were unacceptable. The old selector rendered only the first twelve of 201 records, hiding the rest behind a `Show more` interaction.
+
+**Changes shipped in v3**
+
+- Full 201-prospect **index, immediately rendered**, sorted by consensus rank, no first-12 slice, load-more or arbitrary limit.
+- Visible `N of 201 shown`, dynamically accurate for search and position filters; search covers player name, school, position code and rank, accent-agnostic.
+- Desktop directory+detail reading pattern; mobile browse screen → detail screen with clear `All prospects` back and chronological Previous/Next.
+- Crisp editorial hierarchy: player name, source-limited APEX takeaway, three essential context facts, public observable production and dated research, one specific unanswered football question.
+- Size-only historical peers, same-position stats and available earlier seasons are **progressively disclosed** rather than crowded into the default player view.
+- Source, missingness and non-promotion limits remain explicit. No missing-player fallbacks, fake grades, invented NFL comparisons or silent model changes.
+- Dark/light and high-contrast focus states inherited. One-column cards on narrow phones; tap targets 42–58px.
+- Regression gate verifies all 201 controls and rank #201 exist immediately, every selection works, the mobile mode toggles correctly, and the rest of APEX remains operational.
+
+Remaining known gap: a full board entry is not the same as a complete validated individual 2026 box-score record. Every player remains selectable even when their college performance is not measured or verified in public data.
