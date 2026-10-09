@@ -104,6 +104,7 @@
        '<div class="intel-time-item"><span>2026 snapshot</span><strong>'+safe(t.currentAvailable?"Public season evidence":"Evidence incomplete")+'</strong>'+
          '<p>'+safe(t.current)+'</p></div></div>'+
        '<p class="intel-dev-foot">A season-to-season growth rate is deliberately not shown unless comparable player-season measurements exist. Absences, transfers and positions change what a trend can mean.</p></section>';
+    window.APEX_HISTORICAL_WIDGET?.render(p,root);
   }
   window.APEX_DEVELOP={analysis,render,historyCount:history.length};
 })();
