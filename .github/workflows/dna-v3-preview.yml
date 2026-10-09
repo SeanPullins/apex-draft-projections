@@ -1,0 +1,40 @@
+name: APEX Player DNA v3 visual preview
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'player-intel.js'
+      - 'player-dna-v3.css'
+      - 'index.html'
+      - '.github/workflows/dna-v3-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive public-safe static page for offline browser verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-dna-v3-offline-preview
+          path: |
+            index.html
+            styles.css
+            decision-lab.css
+            decision-lab.js
+            player-intel.css
+            player-intel.js
+            player-dna-v3.css
+            player-development.css
+            player-development.js
+            historical-physical-reference.js
+            data2027.js
+            data2026.js
+            data2027-context.js
+            scouting-stories.js
+            app.js
+            pffqb2026.js
+            docs/PLAYER_DNA_MODEL_LAB_PRD.md
+          if-no-files-found: error
+          retention-days: 2
