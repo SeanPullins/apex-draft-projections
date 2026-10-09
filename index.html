@@ -8,6 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <link rel="stylesheet" href="styles.css?v=20261008-board1">
 <link rel="stylesheet" href="decision-lab.css?v=20261008-fan1">
+<link rel="stylesheet" href="player-intel.css?v=20261009-intel1">
 </head>
 <body>
 <header class="topbar">
@@ -17,10 +18,11 @@
   </a>
   <nav class="tabs" role="tablist" aria-label="APEX sections">
     <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">2027 Board</button>
+    <button class="tab" data-tab="dna" role="tab" aria-selected="false">Player DNA</button>
     <button class="tab" data-tab="team" role="tab" aria-selected="false">Team Mode</button>
     <button class="tab" data-tab="lab" role="tab" aria-selected="false">Draft Advisor</button>
     <button class="tab" data-tab="how" role="tab" aria-selected="false">How APEX Works</button>
-    <button class="tab" data-tab="validation" role="tab" aria-selected="false">Validation</button>
+    <button class="tab" data-tab="validation" role="tab" aria-selected="false">Model Lab</button>
   </nav>
   <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
 </header>
@@ -40,6 +42,7 @@
         <div class="hero-actions">
           <button id="openTeamMode" class="primary-button hero-team-button" type="button">Open Team Mode →</button>
           <button id="openDecisionLab" class="text-button" type="button">Explore Draft Advisor →</button>
+          <button id="openPlayerDNA" class="text-button" type="button">Explore Player DNA →</button>
           <span>Build a Browns or any-team draft room with your picks, needs, philosophy, and risk tolerance.</span>
         </div>
       </div>
@@ -141,6 +144,10 @@
       </div>
       <p class="table-hint">Select a player for actual season statistics, APEX’s market view, and an explanation of what the available data can and cannot establish.</p>
     </div>
+  </section>
+
+  <section id="tab-dna" class="tab-panel" aria-label="Player DNA scouting evidence experience">
+    <div id="playerDNAApp" class="dna-app"></div>
   </section>
 
   <section id="tab-team" class="tab-panel">
@@ -396,7 +403,8 @@
   </section>
 
   <section id="tab-validation" class="tab-panel">
-    <div class="prose wide">
+    <div id="modelLabApp" class="intel-model-lab"></div>
+    <div class="prose wide intel-legacy-research">
       <div class="eyebrow">Why trust the framework?</div>
       <h2>Older classes are validation data now — not the product.</h2>
       <p class="lead">We intentionally removed historical draft-class navigation from the main experience. Those classes are used to test whether each APEX component does the job it claims to do.</p>
@@ -504,5 +512,6 @@
 <script src="scouting-stories.js?v=20261008-verify2"></script>
 <script src="app.js?v=20261008-verify2"></script>
 <script src="decision-lab.js?v=20261008-recover1"></script>
+<script src="player-intel.js?v=20261009-intel1"></script>
 </body>
 </html>
