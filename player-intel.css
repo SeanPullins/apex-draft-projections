@@ -151,3 +151,7 @@
   .intel-lab-bottom{flex-direction:column;align-items:start;gap:8px}
 }
 @media (prefers-reduced-motion:reduce){.intel-app *,.intel-model-lab *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Keep every destination available on small phones. */
+@media(max-width:700px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.tab{font-size:11px;min-height:40px}}
+@media(max-width:460px){.tabs .tab:nth-child(3){display:block!important}.tab[data-tab="dna"],.tab[data-tab="validation"]{display:block!important}}
