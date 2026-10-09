@@ -90,11 +90,13 @@
           '<article class="intel-source-tile"><div class="intel-source-top"><span class="intel-source-pill">Evaluation gap</span><span>NFL translation</span></div>'+
             '<strong>What the numbers cannot answer</strong><p>'+esc(next)+'</p><small>No inferred PFF grades, fake film ratings, or made-up probabilities.</small></article>'+
         '</div></section>'+
-      '<section class="intel-next"><div><span class="intel-label">03 / NEXT SCOUTING QUESTION</span><h3>What would change the assessment?</h3>'+
+      '<div id="intelDevelopment"></div>'+
+      '<section class="intel-next"><div><span class="intel-label">06 / NEXT SCOUTING QUESTION</span><h3>What would change the assessment?</h3>'+
         '<p>'+esc(next)+'</p><small>Position-specific research question; not an identified weakness or a guaranteed score change.</small></div>'+
         '<div class="intel-profile-actions"><button type="button" class="intel-action primary" id="intelDossier">Full player dossier ↗</button>'+
           '<button type="button" class="intel-action" id="intelAdvisor">View in Draft Advisor →</button></div></section>'+
       '<div class="intel-freshness"><strong>Know the data boundary.</strong> Public box scores: Oct. 7, 2026 secondary snapshot. Context receipts: through Oct. 8, 2026. Licensed 2026 CFBD and historical model experiments are being researched privately and are not represented as current live player probabilities.</div>';
+    window.APEX_DEVELOP?.render(p);
     document.getElementById("intelDossier").addEventListener("click",()=>{
       window.dispatchEvent(new CustomEvent("apex:open-dossier",{detail:{rank:p.r}}));
     });
