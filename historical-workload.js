@@ -46,7 +46,7 @@ function render(p,root){
  const html='<section class="intel-dev-section intel-career-context" aria-label="Historical four-year NFL workload cohort">'+
    '<div class="intel-section-head"><span>03B / NFL HISTORY</span><h3>What happened to drafted players in this group?</h3></div>'+
    '<p class="intel-dev-intro">A real-world reference point from '+records.years[0]+'–'+records.years[1]+
-   ' NFL drafts. <strong>These are past results—not this player’s predicted chances.</strong></p>'+
+   ' NFL drafts. <strong>These are past results, not an APEX prediction for this prospect.</strong></p>'+
    '<div class="intel-career-cohort"><div><span>REFERENCE GROUP</span><strong>'+esc(x.position)+(useBand?" · "+esc(x.range):" · All sizes")+
    '</strong><small>'+esc(desc)+'</small></div><div class="intel-career-count"><strong>'+number(x.n)+'</strong><span>historically drafted players</span></div></div>'+
    '<div class="intel-career-rows">'+bars+'</div>'+
