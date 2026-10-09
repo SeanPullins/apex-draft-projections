@@ -108,4 +108,39 @@ const devcss=fs.readFileSync(path.join(root,"player-development.css"),"utf8");
 assert(devcss.includes("max-width:650px") && devcss.includes("intel-hist-grid"),"stack historical profiles on mobile");
 assert(!JSON.stringify(w.APEX_HISTORY_PHYSICAL).includes("A_earns_nfl_role"),"never publish private NFL success labels");
 
+assert(w.APEX_HISTORICAL_COHORT && w.APEX_HISTORICAL_WIDGET,"verified historical NFL cohort module must load");
+assert.equal(w.APEX_HISTORICAL_COHORT.years[0],2013);
+assert.equal(w.APEX_HISTORICAL_COHORT.years[1],2022);
+const cohortRows=Object.values(w.APEX_HISTORICAL_COHORT.rows);
+assert.equal(cohortRows.length,9,"nine non-specialist historical position groups");
+assert.equal(cohortRows.reduce((sum,row)=>sum+row.all[0],0),2509,
+  "2,509 historical drafted athletes with a known combine weight");
+for(const row of cohortRows){
+  for(let i=0;i<4;i++)assert.equal(row.all[i],row.bands.reduce((total,cell)=>total+cell[i],0),
+    "all historical cohort columns must reconcile to disjoint weight ranges");
+}
+const smith=w.APEX_HISTORICAL_WIDGET.analysis(w.APEX2027.players.find(p=>p.r===1));
+assert.equal(smith.position,"WR");
+assert.equal(smith.tier,2,"222-lb WR belongs to the >210-lb historical band");
+assert.equal(smith.n,91);
+assert.equal(smith.counts[0],56,"56 of 91 historical drafted WRs earned a workload role");
+const qbMissing=w.APEX_HISTORICAL_WIDGET.analysis(w.APEX2027.players.find(p=>p.r===61));
+assert.equal(qbMissing.tier,null,"unavailable roster weight must not be guessed");
+assert.equal(qbMissing.n,113,"weight-missing QB safely falls back to full position cohort");
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:1}}));
+assert(d.querySelectorAll(".intel-career-context").length===1,"exactly one historical cohort panel per player");
+assert(d.querySelector(".intel-career-context").textContent.includes("2013–2022"));
+assert(d.querySelector(".intel-career-context").textContent.includes("91"));
+assert(d.querySelector(".intel-career-context").textContent.includes("past results"));
+assert(d.querySelector(".intel-career-context").textContent.includes("not an APEX prediction"));
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:8}}));
+assert(d.querySelectorAll(".intel-career-context").length===1,"changing prospects must replace historical panel");
+assert(d.querySelector(".intel-career-context").textContent.includes("140"));
+assert.equal(w.APEX_HISTORICAL_WIDGET.analysis(w.APEX2027.players.find(p=>p.r===8)).position,"OL");
+assert(!JSON.stringify(w.APEX_HISTORICAL_COHORT).includes("pfr_player_id"),"no individual PFR IDs in public aggregate");
+assert(!JSON.stringify(w.APEX_HISTORICAL_COHORT).includes("A_earns_nfl_role"),"no internal player-level labels in public aggregate");
+const cohortCss=fs.readFileSync(path.join(root,"historical-workload.css"),"utf8");
+assert(cohortCss.includes("max-width:650px"),"career cohort must remain readable on phones");
+assert.equal(JSON.stringify(w.APEX2027.players),original,"historical module cannot mutate 2027 rankings");
+
 console.log("PASS: Player DNA, source scope, 201 prospects, linked dossiers, mobile navigation, Model Lab and immutable projections");

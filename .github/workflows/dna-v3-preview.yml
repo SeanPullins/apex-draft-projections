@@ -6,6 +6,9 @@ on:
       - 'player-intel.js'
       - 'player-dna-v3.css'
       - 'index.html'
+      - 'apex-historical-context.js'
+      - 'historical-workload.js'
+      - 'historical-workload.css'
       - '.github/workflows/dna-v3-preview.yml'
 permissions:
   contents: read
@@ -29,6 +32,9 @@ jobs:
             player-development.css
             player-development.js
             historical-physical-reference.js
+            apex-historical-context.js
+            historical-workload.js
+            historical-workload.css
             data2027.js
             data2026.js
             data2027-context.js
@@ -36,5 +42,6 @@ jobs:
             app.js
             pffqb2026.js
             docs/PLAYER_DNA_MODEL_LAB_PRD.md
+            docs/PLAYER_DNA_HISTORICAL_WORKLOAD_COHORTS.md
           if-no-files-found: error
           retention-days: 2
