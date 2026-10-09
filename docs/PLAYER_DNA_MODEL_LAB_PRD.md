@@ -49,3 +49,31 @@ Target: a casual NFL fan who understands football but does not know data science
 - X10 independent prospective outcome validation and calibration.
 - Team fit informed by real roster/scheme only after authoritative feeds and accuracy assessment.
 - Film charts with licensed access and repeatable agreement; never LLM hallucinated ratings.
+
+
+## Player DNA v2 — historical size neighbors and development evidence (Oct 9, 2026)
+
+Shipped source-aware **non-predictive** comparison widgets. These do not implement a validated skill/production/NFL-outcome analog engine.
+
+**Historical reference**
+- Small 155-player sampled reference from 2015–2022 drafted non-specialists, selected using historical pre-draft measurements and 2027 physical-size coverage, **not NFL outcomes**.
+- Position-group, listed height and weight ONLY. No age, skill, production, team fit, NFL success or win-probability comparison implied.
+- Up to three closest historical neighbors when source roster measurements exist; cap 3 inches / 25 lb (35 lb OL/DT) and normalized size distance 1.8. Quarantine players with missing height or weight.
+- Historical measurement records originated in existing APEX research exports and have NOT been independently source-fact-verified; this is clearly disclosed.
+- Any future football-performance "success analogs" require independently authorized career data and out-of-time validation; **not released here**.
+
+**2026 production context**
+- Use public ESPN-derived October 7 2026 box-score data ONLY; never private CollegeFootballData or PFF files.
+- Compare one metric appropriate to the position (QB pass yards, WR/TE receiving yards, RB rushing yards, EDGE/DT sacks, LB/S tackles, CB defended passes) **per recorded-stat game**.
+- Only include same-position prospects with >=2 box-score-recorded games and valid metric entries, minimum comparison n=5.
+- Report the player's rate, within-sample median and cohort size; never call this a national percentile, opponent-adjusted score, quality grade, or future projection.
+- Abstain for offensive linemen, injuries/nonparticipants, and inadequate source coverage. Do not impute zero from missing data.
+
+**Cross-season evidence**
+- Display a previous season fact only when its existing source-linked research entry is verified and explicitly names 2023/2024/2025.
+- Other prospects display a transparent unavailable state, not an artificial growth curve. Link original dated source when checked.
+- The 2026 current snapshot remains independent and cannot itself establish a trajectory.
+
+**Tests**
+- Existing 201-player navigation and all privacy tests preserved.
+- New browser-simulation tests cover physical match gates, 2026 same-position comparison, OL abstention, missing-measurement fallback, verified 2025 evidence, no private NFL success label, and mobile stacking.

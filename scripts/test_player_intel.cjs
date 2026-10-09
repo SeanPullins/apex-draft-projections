@@ -68,4 +68,36 @@ const css=fs.readFileSync(path.join(root,"player-intel.css"),"utf8");
 assert(css.includes(".tab[data-tab=\"dna\"]"),"DNA visible on narrow phones");
 assert(css.includes("max-width:650px"),"mobile evidence layout");
 assert(css.includes("focus-visible"),"keyboard focus states");
+
+assert(w.APEX_DEVELOP && w.APEX_HISTORY_PHYSICAL,"historical + development module must load");
+assert.equal(w.APEX_HISTORY_PHYSICAL.length,155,"historical reference count is frozen");
+assert(w.APEX_DEVELOP.analysis(w.APEX2027.players.find(p=>p.r===1)).physical.matches.length>0,
+  "Jeremiah Smith must have size-only historical neighbors");
+const first=w.APEX_DEVELOP.analysis(w.APEX2027.players.find(p=>p.r===1));
+assert(first.snapshot && first.snapshot.cohort>=5,"WR position-specific 2026 recorded-stat comparison");
+assert.equal(first.snapshot.label,"Receiving yards per recorded-stat game");
+assert.equal(first.physical.matches[0].position,"WR","historical matches stay within position group");
+assert(first.physical.matches.every(x=>Math.abs(x.heightDelta)<=3 && Math.abs(x.weightDelta)<=25),
+  "historical comp candidates limited by explicit physical difference gates");
+d.querySelector('[data-tab="dna"]').click();
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:1}}));
+assert(d.querySelector("#intelDevelopment").textContent.includes("Who had a similar build?"));
+assert(d.querySelector("#intelDevelopment").textContent.includes("not a national percentile") ||
+       d.querySelector("#intelDevelopment").textContent.includes("Not a national percentile"));
+assert(d.querySelector("#intelDevelopment").textContent.includes("Similar size does not imply a similar NFL career."));
+assert(d.querySelector("#intelDevelopment").textContent.includes("Nico Collins"),"known size neighbor");
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:8}}));
+assert(d.querySelector("#intelDevelopment").textContent.includes("Individual OL production isn’t available from box scores."),
+ "OL metrics must be abstained");
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:144}}));
+assert(d.querySelector("#intelDevelopment").textContent.includes("2025: 59 tackles"),"verified prior-season source only");
+assert(d.querySelector("#intelDevelopment").querySelector(".intel-timeline a[href^='https://']"));
+w.dispatchEvent(new w.CustomEvent("apex:focus-dna-player",{detail:{rank:61}}));
+assert(d.querySelector("#intelDevelopment").textContent.includes("Public roster height or weight is unavailable."),
+ "No guess when measurements are missing");
+assert.equal(JSON.stringify(w.APEX2027.players),original,"historical comparisons must not modify forecasts");
+const devcss=fs.readFileSync(path.join(root,"player-development.css"),"utf8");
+assert(devcss.includes("max-width:650px") && devcss.includes("intel-hist-grid"),"stack historical profiles on mobile");
+assert(!JSON.stringify(w.APEX_HISTORY_PHYSICAL).includes("A_earns_nfl_role"),"never publish private NFL success labels");
+
 console.log("PASS: Player DNA, source scope, 201 prospects, linked dossiers, mobile navigation, Model Lab and immutable projections");
