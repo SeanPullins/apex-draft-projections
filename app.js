@@ -175,12 +175,18 @@
   }
   $$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
   const initial = (location.hash || "#board").slice(1);
-  if (["board","team","lab","how","validation"].includes(initial)) setTab(initial);
+  if (["board","dna","team","lab","how","validation"].includes(initial)) setTab(initial);
+  window.addEventListener("hashchange", () => {
+    const requested=(location.hash||"#board").slice(1);
+    if (["board","dna","team","lab","how","validation"].includes(requested) && state.tab!==requested) setTab(requested);
+  });
 
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
   const labLauncher = $("#openDecisionLab");
   if (labLauncher) labLauncher.addEventListener("click", () => setTab("lab"));
+  const dnaLauncher=$("#openPlayerDNA");
+  if (dnaLauncher) dnaLauncher.addEventListener("click", () => setTab("dna"));
 
   /* position filters */
   const positions = ["ALL", ...Array.from(new Set(D.players.map(p => p.p))).sort()];
@@ -779,9 +785,14 @@
         tech("Legacy research focus",p.ctx ? humanContext(p.ctx) : "Not available") +
         tech("Topology freshness",topo ? "through 2025" : "not covered") +
       '</div><p class="fine">'+esc(prof.note)+' Live 2026 evidence is a separate sensor. Translation Topology still uses college history through 2025.</p></details>' +
-      '<div class="dossier-lab-cta"><button id="modalInvestigate" class="primary-button" type="button">See the APEX player verdict →</button><span class="fine">Read the verdict and follow your favorite prospects. No new grade is created.</span></div>';
+      '<div class="dossier-lab-cta"><button id="modalDNA" class="primary-button" type="button">Explore Player DNA →</button><button id="modalInvestigate" class="text-button" type="button">Draft Advisor →</button><span class="fine">Trace the evidence before deciding. No new grade is created.</span></div>';
     backdrop.hidden = false;
     document.body.classList.add("modal-open");
+    $("#modalDNA",modal).addEventListener("click", () => {
+      closeModal();
+      setTab("dna");
+      window.dispatchEvent(new CustomEvent("apex:focus-dna-player",{detail:{rank:p.r}}));
+    });
     $("#modalInvestigate",modal).addEventListener("click", () => {
       closeModal();
       setTab("lab");
