@@ -207,7 +207,7 @@ def build_labels(picks,snaps,season_audit):
             status="SNAP_FEED_BEFORE_COVERAGE";value=None
         elif not pid:
             status="ID_UNRESOLVED";value=None
-        elif not grp:
+        elif not grp or grp not in POSITIONS:
             status="POSITION_UNSUPPORTED";value=None
         else:
             # All four constituent seasons must have complete league schedules.
