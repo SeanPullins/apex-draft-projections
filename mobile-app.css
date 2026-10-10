@@ -1,3 +1,4 @@
+.apex-mob-one-line{display:none}
 /* App-like mobile only. Desktop styles (>=481px) are intentionally untouched. */
 @media(max-width:480px){
   :root{--mob-gutter:16px;--mob-header:48px;--mob-bottom:calc(56px + env(safe-area-inset-bottom,0px));--mob-stroke:var(--line);--mob-card:var(--surface);scroll-padding-top:120px}
@@ -49,6 +50,8 @@
   #tab-board .hero h1{font-size:28px;line-height:1.12;letter-spacing:-.045em;margin:9px 0 10px}
   #tab-board .hero h1 br{display:none}
   #tab-board .hero p{font-size:15px;line-height:1.45;color:var(--muted);margin:0}
+  .apex-mobile-ready #tab-board .hero-copy>p:not(.apex-mob-one-line){display:none}
+  .apex-mobile-ready #tab-board .hero-copy>.apex-mob-one-line{display:block;font-size:15px;line-height:1.45}
   #tab-board .hero p strong{font-weight:650}
   #tab-board .hero-guide{display:none!important}
   #tab-board .hero-meta{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:13px -16px 0;padding:2px 16px 9px;scrollbar-width:none}
@@ -79,7 +82,7 @@
   .apex-mob-chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
   .apex-mob-position{display:grid;grid-template-columns:1fr;min-width:96px;max-width:116px}
   .apex-mob-position span{font-size:9px;text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:var(--muted);line-height:10px}
-  .apex-mob-position select{width:100%;min-width:0;height:33px;min-height:33px;margin-top:1px;padding:0 5px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+  .apex-mob-position select{width:100%;min-width:0;height:44px;min-height:44px;margin-top:1px;padding:0 5px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
   #apexMobBoard{display:grid;gap:11px;min-width:0}
   .apex-mob-count{font-size:12px;font-weight:750;color:var(--muted);margin-bottom:1px;min-height:22px}
   .apex-mob-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--mob-card);box-shadow:0 2px 9px rgba(0,0,0,.04);min-width:0;overflow-wrap:anywhere;cursor:pointer}
@@ -94,9 +97,12 @@
   .apex-mob-take{background:var(--surface-2);color:var(--ink)}
   .apex-mob-confidence{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
   .apex-mob-confidence i{width:8px;height:8px;border-radius:50%;background:currentColor}
-  .apex-mob-confidence.tone-green{color:var(--green);background:var(--green-bg)}
-  .apex-mob-confidence.tone-amber{color:var(--amber);background:var(--amber-bg)}
-  .apex-mob-confidence.tone-red{color:var(--red);background:var(--red-bg)}
+  .apex-mob-confidence.tone-green{color:var(--ink);background:var(--green-bg)}
+  .apex-mob-confidence.tone-amber{color:var(--ink);background:var(--amber-bg)}
+  .apex-mob-confidence.tone-red{color:var(--ink);background:var(--red-bg)}
+  .apex-mob-confidence.tone-green i{background:var(--green)}
+  .apex-mob-confidence.tone-amber i{background:var(--amber)}
+  .apex-mob-confidence.tone-red i{background:var(--red)}
   .apex-mob-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .apex-mob-stat{background:var(--surface-2);border-radius:9px;padding:8px 6px;min-width:0;display:grid;gap:2px}
   .apex-mob-stat strong{color:var(--ink);font-size:17px;font-weight:950;line-height:1.2;font-variant-numeric:tabular-nums}
