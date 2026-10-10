@@ -81,7 +81,7 @@ class OpportunityEvaluationGuardTests(unittest.TestCase):
 
     def test_reject_post_draft_forecast(self):
         p=valid_manifest();p["forecast_as_of"]="2022-05-01"
-        with self.assertRaisesRegex(g.EvaluationContractError,"precedes"):
+        with self.assertRaisesRegex(g.EvaluationContractError,"precede"):
             g.validate_manifest(p)
 
     def test_reject_late_feature_or_consensus_board(self):
