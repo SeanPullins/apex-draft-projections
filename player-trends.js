@@ -25,7 +25,12 @@
     const live=window.APEX2026?.players?.[p.r];
     const eligible=live&&live.ds==="LIVE_2026_SCORED"&&!nonplay.has(live.status);
     let current=null;
-    if(eligible&&r.pos==="WR"&&valid(live.rec)&&live.rec>0&&valid(live.rey)){
+    if(eligible&&p.r===6){
+      // Official Texas four-game log: 3+3+4+1 = 11 catches, 70+35+59+30 = 194 yards.
+      // Oct 7 APEX2026 extract: 12 catches, 208 yards. Same four-game window is unreconciled.
+      current={year:2026,team:live.team,n:null,yards:null,td:null,rate:null,
+        complete:false,scope:"Source conflict: Texas official reports 11 catches / 194 yards through four games; APEX Oct. 7 lists 12 / 208. Rate withheld pending reconciliation."};
+    }else if(eligible&&r.pos==="WR"&&valid(live.rec)&&live.rec>0&&valid(live.rey)){
       current={year:2026,team:live.team,n:live.rec,yards:live.rey,
         td:valid(live.retd)?live.retd:null,rate:live.rey/live.rec,complete:false,
         scope:"Frozen Oct. 7, 2026 public summary; not a complete season"};
@@ -96,7 +101,7 @@
     // The legacy fallback timeline remains for everyone else. Avoid duplicate unsourced
     // 2026 narrative for the four curated sample records.
     const prior=host.querySelector(".intel-timeline");
-    if(prior)prior.hidden=true;
+    if(prior)prior.remove();
   }
   window.APEX_PLAYER_TRENDS={analysis,render,reviewedCount:Object.keys(records).length};
 })();
