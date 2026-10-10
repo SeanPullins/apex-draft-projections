@@ -29,7 +29,7 @@ const {JSDOM} = require('jsdom');
   assert.notEqual(w.APEX2027.players.find(p=>p.r===19).a,'URGENT_DATA_GAP','Tae Johnson must use refreshed 2026 evidence');
   assert.equal(w.APEX2027.players.find(p=>p.r===70).a,'SCOUT_MORE','OJ Frederique should use refreshed 2026 evidence');
   assert(d.querySelector('link[rel="stylesheet"]').getAttribute('href').includes('?v=20261008-board1'));
-  assert([...d.querySelectorAll('script[src]')].every(s=>/\?v=(?:20261007-(?:data7|pff5)|20261008-(?:board1|recover1|verify2)|20261009-(?:intel1|history1|ux3|coh1|trend1|trend2|season1|polish1))$/.test(s.getAttribute('src'))),'All JS assets must be cache-busted');
+  assert([...d.querySelectorAll('script[src]')].every(s=>/\?v=(?:20261007-(?:data7|pff5)|20261008-(?:board1|recover1|verify2)|20261009-(?:intel1|history1|ux3|coh1|trend1|trend2|season1|polish1|mobile1))$/.test(s.getAttribute('src'))),'All JS assets must be cache-busted');
   const css=fs.readFileSync(path.join(root,'styles.css'),'utf8');
   assert(css.includes('.tab[data-tab="team"]{display:block!important}'),'Team Mode must remain visible on narrow phones');
   assert(css.includes('.tabs{order:3;width:100%;margin-left:0;display:grid'),'Mobile tabs must use a dedicated full-width row');
