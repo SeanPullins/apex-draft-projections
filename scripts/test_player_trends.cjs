@@ -27,6 +27,8 @@ assert.equal(Number(smith.current.rate.toFixed(1)),18.7);
 const cam=lab.analysis(player(6));
 assert.equal(cam.seasons[0].team,"Auburn");
 assert.equal(cam.current.team,"Texas","transfer must preserve school-by-season");
+assert.equal(cam.current.rate,null,"Cam 2026 conflict must abstain rather than choose a version");
+assert(cam.current.scope.includes("Source conflict"));
 assert.equal(cam.seasons[1].yards,708);
 const arch=lab.analysis(player(5));
 assert.equal(arch.seasons[0].n,90);
