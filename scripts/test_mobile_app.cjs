@@ -23,7 +23,7 @@ const {JSDOM}=require("jsdom");
     assert.equal(d.querySelectorAll(".tabs .tab").length,6,"Desktop tabs kept as routing source");
     assert.equal(d.querySelector("#apexMobHeader .apex-mob-wordmark").textContent.replace(/\s/g,""),"APEX2027");
     assert.equal(w.APEX_MOBILE.state().tab,"board");
-    assert.equal(d.querySelector("#apexMobBoard .apex-mob-card").length,25);
+    assert.equal(d.querySelectorAll("#apexMobBoard .apex-mob-card").length,25);
     assert.equal(d.querySelector("#apexMobBoard .apex-mob-count").textContent,"201 prospects · 25 shown");
     assert.equal(d.querySelectorAll("#boardBody tr").length,201,
       "Desktop board backing data is unchanged, but phone renders only 25 cards");
