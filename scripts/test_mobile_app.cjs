@@ -60,6 +60,7 @@ const {JSDOM}=require("jsdom");
     mario.querySelector(".apex-mob-card-head").click();
     assert.equal(d.querySelector("#modalBackdrop").hidden,false,"Card opens the existing evidence dossier");
     assert(d.querySelector("#modal").textContent.includes("Jeremiah Smith"));
+    await new Promise(resolve=>w.setTimeout(resolve,0)); // Wait for modal MutationObserver to push state.
     assert.equal(w.history.state.apexMobileSheet,true,"Mobile profile gets a history entry for Back");
     w.history.back();
     await new Promise(resolve=>w.setTimeout(resolve,35));
