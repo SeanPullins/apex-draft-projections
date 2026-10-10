@@ -324,7 +324,7 @@
         '<td data-label="APEX Summary" class="why-cell">'+esc(prof.interpretation.replace(prof.fact+". ",""))+'</td>' +
       '</tr>';
     }).join("");
-    $$("tr", body).forEach(tr => {
+    Array.from(body.querySelectorAll("tr")).forEach(tr => {
       const open=()=>{const p=D.players.find(x=>x.r===+tr.dataset.rank);if(p)openModal(p);};
       tr.addEventListener("click",open);
       tr.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
