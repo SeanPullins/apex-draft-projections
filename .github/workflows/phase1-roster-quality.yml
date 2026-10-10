@@ -1,0 +1,41 @@
+name: APEX Phase 1 Exact-ID Roster Quality Gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/phase1_roster_reconciliation.py'
+      - 'tests/test_phase1_roster_reconciliation.py'
+      - '.github/workflows/phase1-roster-quality.yml'
+permissions:
+  contents: read
+jobs:
+  roster-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run source and label-safety tests
+        run: python3 -m unittest discover -s tests -p 'test_phase1_roster_reconciliation.py' -v
+      - name: Build base NFL source cache in private runner
+        run: |
+          python3 scripts/phase1_nfl_snap_baseline.py \
+            --cache "${RUNNER_TEMP}/apex_roster_private_source" \
+            --out "${RUNNER_TEMP}/apex_initial_aggregate" \
+            --fetch --bootstrap 100
+      - name: Reconcile missing snap entries against 2013-2025 weekly rosters
+        run: |
+          python3 scripts/phase1_roster_reconciliation.py \
+            --cache "${RUNNER_TEMP}/apex_roster_private_source" \
+            --out "${RUNNER_TEMP}/apex_roster_aggregate" \
+            --fetch
+      - name: Publish aggregate-only findings as temporary artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-phase1-roster-exact-id-aggregate
+          path: "${{ runner.temp }}/apex_roster_aggregate/APEX_phase1_roster_aggregate.json"
+          if-no-files-found: error
+          retention-days: 7
