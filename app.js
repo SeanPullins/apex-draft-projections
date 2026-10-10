@@ -167,7 +167,7 @@
     const compareHost = tab==="lab" ? $("#advisorCompareHost") : $("#boardCompareHost");
     const sharedCompare = $("#sharedCompare");
     if(compareHost && sharedCompare && sharedCompare.parentNode!==compareHost) compareHost.appendChild(sharedCompare);
-    $(".tab").forEach(b => {
+    $$(".tab").forEach(b => {
       const on = b.dataset.tab === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
