@@ -28,7 +28,7 @@ from urllib.error import URLError, HTTPError
 REPO = Path(__file__).resolve().parents[1]
 DRAFT_URL = "https://github.com/nflverse/nflverse-data/releases/download/draft_picks/draft_picks.csv"
 SNAP_URL = "https://github.com/nflverse/nflverse-data/releases/download/snap_counts/snap_counts_{year}.csv"
-FIRST = 2012
+FIRST = 2013
 LAST_DRAFT = 2022
 LAST_SNAP = 2025
 SNAP_FIELDS = {"game_id","season","game_type","pfr_player_id","offense_snaps",
@@ -328,7 +328,8 @@ def build_report(picks,labels,quality,season_audit,issues,receipts,replicates):
          "Current source downloads cannot prove historical as-of source vintages.",
          "Drafted-only cohorts exclude eligible UDFAs; no comparison to full prospect population.",
          "PFR position mapping (DE/OLB/DB) is provisional for pass-rush/coverage grouping.",
-         "The 2019–2022 cohorts already inspected by Muse are development, not fresh holdouts.",
+         "2012 NFL snap release is a header-only 154-byte placeholder; 2012 drafted cohort has no complete four-year snaps.",
+      "The 2019–2022 cohorts already inspected by Muse are development, not fresh holdouts.",
          "NFL labels or baseline may not be promoted without operator source-rights review and independent validation."
       ],
       "phase1_complete":False,
