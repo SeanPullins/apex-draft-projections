@@ -1,8 +1,12 @@
 .apex-mob-one-line{display:none}
+#apexMobileChrome,#apexMobBoard,#apexMobFilters,#apexMobTeamWizard,#apexMobTeamSegments,#apexMobTeamEdit,.apex-mob-howto,.apex-mob-stories,.apex-mob-readmore{display:none}
 /* App-like mobile only. Desktop styles (>=481px) are intentionally untouched. */
 @media(max-width:480px){
   :root{--mob-gutter:16px;--mob-header:48px;--mob-bottom:calc(56px + env(safe-area-inset-bottom,0px));--mob-stroke:var(--line);--mob-card:var(--surface);scroll-padding-top:120px}
   html,body{max-width:100%;overflow-x:clip}
+  .apex-mobile-ready #apexMobileChrome{display:block}
+  .apex-mobile-ready #apexMobFilters{display:grid}
+  .apex-mobile-ready #apexMobTeamWizard{display:block}
   body{font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;padding-bottom:var(--mob-bottom)}
   button,input,textarea,select{font-size:16px}
   button,select,.tab,.pill{touch-action:manipulation}
