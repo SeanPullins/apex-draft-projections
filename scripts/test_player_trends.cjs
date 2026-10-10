@@ -63,7 +63,7 @@ for(const r of ranks){
  const p=player(r),x=lab.analysis(p);
  assert(x,p.n+" must have a reviewed identity and positional source");
  assert(x.source.startsWith("https://"),"only published source links");
- assert.deepEqual(x.seasons.map(s=>s.year),[2024,2025]);
+ assert.equal(x.seasons.map(s=>s.year).join(","),"2024,2025");
  for(const row of x.seasons){
    assert(Number.isFinite(row.yards)&&row.n>0&&Number.isFinite(row.rate));
  }
