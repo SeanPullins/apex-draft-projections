@@ -32,6 +32,7 @@ jobs:
             player-development.css
             player-development.js
             player-trends.js
+            apex-player-season-history.js
             player-trends.css
             historical-physical-reference.js
             apex-historical-context.js

@@ -11,7 +11,7 @@
   const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const norm=v=>String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const safeUrl=v=>/^https:\/\/[a-z0-9.-]+\/[^"'<>]*$/i.test(String(v||""))?v:null;
-  const state={rank:players[0].r,position:"ALL",query:"",view:"browse"};
+  const state={rank:players[0].r,position:"ALL",query:"",view:"browse",onlyHistory:false};
   const positions=["ALL",...Array.from(new Set(players.map(p=>p.p))).sort()];
   const titleByPos={QB:"Quarterbacks",RB:"Running backs",WR:"Wide receivers",TE:"Tight ends",OL:"Offensive line",ED:"Edge",DT:"Defensive line",LB:"Linebackers",CB:"Cornerbacks",S:"Safeties"};
   const take=p=>({
@@ -31,7 +31,8 @@
   }
   function matches(){
     const q=norm(state.query);
-    return players.filter(p=>(state.position==="ALL"||p.p===state.position)&&
+    return players.filter(p=>(!state.onlyHistory||window.APEX_PLAYER_TRENDS?.hasHistory(p))&&
+      (state.position==="ALL"||p.p===state.position)&&
       (!q||norm([p.n,p.s,p.p,p.r].join(" ")).includes(q)||
        [p.n,p.s,p.p,String(p.r)].some(x=>norm(x).includes(q))));
   }
@@ -57,6 +58,7 @@
   function drawProfile(){
     const p=byRank.get(state.rank);if(!p)return;
     const d=available(p),info=d.info,stat=d.stats,c=d.research;
+    const withHistory=!!window.APEX_PLAYER_TRENDS?.hasHistory(p);
     const enough=stat.length>0;
     const production=enough?stat.slice(0,3).map(x=>statText(x.value)+" "+x.label).join(" · "):
       p.p==="OL"?"No individual blocking grade from box scores":"No usable individual 2026 stat line";
@@ -89,6 +91,7 @@
         evidenceCard("ON THE FIELD",production,enough?pg+" · ESPN-derived Oct. 7 public summary":info.status,enough?"Recorded":"Incomplete")+
         evidenceCard("ROLE & BACKGROUND",researchLine,c?"Verification applies only to this individual dated fact.":"No evidence is not a negative grade.",researchStatus,extra)+
       '</div>'+
+      (withHistory?'<button id="dnaOpenTrends" class="dna-history-cta" type="button">Explore 2024–26 season history → <span>Role · efficiency · competition</span></button>':"")+
       '<div class="dna-question"><div><span>02 / THE QUESTION</span><h3>What still needs to be proved?</h3><p>'+esc(next)+'</p>'+
         '<small>Scouting question, not a diagnosed weakness.</small></div></div>'+
       '<details class="dna-expand" id="dnaMoreResearch"><summary><span>03 / GO DEEPER</span><strong>Historical comparisons & development</strong><span class="dna-expand-icon" aria-hidden="true">+</span></summary>'+
@@ -97,6 +100,12 @@
       '<button id="intelAdvisor" class="dna-button" type="button">Explore Draft Advisor →</button></div>'+
       '<p class="dna-bottom-note"><strong>Source boundary:</strong> 2026 public statistics reflect an ESPN-derived Oct. 7 snapshot. The independently replayed private CFBD Week 5 dataset and historical NFL experiments are not published as new player grades. Missing is not poor performance.</p>';
     window.APEX_DEVELOP?.render(p);
+    if(withHistory)document.getElementById("dnaOpenTrends").addEventListener("click",()=>{
+      const details=document.getElementById("dnaMoreResearch");
+      details.open=true;
+      const summary=details.querySelector("summary");
+      if(summary)summary.focus();
+    });
     document.getElementById("dnaBack").addEventListener("click",()=>{state.view="browse";root.dataset.view="browse";document.getElementById("intelSearch").focus()});
     document.getElementById("dnaPrev").addEventListener("click",()=>{if(index>0)select(players[index-1].r)});
     document.getElementById("dnaNext").addEventListener("click",()=>{if(index<players.length-1)select(players[index+1].r)});
@@ -117,11 +126,12 @@
     if(a)a.textContent="Selected "+byRank.get(rank).n+" ("+rank+" of "+players.length+")";
   }
   const withStat=players.filter(p=>statsFor(p).length>0).length;
+  const withHistoryCount=players.filter(p=>window.APEX_PLAYER_TRENDS?.hasHistory(p)).length;
   root.className="dna-v3";
   root.dataset.view="browse";
   root.innerHTML=
     '<header class="dna-header"><div><span class="dna-kicker">APEX SCOUTING / 2027</span>'+
-      '<h1>The player comes first.</h1><p>Explore every prospect. Clear evidence, real context, no mystery scores.</p></div>'+
+      '<h1>The player comes first.</h1><p>Explore every prospect. Clear evidence, real context, no mystery scores. <strong>'+withHistoryCount+' profiles now include source-reviewed 2024–25 season histories.</strong></p></div>'+
       '<div class="dna-header-count"><strong>'+players.length+'</strong><span>prospects on the board</span><small>'+withStat+' with position stats in the public snapshot</small></div></header>'+
     '<div class="dna-browser"><aside class="dna-list" aria-label="All 2027 prospects"><div class="dna-directory-head">'+
       '<div><strong>Find your player</strong><span id="intelShown">'+players.length+' of '+players.length+' shown</span></div>'+
@@ -129,7 +139,8 @@
       '<label class="dna-search"><span class="dna-sr">Search every 2027 prospect</span><input id="intelSearch" type="search" placeholder="Search name, team, rank..." autocomplete="off" aria-label="Search every prospect"></label>'+
       '<label class="dna-position"><span>POSITION</span><select id="intelPosition" aria-label="Filter by position">'+positions.map(x=>
         '<option value="'+esc(x)+'">'+esc(x==="ALL"?"All positions":titleByPos[x]||x)+'</option>').join("")+'</select></label>'+
-      '<div class="dna-list-help">All '+players.length+' prospects are listed below. Scroll or search to find anyone.</div>'+
+      '<label class="dna-history-filter"><input id="intelWithHistory" type="checkbox"> Show '+withHistoryCount+' with season histories</label>'+ 
+      '<div class="dna-list-help">All '+players.length+' prospects remain available. Use filters to narrow the directory.</div>'+
       '<div id="intelDirectory" class="dna-all-players" aria-label="Complete prospect directory"></div></aside>'+
       '<section id="intelProfile" class="dna-profile" aria-label="Selected prospect"></section></div>'+
     '<div id="intelAnnouncement" class="dna-sr" aria-live="polite"></div>';
@@ -143,12 +154,16 @@
   document.getElementById("intelPosition").addEventListener("change",event=>{
     state.position=event.target.value;drawDirectory();
   });
+  document.getElementById("intelWithHistory").addEventListener("change",event=>{
+    state.onlyHistory=event.target.checked;drawDirectory();
+  });
   window.addEventListener("apex:focus-dna-player",event=>{
     const rank=Number(event?.detail?.rank);
     if(byRank.has(rank)){
-      state.position="ALL";state.query="";
+      state.position="ALL";state.query="";state.onlyHistory=false;
       document.getElementById("intelPosition").value="ALL";
       document.getElementById("intelSearch").value="";
+      document.getElementById("intelWithHistory").checked=false;
       select(rank);
     }
   });

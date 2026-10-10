@@ -30,3 +30,21 @@
 .dna-trend-method p{line-height:1.65}
 @media(max-width:900px){.dna-trend-years{grid-template-columns:1fr}.dna-trend-year{min-height:120px}.dna-trend-year>strong{margin:10px 0}}
 @media(max-width:650px){.dna-trend-study{padding:12px;border-radius:13px}.dna-trend-heading{flex-wrap:wrap}.dna-trend-heading h4{font-size:16px}.dna-trend-count{padding:5px 8px}.dna-trend-year{padding:12px;min-height:unset}.dna-trend-year>strong{font-size:26px}}
+
+
+/* v2: role / rate / competition guide, with deliberate non-predictive labels. */
+.dna-trend-reads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0 0}
+.dna-trend-reads>div{border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:13px;min-width:0}
+.dna-trend-reads>div>span{display:block;font-size:9px;font-weight:900;letter-spacing:.09em;color:var(--blue)}
+.dna-trend-reads>div>strong{font-size:13px;line-height:1.4;display:block;margin:7px 0;color:var(--ink)}
+.dna-trend-reads p{font-size:11.5px;line-height:1.7;color:var(--muted);margin:0;overflow-wrap:anywhere}
+.dna-trend-reads p strong{font-weight:750;color:var(--ink)}
+.dna-trend-warning{margin:9px 0 0;font-size:10px;font-weight:780;color:var(--muted);line-height:1.5}
+.dna-trend-year.is-thin{border-style:dashed}
+.dna-history-filter{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 14px 12px;color:var(--ink);font-size:11px;font-weight:800}
+.dna-history-filter input{accent-color:var(--blue);width:17px;height:17px;margin:0;flex:0 0 auto}
+.dna-history-cta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:13px 15px;margin:14px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink);cursor:pointer;font-weight:800;font-size:12px}
+.dna-history-cta span{font-size:10px;font-weight:700;color:var(--muted)}
+.dna-history-cta:hover{border-color:var(--blue)}
+@media(max-width:1080px){.dna-trend-reads{grid-template-columns:1fr}}
+@media(max-width:650px){.dna-trend-reads{gap:7px}.dna-trend-reads>div{padding:12px}.dna-history-cta{flex-direction:column;align-items:flex-start}}
