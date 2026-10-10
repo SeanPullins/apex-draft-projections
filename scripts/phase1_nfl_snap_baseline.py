@@ -254,37 +254,61 @@ def pooled_estimate(rows,band,position):
     return shrink,len(matching),len(same_band)
 
 def expected_by_pick(labels,training_classes,replicates=400,seed=20261009):
-    approved=[r for r in labels if r["year"] in training_classes]
-    years=set(training_classes)
+    """Training-only, position-shrunk band estimates; class bootstrap by counts.
+
+    Pre-aggregating sums/denominators also avoids reading thousands of source
+    rows inside each bootstrap replicate. No opponent, NFL future, or salary
+    information is introduced. This is STILL participants-only.
+    """
+    years=sorted(set(training_classes))
     ensure(years and max(years)<=LAST_DRAFT,"invalid training years")
-    rng=random.Random(seed)
-    output=[]
+    # year -> band -> [(all-count, all-sum), positional buckets]
+    counters=defaultdict(lambda:defaultdict(lambda:[0,0.0]))
+    for r in labels:
+        if r["year"] not in years or r["status"]!="COMPLETE_OBSERVED_PARTICIPANT":
+            continue
+        band=band_for(r["pick"]);grp=r["position_group"]
+        v=float(r["four_year_unit_snaps"])
+        for key in [(band,"ALL"),(band,grp)]:
+            rec=counters[r["year"]][key]
+            rec[0]+=1;rec[1]+=v
+    def estimate(draw,band,group):
+        a_n=a_sum=p_n=p_sum=0
+        for year in draw:
+            annual=counters[year]
+            g=annual.get((band,"ALL"),(0,0.0))
+            p=annual.get((band,group),(0,0.0))
+            a_n+=g[0];a_sum+=g[1]
+            p_n+=p[0];p_sum+=p[1]
+        if a_n<8:return None,p_n,a_n
+        pooled=(p_sum+20*(a_sum/a_n))/(p_n+20)
+        return pooled,p_n,a_n
+
+    output=[];rng=random.Random(seed)
     for group in sorted(POSITIONS):
         for lo,hi in BANDS:
             band=f"{lo}-{hi}"
-            est,n_group,n_band=pooled_estimate(approved,band,group)
-            if est is None:
-                continue
-            series=[]
-            cls=sorted(years)
-            if len(cls)>=4:
-                by_year=defaultdict(list)
-                for row in approved:by_year[row["year"]].append(row)
-                for i in range(replicates):
-                    draw=[y for _ in cls for y in [cls[rng.randrange(len(cls))]]]
-                    sample=[r for y in draw for r in by_year[y]]
-                    v,_,_=pooled_estimate(sample,band,group)
-                    if v is not None:series.append(v)
-            series.sort()
-            interval=[series[int(.025*(len(series)-1))],series[int(.975*(len(series)-1))]] if len(series)>=.9*replicates else None
-            output.append({"position_group":group,"pick_band":band,
-                           "pick_min":lo,"pick_max":hi,
-                           "expected_four_year_unit_snaps_conditional_on_recorded_participation":round(est,2),
-                           "training_position_band_participants":n_group,
-                           "training_band_participants":n_band,
-                           "bootstrap_95_ci":list(map(lambda v:round(v,2),interval)) if interval else None,
-                           "classes_used":len(cls),"participants_only":True,
-                           "usable_as_true_market_surplus":False})
+            est,n_group,n_band=estimate(years,band,group)
+            if est is None:continue
+            samples=[]
+            if len(years)>=4:
+                for _ in range(replicates):
+                    draw=[years[rng.randrange(len(years))] for __ in years]
+                    v,_,_=estimate(draw,band,group)
+                    if v is not None:samples.append(v)
+            samples.sort()
+            interval=([samples[int(.025*(len(samples)-1))],
+                       samples[int(.975*(len(samples)-1))]]
+                      if len(samples)>=.9*replicates else None)
+            output.append({
+              "position_group":group,"pick_band":band,"pick_min":lo,"pick_max":hi,
+              "expected_four_year_unit_snaps_conditional_on_recorded_participation":round(est,2),
+              "training_position_band_participants":n_group,
+              "training_band_participants":n_band,
+              "bootstrap_95_ci":[round(x,2) for x in interval] if interval else None,
+              "classes_used":len(years),"participants_only":True,
+              "usable_as_true_market_surplus":False,
+            })
     return output
 
 def build_report(picks,labels,quality,season_audit,issues,receipts,replicates):
