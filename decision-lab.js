@@ -217,5 +217,5 @@
   window.APEX_FAN_ADVISOR={
     pool,evidence,reasons,stability,select:setCurrent,exportWatchlist,importWatchlist,current:()=>({focus:ui.focus,position:ui.position,rank:ui.rank,following:[...ui.favorites]})
   };
-  renderStories();setCurrent(ui.rank);renderFavorites();compareState();
+  renderStories();setCurrent(ui.rank);renderFavorites();
 })();
