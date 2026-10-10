@@ -177,8 +177,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--years", nargs="+", type=int, default=list(ALLOWED_YEARS))
     parser.add_argument("--output", default=None, help="Absolute private cache folder")
-    parser.add_argument("--max-calls", type=int, default=52,
-                        help="Hard cap on NEW API requests for this run (default 52)")
+    parser.add_argument("--max-calls", type=int, default=54,
+                        help="Hard cap on NEW API requests for this run (default 54)")
     parser.add_argument("--plan", action="store_true",
                         help="Print upper-bound request plan; makes NO API requests")
     args = parser.parse_args(argv)
