@@ -79,6 +79,7 @@ def roster_evidence(cache):
     evidence=defaultdict(lambda:{"years":set(),"weeks":set(),"teams":set(),
                                   "gsis_ids":set(),"statuses":set(),
                                   "rows":0})
+    gsis_index=defaultdict(lambda:{"years":set(),"pfr_ids":set()})
     audit={}
     missing_id_counts=Counter()
     for season in range(FIRST,LAST_SNAP+1):
@@ -89,7 +90,7 @@ def roster_evidence(cache):
                "weekly roster required columns missing "+str(season))
         id_key="pfr_id" if "pfr_id" in fields else "pfr_player_id" if "pfr_player_id" in fields else None
         ensure(id_key is not None,"weekly roster has no PFR identifier "+str(season))
-        issues=Counter();rows=0;matched=0;season_ids=set()
+        issues=Counter();rows=0;matched=0;season_ids=set();gsis_ids=set()
         for row in reader:
             rows+=1
             ensure(str(row.get("season","")).strip()==str(season),
@@ -106,12 +107,19 @@ def roster_evidence(cache):
             game_type=(row.get("game_type") or "REG").upper().strip()
             if game_type not in ("REG","REGULAR","","R"):
                 continue
-            if not pfr:
-                issues["missing_pfr_id"]+=1
-                continue
             team=(row.get("team") or "").strip().upper()
             if not team:
                 issues["missing_team"]+=1
+                continue
+            gsis=(row.get("gsis_id") or "").strip()
+            if gsis:
+                gsis_ids.add(gsis)
+                gsis_index[gsis]["years"].add(season)
+                if pfr:gsis_index[gsis]["pfr_ids"].add(pfr)
+            else:
+                issues["missing_gsis_id"]+=1
+            if not pfr:
+                issues["missing_pfr_id"]+=1
                 continue
             matched+=1;season_ids.add(pfr)
             rec=evidence[pfr]
@@ -119,7 +127,6 @@ def roster_evidence(cache):
             rec["weeks"].add((season,week,team))
             rec["teams"].add((season,team))
             rec["rows"]+=1
-            gsis=(row.get("gsis_id") or "").strip()
             if gsis:rec["gsis_ids"].add(gsis)
             # NEVER export potentially sensitive individual status metadata
             status=(row.get("status") or "").strip().upper()
@@ -128,12 +135,13 @@ def roster_evidence(cache):
         audit[str(season)]={
             "rows":rows,"valid_pfr_id_rows":matched,
             "distinct_pfr_ids":len(season_ids),
+            "distinct_gsis_ids":len(gsis_ids),
             "issues":dict(issues)
         }
         for k,v in issues.items():missing_id_counts[k]+=v
-    return evidence,audit,dict(missing_id_counts)
+    return evidence,gsis_index,audit,dict(missing_id_counts)
 
-def reconcile(labels,evidence):
+def reconcile(labels,evidence,gsis_evidence=None):
     """Four-season roster evidence cannot confirm no-snap player skill/ability."""
     statuses=Counter()
     by_class=defaultdict(Counter)
@@ -141,25 +149,40 @@ def reconcile(labels,evidence):
     by_position=defaultdict(Counter)
     conflicts=Counter()
     matches=0
-    sampled=[]
+    gsis_only_matches=0
+    gsis_evidence=gsis_evidence or {}
     # Do not expose records. Track one row per selection.
     for row in labels:
         original=row["status"]
         if original!="NO_SNAP_ENTRY_UNCONFIRMED":
             continue
         pid=row["pfr_id"]
+        gsis=(row.get("gsis_id") or "").strip()
         years=set(range(row["year"],row["year"]+4))
-        roster=evidence.get(pid)
-        if not roster or not (roster["years"] & years):
-            status="NO_ROSTER_MATCH_OR_UNOBSERVED"
+        roster=evidence.get(pid) if pid else None
+        gsis_roster=gsis_evidence.get(gsis) if gsis else None
+        pfr_present=bool(roster and (roster["years"] & years))
+        gsis_present=bool(gsis_roster and (gsis_roster["years"] & years))
+        if pfr_present:
+            if gsis and roster["gsis_ids"] and gsis not in roster["gsis_ids"]:
+                status="PFR_GSIS_IDENTITY_CONFLICT"
+                conflicts["draft_gsis_conflicts_with_roster_pfr"]+=1
+            else:
+                status="ROSTER_SEEN_NO_SNAP_MATCH"
+                matches+=1
+                if len(roster["gsis_ids"])>1:
+                    conflicts["pfr_to_multiple_gsis_any_year"]+=1
+                if (roster["years"] & years)!=years:
+                    conflicts["not_present_every_year"]+=1
+        elif gsis_present:
+            status="GSIS_ONLY_ROSTER_SEEN_NO_SNAP_MATCH"
+            gsis_only_matches+=1
+            if len(gsis_roster["pfr_ids"])>1:
+                conflicts["gsis_multiple_pfr_ids"]+=1
+            if pid and gsis_roster["pfr_ids"] and pid not in gsis_roster["pfr_ids"]:
+                conflicts["gsis_roster_uses_different_pfr_id"]+=1
         else:
-            status="ROSTER_SEEN_NO_SNAP_MATCH"
-            matches+=1
-            if len(roster["gsis_ids"])>1:
-                conflicts["pfr_to_multiple_gsis_any_year"]+=1
-            # Confirmed roster presence does NOT certify an active NFL game.
-            if not (roster["years"] & years)==years:
-                conflicts["not_present_every_year"]+=1
+            status="NO_ROSTER_MATCH_OR_UNOBSERVED"
         statuses[status]+=1
         by_class[str(row["year"])][status]+=1
         p=row.get("position_group") or "UNKNOWN"
@@ -174,6 +197,8 @@ def reconcile(labels,evidence):
     return {
         "base_no_snap_selections":sum(statuses.values()),
         "roster_seen_no_snap_match":matches,
+        "gsis_only_roster_match":gsis_only_matches,
+        "total_exact_identifier_roster_match":matches+gsis_only_matches,
         "no_roster_match_or_unobserved":statuses["NO_ROSTER_MATCH_OR_UNOBSERVED"],
         "status_counts":dict(statuses),
         "by_class":{k:dict(v) for k,v in sorted(by_class.items())},
@@ -198,7 +223,7 @@ def run(args=None):
     receipts=fetch_roster_cache(cache,opts.fetch)
     picks,snaps,season_audit,issues=parse_sources(cache)
     labels,_=build_labels(picks,snaps,season_audit)
-    evidence,audit,issues=roster_evidence(cache)
+    evidence,gsis_evidence,audit,issues=roster_evidence(cache)
     result={
         "schema_version":1,"phase":"phase1_roster_exact_id_reconciliation",
         "state":"RESEARCH_AUDIT_ONLY_NOT_LABEL_PROMOTION",
@@ -207,9 +232,9 @@ def run(args=None):
         "source_roster_receipts":receipts,
         "season_roster_coverage":audit,
         "roster_issue_counts":issues,
-        "no_snap_reconciliation":reconcile(labels,evidence),
+        "no_snap_reconciliation":reconcile(labels,evidence,gsis_evidence),
         "candidate_count":len(picks),
-        "next_gate":["verify drafts without snap rows against authoritative GSIS/PFR crosswalk",
+        "next_gate":["verify GSIS/PFR conflicts and unresolved players with authoritative crosswalk",
                      "verify game-level active status and injury-inactive roster rules",
                      "establish complete team-game unit-snap denominators before Y3 share",
                      "do not impute intrinsic ability as zero",
