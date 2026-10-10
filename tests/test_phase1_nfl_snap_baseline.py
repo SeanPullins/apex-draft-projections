@@ -39,14 +39,14 @@ class NFLPhase1Tests(unittest.TestCase):
         self.assertEqual(m.band_for(260),"201-300")
 
     def test_realized_zero_not_false_talent_grade(self):
-        seasons={str(y):{"regular_games":256} for y in range(2012,2026)}
-        rows=[draft(2012,1,"A"),draft(2012,2,"B"),draft(2012,3,""),
-              draft(2011,4,"C"),draft(2022,5,"D"),draft(2012,6,"E","K")]
+        seasons={str(y):{"regular_games":256} for y in range(2013,2026)}
+        rows=[draft(2013,1,"A"),draft(2013,2,"B"),draft(2013,3,""),
+              draft(2012,4,"C"),draft(2022,5,"D"),draft(2013,6,"E","K")]
         snaps={
-           (2012,"A"):snap_record(off=200,st=60),
-           (2013,"A"):snap_record(off=550),
-           (2014,"A"):snap_record(off=250),
-           (2015,"A"):snap_record(off=300),
+           (2013,"A"):snap_record(off=200,st=60),
+           (2014,"A"):snap_record(off=550),
+           (2015,"A"):snap_record(off=250),
+           (2016,"A"):snap_record(off=300),
            (2022,"D"):snap_record(defense=100),
            (2023,"D"):snap_record(defense=300),
         }
@@ -63,20 +63,20 @@ class NFLPhase1Tests(unittest.TestCase):
         self.assertEqual(counts["COMPLETE_OBSERVED_PARTICIPANT"],2)
 
     def test_complete_source_season_gate(self):
-        years={str(y):{"regular_games":256} for y in range(2012,2026)}
-        years["2014"]["regular_games"]=159
+        years={str(y):{"regular_games":256} for y in range(2013,2026)}
+        years["2015"]["regular_games"]=159
         with self.assertRaisesRegex(ValueError,"incomplete snap feed"):
-            m.build_labels([draft(2012,1,"A")],{(2012,"A"):snap_record(200)},years)
+            m.build_labels([draft(2013,1,"A")],{(2013,"A"):snap_record(200)},years)
 
     def test_pick_baseline_uses_only_supplied_training_classes(self):
         examples=[]
-        for y in range(2012,2023):
+        for y in range(2013,2023):
             for i in range(1,30):
                 examples.append({**draft(y,i,"P"+str(i), "QB" if i%2 else "WR"),
                   "status":"COMPLETE_OBSERVED_PARTICIPANT",
                   "four_year_unit_snaps":(y-2000)*1000+i})
-        older=m.expected_by_pick(examples,list(range(2012,2017)),replicates=100)
-        later=m.expected_by_pick(examples,list(range(2012,2023)),replicates=100)
+        older=m.expected_by_pick(examples,list(range(2013,2018)),replicates=100)
+        later=m.expected_by_pick(examples,list(range(2013,2023)),replicates=100)
         self.assertTrue(older)
         self.assertTrue(later)
         o=next(x for x in older if x["position_group"]=="QB" and x["pick_band"]=="1-16")
@@ -98,7 +98,7 @@ class NFLPhase1Tests(unittest.TestCase):
         self.assertEqual(r["conditional_by_pick_curve"],[])
         self.assertEqual(r["forward_vintage_2020_2022"]["2022"]["train_classes"][-1],2018)
         self.assertTrue(r["user_approval_required_before_phase2"])
-        self.assertNotIn("P2012",json.dumps(r))
+        self.assertNotIn("P2013",json.dumps(r))
         self.assertNotIn("P2022",json.dumps(r))
 
 if __name__=="__main__":
