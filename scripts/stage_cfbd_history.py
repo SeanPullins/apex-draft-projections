@@ -154,6 +154,7 @@ def parse_cached(cache, identity):
                 all_gameids.add(gid)
                 meta = games[gid]
                 tms = extract(game.get("teams", []))
+                source_receipt_sha = receipt["sha256"]
                 home, away = meta["homeTeam"], meta["awayTeam"]
                 if home not in tms or away not in tms:
                     reasons["team_stats_missing"] += 1
@@ -181,7 +182,8 @@ def parse_cached(cache, identity):
                                 "kind": "team_qb_passing", "year": year, "gid": gid,
                                 "offense": tname, "defense": opponent,
                                 "kickoff": kickoff, "n": opps, "yards": yards,
-                                "retrieved_at": max(receipts)})
+                                "retrieved_at": timestamp(receipt["retrieved_at"]),
+                                "source_sha": source_receipt_sha})
                     for aid, athlete in all_players.items():
                         record = identity.get(aid)
                         if record is None or record["position"] not in POSITIONS:
@@ -203,7 +205,8 @@ def parse_cached(cache, identity):
                             "player_id": aid, "position": record["position"],
                             "offense": tname, "defense": opponent,
                             "kickoff": kickoff, "n": n, "yards": yards,
-                            "retrieved_at": timestamp(receipt["retrieved_at"])})
+                            "retrieved_at": timestamp(receipt["retrieved_at"]),
+                            "source_sha": source_receipt_sha})
         reasons["year_" + str(year) + "_schedule_games"] = len(games)
     return metrics_by_year, reasons
 
@@ -220,7 +223,7 @@ def build_contract(cache, crosswalk):
                     "game_id": r["gid"], "offense_team_id": r["offense"],
                     "defense_team_id": r["defense"], "kickoff_at": r["kickoff"].isoformat(),
                     "available_at": r["retrieved_at"].isoformat(), "opportunities": r["n"],
-                    "yards": r["yards"], "source_id": "CFBD-private-QB-game-" + str(year),
+                    "yards": r["yards"], "source_id": "CFBD-source-sha256:" + r["source_sha"],
                     "rights": "internal-authorized",
                 })
             if r["kind"] == "team_qb_passing":
@@ -230,7 +233,7 @@ def build_contract(cache, crosswalk):
                     "kickoff_at": r["kickoff"].isoformat(),
                     "available_at": r["retrieved_at"].isoformat(),
                     "opportunities_allowed": r["n"], "yards_allowed": r["yards"],
-                    "source_id": "CFBD-private-QB-team-" + str(year),
+                    "source_id": "CFBD-source-sha256:" + r["source_sha"],
                     "rights": "internal-authorized",
                 })
         old = [s for s in stats[year-1] if s["kind"] == "team_qb_passing"]
