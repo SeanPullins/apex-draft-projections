@@ -185,7 +185,7 @@
   });
 
   const openBoard=$("#openBoard");
-  if(openBoard)openBoard.addEventListener("click",()=>$("#boardTable").scrollIntoView?.({behavior:"smooth",block:"start"}));
+  if(openBoard)openBoard.addEventListener("click",()=>{const board=window.matchMedia?.("(max-width:480px)").matches&&$("#apexMobBoard")||$("#boardTable");board?.scrollIntoView?.({behavior:"smooth",block:"start"});});
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
   const labLauncher = $("#openDecisionLab");
