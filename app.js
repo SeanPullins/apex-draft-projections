@@ -77,7 +77,7 @@
     return [p?story(p).take:(TAKE[action]?.[0]||"Current view"),classes[action]||(supported?"take-hold":"take-data")];
   }
   function confidenceMeta(p) {
-    if (!p.ta) return ["—","status-na"];
+    if (!p.ta) return ["Not rated","status-na"];
     return [p.ta,"status-"+p.ta.toLowerCase()];
   }
   function shortWhy(p) {
@@ -164,7 +164,10 @@
   /* tabs */
   function setTab(tab) {
     state.tab = tab;
-    $$(".tab").forEach(b => {
+    const compareHost = tab==="lab" ? $("#advisorCompareHost") : $("#boardCompareHost");
+    const sharedCompare = $("#sharedCompare");
+    if(compareHost && sharedCompare && sharedCompare.parentNode!==compareHost) compareHost.appendChild(sharedCompare);
+    $(".tab").forEach(b => {
       const on = b.dataset.tab === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
@@ -181,6 +184,8 @@
     if (["board","dna","team","lab","how","validation"].includes(requested) && state.tab!==requested) setTab(requested);
   });
 
+  const openBoard=$("#openBoard");
+  if(openBoard)openBoard.addEventListener("click",()=>$("#boardTable").scrollIntoView?.({behavior:"smooth",block:"start"}));
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
   const labLauncher = $("#openDecisionLab");
@@ -301,25 +306,29 @@
 
   function render() {
     const rows = filteredRows();
+    const coverage=$("#heroCoverage");
+    if(coverage)coverage.textContent=D.summary.topology+" of "+D.summary.board+" with context profiles";
     renderTiles(rows);
     const body = $("#boardBody");
     body.innerHTML = rows.map(p => {
       const [take, takeClass] = takeMeta(p.a,p);
       const [conf, confClass] = confidenceMeta(p);
       const prof=story(p);
-      return '<tr data-rank="'+p.r+'">' +
-        '<td class="num rank-cell">#'+p.r+'</td>' +
-        '<td><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">'+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
-        '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
-        '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
-        '<td class="statline-cell">'+esc(prof.fact)+'</td>' +
-        '<td class="why-cell">'+esc(prof.interpretation.replace(prof.fact+". ",""))+'</td>' +
+      return '<tr data-rank="'+p.r+'" tabindex="0" role="button" aria-label="Open '+esc(p.n)+' profile">' +
+        '<td data-label="Rank" class="num rank-cell">#'+p.r+'</td>' +
+        '<td data-label="Player"><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">'+esc(p.p)+' · '+esc(p.s)+'</div>'+
+        '<span class="coverage-chip'+(p.ta?' is-covered':' is-unrated')+'">'+(p.ta?'Context covered':'Context not rated')+'</span></td>' +
+        '<td data-label="APEX Take"><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
+        '<td data-label="Confidence"><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
+        '<td data-label="2026 Snapshot" class="statline-cell">'+esc(prof.fact)+'</td>' +
+        '<td data-label="APEX Summary" class="why-cell">'+esc(prof.interpretation.replace(prof.fact+". ",""))+'</td>' +
       '</tr>';
     }).join("");
-    $$("tr", body).forEach(tr => tr.addEventListener("click", () => {
-      const p = D.players.find(x => x.r === +tr.dataset.rank);
-      if (p) openModal(p);
-    }));
+    $("tr", body).forEach(tr => {
+      const open=()=>{const p=D.players.find(x=>x.r===+tr.dataset.rank);if(p)openModal(p);};
+      tr.addEventListener("click",open);
+      tr.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+    });
   }
 
   function parsePicks(value) {
@@ -565,19 +574,21 @@
     $("#teamBoardBody").innerHTML=rows.map(p=>{
       const [take,takeClass]=takeMeta(p.a,p), [conf,confClass]=confidenceMeta(p);
       const pick=teamState.picks.length ? teamState.picks.slice().sort((a,b)=>pickFitScore(p,b)-pickFitScore(p,a))[0] : null;
-      return '<tr data-rank="'+p.r+'">' +
-        '<td class="num team-fit-score">'+teamFit(p)+'</td>' +
-        '<td><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">#'+p.r+' · '+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
-        '<td>'+(teamState.needs.has(p.p)?'<span class="need-match">NEED</span>':'<span class="need-neutral">—</span>')+'</td>' +
-        '<td>'+esc(pick?pickFitLabel(p,pick)+" · #"+pick:"Set picks")+'</td>' +
-        '<td><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
-        '<td><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
-        '<td class="why-cell"><div class="fit-equation">'+esc(teamFitEquation(p,pick))+'</div><div>'+esc(teamFitDrivers(p,pick))+'</div><div class="fit-narrative">'+esc(teamWhy(p,pick))+'</div></td>' +
+      return '<tr data-rank="'+p.r+'" tabindex="0" role="button" aria-label="Open '+esc(p.n)+' team fit">' +
+        '<td data-label="Team Fit" class="num team-fit-score">'+teamFit(p)+'</td>' +
+        '<td data-label="Player"><div class="player-name">'+esc(p.n)+'</div><div class="player-meta">#'+p.r+' · '+esc(p.p)+' · '+esc(p.s)+'</div></td>' +
+        '<td data-label="Need">'+(teamState.needs.has(p.p)?'<span class="need-match">NEED</span>':'<span class="need-neutral">—</span>')+'</td>' +
+        '<td data-label="Pick fit">'+esc(pick?pickFitLabel(p,pick)+" · #"+pick:"Set picks")+'</td>' +
+        '<td data-label="APEX Take"><span class="take '+takeClass+'">'+esc(take)+'</span></td>' +
+        '<td data-label="Confidence"><span class="status '+confClass+'">'+esc(conf)+'</span></td>' +
+        '<td data-label="Why" class="why-cell"><div class="fit-equation">'+esc(teamFitEquation(p,pick))+'</div><div>'+esc(teamFitDrivers(p,pick))+'</div><div class="fit-narrative">'+esc(teamWhy(p,pick))+'</div></td>' +
       '</tr>';
     }).join("");
-    document.querySelectorAll("#teamBoardBody tr").forEach(tr=>tr.addEventListener("click",()=>{
-      const p=D.players.find(x=>x.r===+tr.dataset.rank); if(p) openModal(p);
-    }));
+    document.querySelectorAll("#teamBoardBody tr").forEach(tr=>{
+      const open=()=>{const p=D.players.find(x=>x.r===+tr.dataset.rank);if(p)openModal(p);};
+      tr.addEventListener("click",open);
+      tr.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+    });
   }
 
   function renderTeamMode() {
