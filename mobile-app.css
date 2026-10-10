@@ -1,0 +1,218 @@
+/* App-like mobile only. Desktop styles (>=481px) are intentionally untouched. */
+@media(max-width:480px){
+  :root{--mob-gutter:16px;--mob-header:48px;--mob-bottom:calc(56px + env(safe-area-inset-bottom,0px));--mob-stroke:var(--line);--mob-card:var(--surface);scroll-padding-top:120px}
+  html,body{max-width:100%;overflow-x:clip}
+  body{font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;padding-bottom:var(--mob-bottom)}
+  button,input,textarea,select{font-size:16px}
+  button,select,.tab,.pill{touch-action:manipulation}
+  button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,.apex-mob-card:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .apex-mobile-ready .topbar{display:none!important}
+  .apex-mobile-ready main{padding:60px var(--mob-gutter) 24px;max-width:100%;min-width:0}
+  main>*{min-width:0}
+  .tab-panel,.tab-panel>*{min-width:0;max-width:100%}
+  .footer{padding:20px 16px 16px;line-height:1.55;font-size:12px}
+  .apex-mobile-ready .apex-mob-header{position:fixed;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--line);z-index:85;transition:transform 180ms ease}
+  .apex-mob-header-hidden .apex-mob-header{transform:translateY(-100%)}
+  .apex-mob-wordmark{font-weight:1000;letter-spacing:-.055em;font-size:22px;text-decoration:none;color:var(--ink);display:inline-flex;gap:7px;align-items:baseline}
+  .apex-mob-wordmark span{font-size:11px;font-weight:850;letter-spacing:.02em;color:var(--blue)}
+  .apex-mob-search-toggle{min-width:44px;min-height:44px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink);border-radius:12px}
+  .apex-mob-search-toggle svg,.apex-mob-tab svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .apex-mob-bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:90;height:var(--mob-bottom);padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:color-mix(in srgb,var(--surface) 96%,transparent);border-top:1px solid var(--line);box-shadow:0 -7px 22px rgba(0,0,0,.08)}
+  .apex-mob-tab{width:100%;min-width:0;height:56px;border:0;border-top:3px solid transparent;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:2px;flex-direction:column;font-weight:750;font-size:11px;letter-spacing:.005em;padding:2px 0 4px}
+  .apex-mob-tab svg{width:20px;height:20px}
+  .apex-mob-tab span{font-size:11px}
+  .apex-mob-tab.is-current{color:var(--blue);border-top-color:var(--blue);background:color-mix(in srgb,var(--blue) 7%,transparent)}
+  .apex-mob-search-panel[hidden],.apex-mob-overlay[hidden]{display:none!important}
+  .apex-mob-search-panel{position:fixed;left:0;right:0;top:48px;z-index:86;background:var(--surface);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line)}
+  .apex-mob-search-panel input{width:100%;min-width:0;height:44px;border-radius:10px;font-size:16px}
+  .apex-mob-search-panel button{min-height:44px;padding:0 7px;border:0;background:transparent;color:var(--blue);font-weight:800;font-size:13px}
+  .apex-mob-overlay{position:fixed;inset:0;z-index:110;display:flex;align-items:flex-end}
+  .apex-mob-overlay-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+  .apex-mob-sheet{position:relative;background:var(--surface);border-radius:22px 22px 0 0;border:1px solid var(--line);width:100%;max-height:85dvh;min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 50px rgba(0,0,0,.18)}
+  .apex-mob-handle{width:42px;height:5px;border-radius:999px;background:var(--muted);opacity:.5;margin:0 auto 12px}
+  .apex-mob-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:20px}
+  .apex-mob-sheet-head button{min-width:44px;min-height:44px;border:0;background:var(--surface-2);border-radius:12px;color:var(--ink);font-size:23px}
+  #apexMobMore .apex-mob-sheet>button{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:12px 2px;text-align:left;font-weight:750;font-size:15px}
+  #apexMobMore .apex-mob-sheet>button span{color:var(--blue);font-size:19px}
+  #apexMobMore .apex-mob-sheet>p{font-size:12px;color:var(--muted);margin-top:18px}
+  .apex-mob-picker input{width:100%;min-width:0;height:46px;font-size:16px}
+  .apex-mob-picker-list{margin-top:12px;max-height:53dvh;overflow-y:auto;overscroll-behavior:contain}
+  .apex-mob-picker-list button{width:100%;display:flex;flex-direction:column;text-align:left;gap:2px;min-height:52px;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:9px 2px}
+  .apex-mob-picker-list button strong{font-size:14px}
+  .apex-mob-picker-list button span{font-size:12px;color:var(--muted)}
+  .apex-mob-picker-list .apex-mob-empty{padding:16px}
+
+  /* First-screen hero: editorial summary, swipeable stats, one action. */
+  #tab-board .hero{display:block;margin:0 0 9px}
+  #tab-board .hero-copy{padding:13px 0 11px;background:transparent}
+  #tab-board .hero .eyebrow{font-size:11px;letter-spacing:.07em}
+  #tab-board .hero h1{font-size:28px;line-height:1.12;letter-spacing:-.045em;margin:9px 0 10px}
+  #tab-board .hero h1 br{display:none}
+  #tab-board .hero p{font-size:15px;line-height:1.45;color:var(--muted);margin:0}
+  #tab-board .hero p strong{font-weight:650}
+  #tab-board .hero-guide{display:none!important}
+  #tab-board .hero-meta{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:13px -16px 0;padding:2px 16px 9px;scrollbar-width:none}
+  #tab-board .hero-meta::-webkit-scrollbar,.apex-mob-filter-scroll::-webkit-scrollbar,.apex-mob-stories::-webkit-scrollbar{display:none}
+  #tab-board .hero-meta span{white-space:nowrap;flex:0 0 auto;min-height:40px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px 11px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:750;scroll-snap-align:start}
+  #tab-board .hero-meta span:before{margin-right:1px}
+  #tab-board .hero-actions{margin:9px 0 0;display:block}
+  #tab-board #openBoard{display:block;width:100%;min-height:46px;font-size:15px;border-radius:12px}
+  #tab-board #openTeamMode,#tab-board #openPlayerDNA,#tab-board #openDecisionLab{display:none!important}
+  .apex-mob-howto[hidden]{display:none!important}
+  .apex-mob-howto{border:1px solid var(--line);border-radius:14px;background:var(--surface);display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:6px;align-items:start;padding:12px 9px 12px 13px;margin:6px 0 14px}
+  .apex-mob-howto strong{display:block;font-size:13px;margin-bottom:2px}
+  .apex-mob-howto span{display:block;color:var(--muted);font-size:12px}
+  .apex-mob-howto button{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--muted);font-size:24px}
+  #tab-board .quick-key,#tab-board .war-room,#tab-board .board-shell .table-wrap,#tab-board .controls,#tab-board #boardCompareHost,#tab-board #boardTiles,#tab-board .table-hint{display:none!important}
+  #tab-board .board-headline{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+  #tab-board .board-headline h2{font-size:22px;margin:0}
+  #tab-board .board-headline p{display:none}
+  #tab-board .board-headline .text-button{display:inline-flex!important;align-items:center;min-height:44px;font-size:12px;text-align:right;max-width:155px}
+  #tab-board .board-shell{background:transparent;border:0;box-shadow:none;padding:0;margin:0}
+
+  /* Sticky filters and primary list (25 cards, not the full desktop table). */
+  .apex-mob-filterbar{position:sticky;top:48px;z-index:31;margin:0 -16px 11px;padding:9px 16px 8px;background:color-mix(in srgb,var(--page) 95%,transparent);border-bottom:1px solid var(--line);backdrop-filter:blur(12px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;transition:top 180ms ease}
+  .apex-mob-header-hidden .apex-mob-filterbar{top:0}
+  .apex-mob-search-open .apex-mob-filterbar{top:105px}
+  .apex-mob-filter-scroll{min-width:0;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;align-items:center;overscroll-behavior-inline:contain}
+  .apex-mob-chip{height:44px;min-width:44px;flex:0 0 auto;padding:0 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-weight:800;font-size:12px}
+  .apex-mob-chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .apex-mob-position{display:grid;grid-template-columns:1fr;min-width:96px;max-width:116px}
+  .apex-mob-position span{font-size:9px;text-transform:uppercase;font-weight:800;letter-spacing:.08em;color:var(--muted);line-height:10px}
+  .apex-mob-position select{width:100%;min-width:0;height:33px;min-height:33px;margin-top:1px;padding:0 5px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+  #apexMobBoard{display:grid;gap:11px;min-width:0}
+  .apex-mob-count{font-size:12px;font-weight:750;color:var(--muted);margin-bottom:1px;min-height:22px}
+  .apex-mob-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--mob-card);box-shadow:0 2px 9px rgba(0,0,0,.04);min-width:0;overflow-wrap:anywhere;cursor:pointer}
+  .apex-mob-card-head{display:grid;grid-template-columns:42px minmax(0,1fr) 15px;align-items:center;gap:10px}
+  .apex-mob-rank{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:color-mix(in srgb,var(--blue) 11%,var(--surface-2));color:var(--blue);font-size:15px;font-weight:1000;font-variant-numeric:tabular-nums}
+  .apex-mob-identity{min-width:0;display:flex;flex-direction:column}
+  .apex-mob-identity strong{font-size:17px;line-height:1.25;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+  .apex-mob-identity span{font-size:12px;color:var(--muted);margin-top:2px}
+  .apex-mob-card-head svg{width:16px;height:16px;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+  .apex-mob-badges{margin:12px 0 11px;display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .apex-mob-take,.apex-mob-confidence{padding:5px 8px;line-height:1.25;border:1px solid var(--line);border-radius:7px;font-size:11px;font-weight:800}
+  .apex-mob-take{background:var(--surface-2);color:var(--ink)}
+  .apex-mob-confidence{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+  .apex-mob-confidence i{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .apex-mob-confidence.tone-green{color:var(--green);background:var(--green-bg)}
+  .apex-mob-confidence.tone-amber{color:var(--amber);background:var(--amber-bg)}
+  .apex-mob-confidence.tone-red{color:var(--red);background:var(--red-bg)}
+  .apex-mob-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .apex-mob-stat{background:var(--surface-2);border-radius:9px;padding:8px 6px;min-width:0;display:grid;gap:2px}
+  .apex-mob-stat strong{color:var(--ink);font-size:17px;font-weight:950;line-height:1.2;font-variant-numeric:tabular-nums}
+  .apex-mob-stat span{font-size:10px;letter-spacing:.03em;text-transform:uppercase;font-weight:750;color:var(--muted)}
+  .apex-mob-stat-empty{font-size:12px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:11px;line-height:1.45}
+  .apex-mob-why{border-top:1px solid var(--line);margin-top:11px;padding-top:7px}
+  .apex-mob-why summary{list-style:none;font-size:13px;font-weight:850;color:var(--blue);padding:7px 0;min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .apex-mob-why summary::-webkit-details-marker{display:none}
+  .apex-mob-why p{font-size:12px;line-height:1.6;color:var(--ink);margin:7px 0}
+  .apex-mob-why .apex-mob-context{font-size:11px;color:var(--muted)}
+  .apex-mob-showmore{width:100%;min-height:48px;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--blue);font-size:14px;font-weight:850;margin:4px 0 12px}
+  .apex-mob-empty{padding:18px;border-radius:13px;background:var(--surface-2);color:var(--muted);font-size:14px}
+  .apex-mob-skeleton{height:155px;border-radius:16px;background:linear-gradient(100deg,var(--surface-2) 0%,var(--surface) 55%,var(--surface-2) 100%);background-size:200% 100%;animation:apexShimmer 1.7s ease infinite}
+  @keyframes apexShimmer{to{background-position:-200% 0}}
+
+  /* Team Mode: four approachable screens while preserving the original controls. */
+  #tab-team .team-hero{display:block;margin-bottom:12px}
+  #tab-team .team-hero>div{padding:0}
+  #tab-team .team-hero h1{font-size:28px;line-height:1.15}
+  #tab-team .team-hero p{font-size:13px}
+  #tab-team .team-rule,#tab-team>.team-mode>.fine{display:none}
+  #apexMobTeamWizard{position:sticky;top:48px;z-index:32;background:var(--page);border-bottom:1px solid var(--line);padding:8px 0 10px;margin-bottom:14px}
+  .apex-mob-header-hidden #apexMobTeamWizard{top:0}
+  .apex-mob-stage-dots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .apex-mob-stage-dots button{display:grid;justify-items:center;gap:3px;min-height:46px;border:0;background:transparent;color:var(--muted);padding:0 1px}
+  .apex-mob-stage-dots button span{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:850}
+  .apex-mob-stage-dots button small{font-size:10px;line-height:1.2;white-space:nowrap}
+  .apex-mob-stage-dots button.is-selected span{background:var(--blue);color:var(--surface)}
+  .apex-mob-stage-dots button.is-selected small{color:var(--ink);font-weight:900}
+  .apex-mob-stage-actions{display:grid;grid-template-columns:68px minmax(0,1fr) 108px;gap:6px;align-items:center;margin-top:12px}
+  .apex-mob-stage-actions strong{font-size:14px;text-align:center}
+  .apex-mob-stage-actions button{min-height:44px;border:1px solid var(--line);background:var(--surface);color:var(--blue);border-radius:10px;font-size:12px;font-weight:800;padding:5px}
+  .apex-mob-stage-actions button:disabled{opacity:.3}
+  .apex-mob-stage-actions button[hidden]{display:none}
+  #tab-team[data-mobile-stage="0"] .team-config{display:grid;grid-template-columns:1fr}
+  #tab-team[data-mobile-stage="0"] .team-config .team-field:nth-child(n+3){display:none}
+  #tab-team[data-mobile-stage="1"] .team-config,
+  #tab-team[data-mobile-stage="1"] #apexMobTeamSegments,
+  #tab-team[data-mobile-stage="2"] .team-config,
+  #tab-team[data-mobile-stage="3"] .team-config{display:none}
+  #tab-team .team-needs-shell,#tab-team .team-summary,#tab-team .pick-plan,#tab-team .team-board-shell,#tab-team #apexMobTeamEdit{display:none}
+  #tab-team[data-mobile-stage="1"] .team-needs-shell{display:block;padding:16px}
+  #tab-team[data-mobile-stage="2"] #apexMobTeamSegments{display:grid}
+  #tab-team[data-mobile-stage="3"] .team-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #tab-team[data-mobile-stage="3"] .pick-plan,#tab-team[data-mobile-stage="3"] .team-board-shell{display:block}
+  #tab-team[data-mobile-stage="3"] #apexMobTeamEdit{display:block}
+  .team-need-pills button{min-height:44px}
+  .apex-mob-team-segments{display:none;gap:16px}
+  .apex-mob-team-segments fieldset{padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:13px;min-width:0}
+  .apex-mob-team-segments legend{font-size:13px;font-weight:850;color:var(--ink);padding:0 6px}
+  .apex-mob-segments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .apex-mob-segments button{min-height:44px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;font-size:12px;font-weight:850;color:var(--ink);padding:7px 3px}
+  .apex-mob-segments button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--surface)}
+  #apexMobTeamEdit{position:sticky;bottom:calc(var(--mob-bottom) + 8px);z-index:25;width:100%;padding:12px;background:var(--blue);color:var(--surface);border:0;border-radius:12px;font-size:14px;font-weight:850;min-height:48px;box-shadow:0 5px 15px rgba(0,0,0,.1)}
+  #tab-team .team-board-shell .team-board{min-width:0!important}
+  #tab-team .team-board-shell .table-wrap{overflow:visible}
+  #tab-team .team-board tbody tr{min-width:0}
+  #tab-team .team-board .fit-equation{overflow-wrap:anywhere}
+  #tab-team .team-board tbody td:last-child{max-width:none}
+
+  /* Reuse existing comparison DOM and present a compact two-column readout. */
+  #advisorCompareHost .compare-strip{display:block;border:0;padding:0;background:transparent}
+  #advisorCompareHost .compare-copy{display:none}
+  #advisorCompareHost .compare-controls{display:grid;grid-template-columns:1fr;gap:9px;width:100%}
+  #advisorCompareHost .compare-controls label{width:100%;min-width:0}
+  #advisorCompareHost .compare-controls select{width:100%;min-width:0;height:48px;font-size:16px}
+  #advisorCompareHost .compare-controls .primary-button{grid-column:auto;width:100%;min-height:48px}
+  #advisorCompareHost .compare-vs{display:none}
+  #tab-lab .lab-hero{display:block;padding:16px}
+  #tab-lab .lab-hero h1{font-size:27px;line-height:1.15}
+  #tab-lab .lab-rules{display:none}
+  #tab-lab .lab-controls{grid-template-columns:1fr;gap:10px}
+  .apex-mob-stories{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;margin:0 -16px 12px;padding:4px 16px 9px;scrollbar-width:none}
+  .apex-mob-stories button{flex:0 0 auto;scroll-snap-align:start;border-radius:999px;min-height:44px;padding:5px 13px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:850;color:var(--muted)}
+  .apex-mob-stories button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .apex-mob-clamped:not(.is-expanded){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .apex-mob-readmore{display:inline-flex;align-items:center;min-height:44px;border:0;background:transparent;color:var(--blue);padding:2px 0;font-size:13px;font-weight:800}
+  #tab-how .layer-grid,#tab-validation .validation-grid{grid-template-columns:1fr}
+  .decision-list>div{grid-template-columns:65px minmax(0,1fr);gap:8px 12px;min-width:0}
+  .decision-list p{grid-column:2}
+  .plain-list>div{grid-template-columns:1fr}
+  #tab-how p,#tab-validation p{overflow-wrap:anywhere}
+
+  /* Known other fixed-width sub-surfaces: never grow the document width. */
+  #tab-dna,#tab-validation,.intel-app,.intel-layout,.intel-hero,.intel-profile-actions,.intel-take,.intel-lab-head,.intel-source-grid,.dna-browser,.dna-header,.dna-right,.dna-main,.dna-panel{min-width:0;max-width:100%}
+  #tab-dna .intel-layout,#tab-validation .intel-layout,.dna-browser,.intel-brier-row{grid-template-columns:minmax(0,1fr)!important}
+  .intel-profile-actions,.intel-take,.intel-lab-section-top label,.intel-lab-bottom>div{min-width:0!important;max-width:100%;overflow-wrap:anywhere}
+  .intel-lab-head,.intel-profile-banner{flex-wrap:wrap}
+  .dna-browser,.dna-browser>*{min-width:0}
+  .intel-model-lab,.intel-app{overflow-wrap:anywhere}
+  .dna-browser .dna-list,.intel-table-scroll{max-width:100%;overflow-x:auto}
+
+  /* Bottom sheets for all site dialogs; player's dossier is full screen. */
+  .modal-backdrop,.sheet-backdrop{align-items:flex-end;padding:0;inset:0;z-index:100;overscroll-behavior:contain}
+  .modal,.sheet{width:100%;max-width:100%;max-height:85dvh;overflow-y:auto;overscroll-behavior:contain;border-radius:22px 22px 0 0;padding:19px 16px calc(22px + env(safe-area-inset-bottom,0px));position:relative;box-shadow:0 -10px 45px rgba(0,0,0,.22)}
+  .modal:before,.sheet:before{content:"";display:block;margin:-8px auto 13px;width:45px;height:5px;border-radius:999px;background:var(--muted);opacity:.55}
+  #modalBackdrop .modal{height:100dvh;max-height:100dvh;border-radius:0;padding-top:18px}
+  .modal-close{min-width:44px;min-height:44px;display:grid;place-items:center;flex:0 0 44px}
+  .modal-head{gap:8px}
+  .modal-name{font-size:22px;line-height:1.2}
+  .dossier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .metric{min-width:0;padding:10px}
+  .metric-value{overflow-wrap:anywhere;font-size:16px}
+  .compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .compare-prospect{min-width:0;padding:3px;overflow-wrap:anywhere}
+  .compare-prospect-head{padding:6px 2px;gap:4px}
+  .compare-prospect-head h3{font-size:14px}
+  .compare-cell{display:block;min-width:0;padding:9px 5px;overflow-wrap:anywhere}
+  .compare-cell span,.compare-cell small{display:block;font-size:10px}
+  .compare-cell strong{display:block;font-variant-numeric:tabular-nums;font-size:15px}
+  .compare-question{padding:8px 5px;overflow-wrap:anywhere}
+  .team-formula-copy>div{grid-template-columns:1fr;gap:4px}
+  .sheet-head{align-items:center}
+  .pff-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* App-like motion only where user preferences permit. */
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  }
+}
