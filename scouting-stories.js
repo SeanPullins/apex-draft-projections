@@ -113,7 +113,7 @@
     if(c && (p.a==="URGENT_DATA_GAP"||p.a==="DATA_GAP"||p.a==="SCOUT_MORE")){
       return line+". "+(c.verified?
           (c.source==="official"?"The cited school source corroborates this specific fact. ":"Independent reporting supports this specific dated fact. "):
-          "This role/history is from Muse research and has not been independently cross-checked. ")+
+          "This role/history is from external research and has not been independently cross-checked. ")+
         "This does not verify 2026 performance grades or update the frozen NFL projection.";
     }
     if(st.kind==="limited")return line+". "+market;
