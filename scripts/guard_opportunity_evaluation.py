@@ -44,8 +44,9 @@ def validate_manifest(data):
     try:fold=require_valid_fold(test,cohort,n)
     except ValueError as e:raise EvaluationContractError(str(e)) from e
     stamp=parse_iso(data.get("forecast_as_of"),"forecast_as_of")
-    req(stamp.year==test and stamp.month<=7,
-        "forecast_as_of must be an early/mid-year date in the test draft year")
+    draft_start=parse_iso(data.get("draft_start_date"),"draft_start_date")
+    req(stamp.year==test and draft_start.year==test and stamp<draft_start,
+        "forecast_as_of must precede the actual NFL draft start date")
     req(isinstance(data.get("label_id"),str) and len(data["label_id"].strip())>=8,
         "unversioned/ambiguous outcome label: specify a unique versioned label_id")
     req("_" in data["label_id"] and any(ch.isdigit() for ch in data["label_id"]),
