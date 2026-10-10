@@ -57,6 +57,30 @@ class RosterJoinTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"SHA256 verification failed"):
                 r.fetch_roster_cache(root,False)
 
+    def test_exact_gsis_id_recovers_missing_roster_pfr(self):
+        target=row(2019,205,"NOT_IN_PFR")
+        target["gsis_id"]="00-0099999"
+        result=r.reconcile([target],{},{
+            "00-0099999":{"years":{2019},"pfr_ids":set()}
+        })
+        self.assertEqual(result["gsis_only_roster_match"],1)
+        self.assertEqual(result["no_roster_match_or_unobserved"],0)
+        self.assertEqual(result["true_zero_playing_time_confirmed"],0)
+        self.assertNotIn("0099999",json.dumps(result))
+
+    def test_identity_conflict_is_never_silently_resolved(self):
+        target=row(2019,101,"PFR_MATCH")
+        target["gsis_id"]="GSIS_FROM_DRAFT"
+        result=r.reconcile([target],{
+            "PFR_MATCH":{"years":{2019},"gsis_ids":{"OTHER_GSIS"},
+                         "weeks":set(),"rows":1}
+        },{
+            "GSIS_FROM_DRAFT":{"years":{2019},"pfr_ids":{"OTHER_PFR"}}
+        })
+        self.assertEqual(result["status_counts"]["PFR_GSIS_IDENTITY_CONFLICT"],1)
+        self.assertEqual(result["roster_seen_no_snap_match"],0)
+        self.assertEqual(result["conflict_flags"]["draft_gsis_conflicts_with_roster_pfr"],1)
+
     def test_unsupported_zero_status_never_fabricated(self):
         report=r.reconcile([row(2019,2,"MISSING")],{})
         self.assertEqual(report["status_counts"]["NO_ROSTER_MATCH_OR_UNOBSERVED"],1)
