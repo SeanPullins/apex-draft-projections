@@ -3,7 +3,7 @@
 (function(){
   "use strict";
   const registry=window.APEX_PLAYER_SEASON_HISTORY?.records||{};
-  const safe=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;":"&#39;"}[c]));
+  const safe=x=>String(x??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==='"'?"&quot;":"&#39;");
   const fmt=n=>Number(n).toLocaleString("en-US");
   const valid=n=>typeof n==="number"&&Number.isFinite(n);
   const activityBlocked=new Set(["OUT_INJURY_2026","LIMITED_INJURY_2026","SITTING_OUT_2026","ELIGIBILITY_NO_2026_GAMES"]);
