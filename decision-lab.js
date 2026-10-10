@@ -150,31 +150,72 @@
   pos.innerHTML=positions.map(v=>'<option value="'+esc(v)+'">'+(v==="ALL"?"Every position":esc(v))+'</option>').join("");
   const options=D.players.slice().sort((a,b)=>a.r-b.r).map(p=>
     '<option value="'+p.r+'">#'+p.r+' · '+esc(p.n)+' ('+esc(p.p)+')</option>').join("");
-  for(const id of ["labPlayer","fanCompareA","fanCompareB"])$(id).innerHTML=options;
+  $("labPlayer").innerHTML=options;
   $("labPlayer").value=String(ui.rank);
-  $("fanCompareA").value=String(D.players[0].r);
-  $("fanCompareB").value=String(D.players[1].r);
-  function compareState(){
-    $("fanCompare").disabled=$("fanCompareA").value===$("fanCompareB").value;
-  }
-  for(const id of ["fanCompareA","fanCompareB"])$(id).addEventListener("change",compareState);
-  $("fanCompare").addEventListener("click",()=>{
-    const a=+ $("fanCompareA").value,b=+ $("fanCompareB").value;
-    if(a!==b&&PLAYERS.has(a)&&PLAYERS.has(b))
-      window.dispatchEvent(new CustomEvent("apex:open-compare",{detail:{a,b}}));
-  });
   $("labFocus").addEventListener("change",e=>{ui.focus=e.target.value;renderStories();});
   pos.addEventListener("change",e=>{ui.position=e.target.value;renderStories();});
   $("labPlayer").addEventListener("change",e=>setCurrent(+e.target.value));
   $("labViewDossier").addEventListener("click",()=>window.dispatchEvent(new CustomEvent("apex:open-dossier",{detail:{rank:ui.rank}})));
   $("fanFollow").addEventListener("click",()=>toggle(ui.rank));
+  /* Portable, user-controlled JSON watchlist. No network or accounts required. */
+  function exportWatchlist(){
+    return JSON.stringify({
+      format:"APEX_WATCHLIST",schema_version:1,board_year:2027,
+      ranks:[...ui.favorites].sort((a,b)=>a-b)
+    },null,2)+"\n";
+  }
+  function importWatchlist(raw){
+    if(typeof raw!=="string" || raw.length>16384)
+      throw new Error("Watchlist file is missing or too large (16 KB maximum).");
+    let record;
+    try{record=JSON.parse(raw);}catch(_){throw new Error("This is not valid JSON.");}
+    const ranks=record&&record.ranks;
+    if(!record||record.format!=="APEX_WATCHLIST"||record.schema_version!==1||
+       record.board_year!==2027||!Array.isArray(ranks)||ranks.length>25||
+       new Set(ranks).size!==ranks.length||
+       !ranks.every(n=>Number.isInteger(n)&&PLAYERS.has(n))){
+      throw new Error("Invalid APEX 2027 watchlist: use 25 or fewer unique board ranks.");
+    }
+    ui.favorites=new Set(ranks);
+    store();renderStories();renderFavorites();setCurrent(ui.rank);
+    return ui.favorites.size;
+  }
+  const watchMessage=$("watchlistMessage");
+  $("fanExportWatchlist").addEventListener("click",()=>{
+    const value=exportWatchlist();
+    const blob=new Blob([value],{type:"application/json"});
+    const href=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=href;a.download="APEX_2027_watchlist.json";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),2000);
+    watchMessage.textContent="Watchlist JSON prepared for download.";
+  });
+  const fileInput=$("fanImportFile");
+  $("fanImportWatchlist").addEventListener("click",()=>fileInput.click());
+  fileInput.addEventListener("change",()=>{
+    const file=fileInput.files&&fileInput.files[0];
+    if(!file)return;
+    if(file.size>16384){watchMessage.textContent="File too large; maximum 16 KB.";fileInput.value="";return;}
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const n=importWatchlist(reader.result);
+        watchMessage.textContent="Imported "+n+" followed players. Previous list replaced.";
+      }catch(error){watchMessage.textContent=error.message;}
+      fileInput.value="";
+    };
+    reader.onerror=()=>{watchMessage.textContent="Unable to read this file.";fileInput.value="";};
+    reader.readAsText(file);
+  });
+
   $("labQueue").addEventListener("click",handleCase);
   $("fanFavorites").addEventListener("click",handleCase);
   $("fanTeamMode").addEventListener("click",()=>document.querySelector('.tab[data-tab="team"]').click());
   window.addEventListener("apex:focus-lab-player",e=>setCurrent(Number(e.detail&&e.detail.rank),true));
   // Read-only utilities for regression checks; no scoring model is executed here.
   window.APEX_FAN_ADVISOR={
-    pool,evidence,reasons,stability,select:setCurrent,current:()=>({focus:ui.focus,position:ui.position,rank:ui.rank,following:[...ui.favorites]})
+    pool,evidence,reasons,stability,select:setCurrent,exportWatchlist,importWatchlist,current:()=>({focus:ui.focus,position:ui.position,rank:ui.rank,following:[...ui.favorites]})
   };
-  renderStories();setCurrent(ui.rank);renderFavorites();compareState();
+  renderStories();setCurrent(ui.rank);renderFavorites();
 })();

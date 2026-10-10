@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>APEX — 2027 NFL Draft Intelligence</title>
+<title>APEX 2027 Draft Intelligence</title>
 <meta name="description" content="APEX turns the 2027 NFL Draft board into decision intelligence: where the market stands, where evidence disagrees, how confident the projection is, and what would change our mind.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <link rel="stylesheet" href="styles.css?v=20261008-board1">
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="player-dna-v3.css?v=20261009-ux3">
 <link rel="stylesheet" href="historical-workload.css?v=20261009-coh1">
 <link rel="stylesheet" href="player-trends.css?v=20261009-trend2">
+<link rel="stylesheet" href="fan-ux-polish.css?v=20261009-polish1">
 </head>
 <body>
 <header class="topbar">
@@ -40,14 +41,13 @@
         <p>Start with the 2027 board, then see <strong>real 2026 production, where APEX differs from consensus, and what the stats can’t prove.</strong> No scouting homework.</p>
         <div class="hero-meta">
           <span>201 prospects</span>
-          <span>104 offensive topology dossiers</span>
+          <span id="heroCoverage">104 of 201 with context profiles</span>
           <span>Live 2026 evidence + topology history through 2025</span>
         </div>
         <div class="hero-actions">
-          <button id="openTeamMode" class="primary-button hero-team-button" type="button">Open Team Mode →</button>
-          <button id="openDecisionLab" class="text-button" type="button">Explore Draft Advisor →</button>
-          <button id="openPlayerDNA" class="text-button" type="button">Explore Player DNA →</button>
-          <span>Build a Browns or any-team draft room with your picks, needs, philosophy, and risk tolerance.</span>
+          <button id="openBoard" class="primary-button hero-team-button" type="button">Explore the 2027 Board ↓</button>
+          <button id="openTeamMode" class="text-button" type="button">Team Mode →</button>
+          <button id="openPlayerDNA" class="text-button" type="button">Player DNA →</button>
         </div>
       </div>
       <div class="hero-guide" aria-label="How to read APEX">
@@ -71,13 +71,13 @@
       <span class="status status-green">GREEN</span><span class="key-copy">projection is comparatively stable</span>
       <span class="status status-amber">AMBER</span><span class="key-copy">one major uncertainty signal</span>
       <span class="status status-red">RED</span><span class="key-copy">multiple uncertainty signals</span>
-      <span class="key-copy muted">GREEN describes forecast stability, not complete scouting evidence. New Muse records are shown separately while validation is pending.</span>
+      <span class="key-copy muted">GREEN describes forecast stability, not complete scouting evidence. New third-party research is reviewed before use in player conclusions.</span>
     </div>
 
     <section class="war-room" aria-labelledby="warRoomTitle">
       <div class="war-room-head">
         <div>
-          <div class="eyebrow">APEX War Room</div>
+          <div class="eyebrow">2027 board highlights</div>
           <h2 id="warRoomTitle">Four stories shaping the 2027 board</h2>
           <p>Possible risers, market disagreements, uncertainty, and actual 2026 production — open any player to learn why.</p>
         </div>
@@ -85,7 +85,7 @@
       <div class="war-room-grid" id="warRoomGrid"></div>
     </section>
 
-    <section class="compare-strip" aria-labelledby="compareTitle">
+    <div id="boardCompareHost"><section class="compare-strip" id="sharedCompare" aria-labelledby="compareTitle">
       <div class="compare-copy">
         <div class="eyebrow">Head-to-head</div>
         <h2 id="compareTitle">Compare two prospects</h2>
@@ -97,7 +97,7 @@
         <label><span>Prospect 2</span><select id="compareB" aria-label="Second prospect"></select></label>
         <button id="compareButton" class="primary-button" type="button" disabled>Compare</button>
       </div>
-    </section>
+    </section></div>
 
     <div class="controls">
       <div class="control grow">
@@ -112,7 +112,7 @@
           <option value="season">2026 production available</option>
           <option value="limited">Limited 2026 public stats</option>
           <option value="red">RED confidence only</option>
-          <option value="topology">Topology covered</option>
+          <option value="topology">Context profile available</option>
         </select>
       </label>
       <label class="control search-control">
@@ -176,7 +176,7 @@
         <label class="team-field team-picks-field">
           <span>2027 picks</span>
           <input id="teamPicks" type="text" inputmode="numeric" placeholder="e.g. 12, 44, 76" aria-label="Draft picks">
-          <small>Enter overall pick numbers, separated by commas. Picks after #201 have partial or no prospect coverage.</small>
+          <small>Enter overall pick numbers, separated by commas. This board ranks 201 prospects; picks beyond #201 do not have a complete candidate pool.</small>
         </label>
         <label class="team-field">
           <span>Draft philosophy</span>
@@ -338,11 +338,8 @@
           <p>APEX puts their recorded season stats and market assessments side by side. It won't invent a winner or pretend different positions are directly comparable.</p>
         </div>
       </div>
-      <div class="lab-controls fan-compare-controls">
-        <label>First player<select id="fanCompareA" aria-label="First comparison prospect"></select></label>
-        <label>Second player<select id="fanCompareB" aria-label="Second comparison prospect"></select></label>
-      </div>
-      <button id="fanCompare" type="button" class="lab-primary" disabled>Compare players →</button>
+      <div id="advisorCompareHost" aria-label="Shared prospect comparison controls"></div>
+      <p class="fine">This is the same comparison tool used on the 2027 Board.</p>
     </section>
 
     <section class="lab-shell" aria-labelledby="fanWatchlistTitle">
@@ -355,6 +352,12 @@
         <span id="fanFavoriteCount" class="lab-count">0 followed</span>
       </div>
       <div id="fanFavorites" class="fan-favorites" aria-live="polite"></div>
+      <div class="watchlist-actions">
+        <button type="button" id="fanExportWatchlist" class="lab-secondary">Export watchlist JSON ↓</button>
+        <button type="button" id="fanImportWatchlist" class="lab-secondary">Import watchlist JSON ↑</button>
+        <input id="fanImportFile" type="file" accept=".json,application/json" hidden aria-label="Import an APEX watchlist JSON">
+      </div>
+      <p id="watchlistMessage" class="fine" role="status" aria-live="polite">Move your list between devices. Import replaces your current list after validation.</p>
       <p class="lab-disclaimer">Saved only in this browser. Following a player doesn't trigger future alerts or live news updates.</p>
     </section>
   </section>
@@ -368,7 +371,7 @@
       <div class="layer-grid">
         <article class="layer-card">
           <span class="layer-kicker">Layer 1</span>
-          <h3>Market prior</h3>
+          <h3>Consensus starting point</h3>
           <p>The consensus board is the starting point. APEX does not pretend the market is useless.</p>
         </article>
         <article class="layer-card">
@@ -378,7 +381,7 @@
         </article>
         <article class="layer-card">
           <span class="layer-kicker">Layer 3</span>
-          <h3>Translation topology</h3>
+          <h3>Playing context</h3>
           <p>APEX asks whether performance survives different roles and environments — pressure, depth, alignment, blocking context, and more.</p>
         </article>
         <article class="layer-card">
@@ -416,28 +419,28 @@
       <div class="validation-grid">
         <article class="validation-card">
           <span class="validation-label">Broad career ranking</span>
-          <strong class="validation-number">0.630</strong>
-          <span>mean within-class Spearman for APEX F2</span>
-          <small>vs 0.586 for consensus on the same four maturity-adjusted classes.</small>
+          <strong class="validation-number">0.630 <small>APEX</small></strong>
+          <span>Mean rank correlation across four historical classes</span>
+          <small>Consensus mean: 0.586. Class sizes and uncertainty intervals are not in the published research payload; this is descriptive, not demonstrated superiority.</small>
         </article>
         <article class="validation-card">
           <span class="validation-label">Information gap</span>
           <strong class="validation-number">3 / 4</strong>
-          <span>classes where high information-gap prospects had larger forecast error</span>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
         </article>
         <article class="validation-card">
           <span class="validation-label">Fragility</span>
           <strong class="validation-number">3 / 4</strong>
-          <span>classes where high fragility identified more forecast error</span>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
         </article>
         <article class="validation-card">
           <span class="validation-label">Role sensitivity</span>
           <strong class="validation-number">3 / 4</strong>
-          <span>classes where role-sensitive profiles had more forecast error</span>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
         </article>
       </div>
 
-      <h3>APEX keeps failed ideas visible internally — and removes them from the user experience.</h3>
+      <h3>What passed—and what did not pass—historical research tests</h3>
       <div class="decision-list">
         <div><span class="decision keep">KEEP</span><strong>F2 Talent / Expected Value</strong><p>Useful broad ranking signal.</p></div>
         <div><span class="decision keep">KEEP</span><strong>Career-path distributions</strong><p>Useful for floor, median, upside and path uncertainty.</p></div>
@@ -447,7 +450,7 @@
       </div>
 
       <div class="callout">
-        Historical results are research evidence, not proof of future NFL performance. The frozen 2027 cohort remains prospective validation.
+        Historical results are directional. Per-class correlations, sample sizes and confidence intervals require independent verification before stronger claims. The 2027 cohort is prospective.
       </div>
     </div>
   </section>
@@ -472,7 +475,7 @@
       <div><strong>Possible upside</strong><span>APEX flags a positive difference from consensus, not a proven star.</span></div>
       <div><strong>Market caution</strong><span>APEX is more cautious than consensus. It is not a bust prediction.</span></div>
       <div><strong>2026 grade unavailable</strong><span>Box scores, injury or incomplete data do not support an individual verdict. Missing is not poor performance.</span></div>
-      <div><strong>Sleeper watch</strong><span>A possible positive signal outside the premium consensus tier, not a guaranteed breakout.</span></div>
+      <div><strong>Sleeper watch</strong><span>A positive signal for a prospect outside the top 32 consensus ranks; not a guaranteed breakout.</span></div>
     </div>
   </div>
 </div>
@@ -505,7 +508,7 @@
 </div>
 
 <footer class="footer">
-  <span>APEX 2.0 · 2027 prospective research</span>
+  <span>APEX 2027 Draft Intelligence · prospective research</span>
   <span>Built for decision clarity, not false precision.</span>
 </footer>
 
@@ -523,5 +526,6 @@
 <script src="player-trends.js?v=20261009-trend2"></script>
 <script src="player-development.js?v=20261009-coh1"></script>
 <script src="player-intel.js?v=20261009-ux3"></script>
+<script src="fan-ux-polish.js?v=20261009-polish1"></script>
 </body>
 </html>

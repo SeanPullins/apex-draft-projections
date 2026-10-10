@@ -1,0 +1,36 @@
+/* APEX 2027: fan-facing polish without altering source data */
+.apex-route-notice[hidden]{display:none}
+.apex-route-notice{display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid var(--line);border-left:4px solid var(--blue);background:var(--surface);border-radius:12px;padding:12px 15px;margin:0 0 16px}
+.apex-route-notice>div{display:grid;gap:3px}
+.apex-route-notice strong{font-size:13px}
+.apex-route-notice span{font-size:12px;color:var(--muted);line-height:1.5}
+.apex-route-notice a{color:var(--blue);text-decoration:underline;text-underline-offset:2px}
+.apex-route-notice button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:8px;width:36px;height:36px;cursor:pointer}
+.coverage-chip{display:inline-block;margin-top:5px;border-radius:6px;padding:3px 6px;border:1px solid var(--line);font-size:10px;font-weight:800;line-height:1.3;letter-spacing:0}
+.coverage-chip.is-covered{color:var(--blue);background:var(--surface-2)}
+.coverage-chip.is-unrated{color:var(--muted);background:transparent}
+.status-na{color:var(--muted);background:var(--surface-2);border:1px solid var(--line)}
+.watchlist-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.watchlist-actions button{min-height:42px}
+.watchlist-actions~.fine{margin-top:7px;line-height:1.6}
+#sharedCompare{scroll-margin-top:115px}
+#boardTable,#tab-team .team-board{width:100%}
+#boardTable tr:focus-visible,#teamBoardBody tr:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+#boardTable .player-meta,#teamBoardBody .player-meta{white-space:normal}
+@media(max-width:640px){
+  #tab-board .board-shell .table-wrap,#tab-team .team-board-shell .table-wrap{overflow:visible}
+  #boardTable,#tab-team .team-board{display:block;border:0;background:transparent}
+  #boardTable thead,#tab-team .team-board thead{display:none}
+  #boardTable tbody,#tab-team .team-board tbody{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+  #boardTable tbody tr,#tab-team .team-board tbody tr{display:block;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--surface);box-shadow:0 2px 10px rgba(0,0,0,.035)}
+  #boardTable tbody td,#tab-team .team-board tbody td{display:block;padding:9px 13px;min-width:0;max-width:none!important;width:100%;white-space:normal;font-size:12px;line-height:1.5;border-bottom:1px solid var(--line);text-align:left!important;overflow-wrap:anywhere}
+  #boardTable tbody td:last-child,#tab-team .team-board tbody td:last-child{border-bottom:0}
+  #boardTable tbody td::before,#tab-team .team-board tbody td::before{content:attr(data-label);display:block;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  #boardTable .statline-cell,#boardTable .why-cell{min-width:0}
+  #boardTable .rank-cell{color:var(--blue);font-size:15px;font-weight:900}
+  #tab-team .team-fit-score{font-size:18px;font-weight:900}
+  #boardTable tbody td[data-label="Player"] .player-name,#teamBoardBody td[data-label="Player"] .player-name{font-size:16px}
+  .watchlist-actions{display:grid;grid-template-columns:1fr 1fr}
+  .watchlist-actions button{padding:9px 7px;font-size:11px}
+  #sharedCompare .compare-controls{min-width:0}
+}

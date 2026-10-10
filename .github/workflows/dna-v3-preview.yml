@@ -6,6 +6,12 @@ on:
       - 'player-intel.js'
       - 'player-dna-v3.css'
       - 'index.html'
+      - 'fan-ux-polish.js'
+      - 'fan-ux-polish.css'
+      - 'app.js'
+      - 'decision-lab.js'
+      - 'scouting-stories.js'
+      - 'styles.css'
       - 'apex-historical-context.js'
       - 'historical-workload.js'
       - 'historical-workload.css'
@@ -23,6 +29,9 @@ jobs:
           name: apex-dna-v3-offline-preview
           path: |
             index.html
+            fan-ux-polish.js
+            fan-ux-polish.css
+            docs/FAN_UX_PUBLIC_AUDIT_2026-10-09.md
             styles.css
             decision-lab.css
             decision-lab.js

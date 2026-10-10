@@ -71,6 +71,17 @@ try{
   assert(d.querySelector("#fanFavorites").textContent.includes(w.APEX2027.players.find(p=>p.r===rank).n));
   const followCount=d.querySelectorAll("#fanFavorites .fan-favorite").length;
   assert.equal(followCount,1);
+  const portable=fan.exportWatchlist();
+  const portableObj=JSON.parse(portable);
+  assert.equal(portableObj.format,"APEX_WATCHLIST");
+  assert.equal(portableObj.board_year,2027);
+  assert.equal(portableObj.schema_version,1);
+  assert.equal(portableObj.ranks[0],rank);
+  assert.equal(fan.importWatchlist(portable),1,"round-trip portability");
+  assert.throws(()=>fan.importWatchlist('{"format":"APEX_WATCHLIST","schema_version":1,"board_year":2027,"ranks":[999]}'),/Invalid APEX/);
+  assert.throws(()=>fan.importWatchlist('{"format":"APEX_WATCHLIST","schema_version":1,"board_year":2027,"ranks":[1,1]}'),/Invalid APEX/);
+  assert(fan.current().following.includes(rank),"rejected import must not erase the list");
+  assert(d.querySelector("#fanExportWatchlist")&&d.querySelector("#fanImportWatchlist"));
 
   // Original dossier and comparison flow work without fabricating a winner.
   d.querySelector("#labViewDossier").click();
@@ -79,14 +90,16 @@ try{
   d.querySelector("#modalInvestigate").click();
   assert.equal(d.querySelector(".tab-panel.is-active").id,"tab-lab");
   assert.equal(fan.current().rank,rank);
-  const ca=d.querySelector("#fanCompareA"),cb=d.querySelector("#fanCompareB");
+  const ca=d.querySelector("#compareA"),cb=d.querySelector("#compareB");
+  assert(d.querySelector("#advisorCompareHost").contains(d.querySelector("#sharedCompare")),
+    "Advisor must use the very same comparison controls as the board");
   ca.value="5"; cb.value="5";
   cb.dispatchEvent(new w.Event("change",{bubbles:true}));
-  assert.equal(d.querySelector("#fanCompare").disabled,true,"A player cannot be compared to themselves");
+  assert.equal(d.querySelector("#compareButton").disabled,true,"A player cannot be compared to themselves");
   cb.value="7";
   cb.dispatchEvent(new w.Event("change",{bubbles:true}));
-  assert.equal(d.querySelector("#fanCompare").disabled,false);
-  d.querySelector("#fanCompare").click();
+  assert.equal(d.querySelector("#compareButton").disabled,false);
+  d.querySelector("#compareButton").click();
   assert.equal(d.querySelector("#compareBackdrop").hidden,false);
   assert(d.querySelector("#compareModal").textContent.includes("No synthetic winner."));
   d.querySelector("#compareModal .compare-close").click();
