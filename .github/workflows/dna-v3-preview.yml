@@ -31,6 +31,8 @@ jobs:
             player-dna-v3.css
             player-development.css
             player-development.js
+            player-trends.js
+            player-trends.css
             historical-physical-reference.js
             apex-historical-context.js
             historical-workload.js
