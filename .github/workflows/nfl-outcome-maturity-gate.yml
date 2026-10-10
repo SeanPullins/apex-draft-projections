@@ -1,0 +1,28 @@
+name: APEX NFL Historical Outcome Maturity Gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/guard_nfl_outcome_maturity.py'
+      - 'tests/test_nfl_outcome_maturity.py'
+      - '.github/workflows/nfl-outcome-maturity-gate.yml'
+permissions:
+  contents: read
+jobs:
+  timeline-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit historical train/test maturity boundaries
+        run: python -m unittest discover -s tests -p 'test_nfl_outcome_maturity.py' -v
+      - name: Positive historical fold example (2019 with fully mature 2015 labels)
+        run: python scripts/guard_nfl_outcome_maturity.py --test-year 2019 --training-classes 2015 --n-seasons 4
+      - name: Verify invalid 2018 Muse test is rejected
+        run: |
+          if python scripts/guard_nfl_outcome_maturity.py --test-year 2018 --training-classes 2015,2016,2017 --n-seasons 4; then
+            echo "ERROR: APEX accepted a future-outcome-leaking historical fold" >&2
+            exit 1
+          fi
