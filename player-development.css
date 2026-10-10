@@ -1,0 +1,44 @@
+/* Player DNA v2 — source-first historical and development insights. */
+#intelDevelopment{display:grid;gap:26px;margin:0 0 26px}
+.intel-dev-section{min-width:0;border-top:1px solid var(--line);padding-top:24px}
+.intel-dev-section .intel-section-head h3{margin-bottom:8px}
+.intel-dev-intro{font-size:13px;line-height:1.65;color:var(--muted);margin:0 0 15px;max-width:760px}
+.intel-dev-intro strong{color:var(--ink)}
+.intel-hist-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.intel-hist-card{border:1px solid var(--line);border-radius:15px;padding:16px;background:var(--surface-2);display:flex;flex-direction:column;justify-content:space-between;min-width:0;gap:14px}
+.intel-hist-card strong{display:block;color:var(--ink);font-weight:850;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.intel-hist-card small{display:block;color:var(--muted);font-size:11.5px;margin-top:6px}
+.intel-hist-card p{font-size:11px;color:var(--muted);margin:0;border-top:1px solid var(--line);padding-top:9px;line-height:1.5}
+.intel-hist-year{display:block;text-transform:uppercase;letter-spacing:.09em;color:var(--blue);font-size:10px;font-weight:850;margin-bottom:7px}
+.intel-dev-foot{margin:11px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+.intel-dev-empty{border:1px dashed var(--line);background:var(--surface-2);border-radius:13px;padding:18px;width:100%}
+.intel-dev-empty strong{font-size:13px;color:var(--ink)}
+.intel-dev-empty p{font-size:12px;color:var(--muted);line-height:1.6;margin:6px 0 0}
+.intel-dev-rate{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0 10px}
+.intel-dev-rate>div{border:1px solid var(--line);background:var(--surface-2);padding:16px;border-radius:12px;min-width:0}
+.intel-dev-rate span{display:block;font-size:11px;line-height:1.45;color:var(--muted)}
+.intel-dev-rate strong{display:block;font-size:27px;line-height:1.18;font-weight:900;letter-spacing:-.045em;margin-top:7px;font-variant-numeric:tabular-nums}
+.intel-dev-ratecopy{border-left:3px solid var(--blue);padding:9px 14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface));border-radius:0 8px 8px 0;font-size:12px;line-height:1.65}
+.intel-timeline{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}
+.intel-time-item{position:relative;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:18px;overflow-wrap:anywhere}
+.intel-time-item::before{content:'';width:9px;height:9px;background:var(--blue);border-radius:50%;display:block;margin-bottom:10px}
+.intel-time-item>span{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:850;color:var(--blue)}
+.intel-time-item strong{display:block;font-size:14px;line-height:1.45;margin:7px 0}
+.intel-time-item p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+.intel-time-item a{display:inline-block;font-size:12px;margin-top:11px;font-weight:800;color:var(--blue)}
+@media(max-width:1080px){.intel-hist-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:830px){.intel-hist-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){
+ #intelDevelopment{gap:23px}
+ .intel-dev-section{padding-top:20px}
+ .intel-dev-section .intel-section-head h3{font-size:20px}
+ .intel-hist-grid{grid-template-columns:1fr;gap:8px}
+ .intel-hist-card{flex-direction:row;align-items:flex-end;padding:13px;gap:14px}
+ .intel-hist-card p{border-top:0;border-left:1px solid var(--line);padding:0 0 0 9px;flex:0 0 105px;font-size:10.5px}
+ .intel-dev-rate{gap:6px}
+ .intel-dev-rate>div{padding:10px 8px}
+ .intel-dev-rate strong{font-size:21px}
+ .intel-dev-rate span{font-size:10px}
+ .intel-timeline{grid-template-columns:1fr}
+}
+@media(max-width:360px){.intel-dev-rate{grid-template-columns:1fr}.intel-hist-card{flex-direction:column;align-items:stretch}.intel-hist-card p{border-left:0;border-top:1px solid var(--line);padding:8px 0 0}}

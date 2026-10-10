@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APEX 2027 Draft Intelligence</title>
+<meta name="description" content="APEX turns the 2027 NFL Draft board into decision intelligence: where the market stands, where evidence disagrees, how confident the projection is, and what would change our mind.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+<link rel="stylesheet" href="styles.css?v=20261008-board1">
+<link rel="stylesheet" href="decision-lab.css?v=20261008-fan1">
+<link rel="stylesheet" href="player-intel.css?v=20261009-intel1">
+<link rel="stylesheet" href="player-development.css?v=20261009-history1">
+<link rel="stylesheet" href="player-dna-v3.css?v=20261009-ux3">
+<link rel="stylesheet" href="historical-workload.css?v=20261009-coh1">
+<link rel="stylesheet" href="player-trends.css?v=20261009-trend2">
+<link rel="stylesheet" href="fan-ux-polish.css?v=20261009-polish1">
+<link rel="stylesheet" href="mobile-app.css?v=20261009-mobile1">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#board" aria-label="APEX home">
+    <span class="brand-mark">APEX</span>
+    <span class="brand-sub">2027 Draft Intelligence</span>
+  </a>
+  <nav class="tabs" role="tablist" aria-label="APEX sections">
+    <button class="tab is-active" data-tab="board" role="tab" aria-selected="true">2027 Board</button>
+    <button class="tab" data-tab="dna" role="tab" aria-selected="false">Player DNA</button>
+    <button class="tab" data-tab="team" role="tab" aria-selected="false">Team Mode</button>
+    <button class="tab" data-tab="lab" role="tab" aria-selected="false">Draft Advisor</button>
+    <button class="tab" data-tab="how" role="tab" aria-selected="false">How APEX Works</button>
+    <button class="tab" data-tab="validation" role="tab" aria-selected="false">Model Lab</button>
+  </nav>
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+</header>
+
+<main>
+  <section id="tab-board" class="tab-panel is-active">
+    <div class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">2027 NFL Draft · Live research board</div>
+        <h1>Know the prospects.<br>See what matters.</h1>
+        <p>Start with the 2027 board, then see <strong>real 2026 production, where APEX differs from consensus, and what the stats can’t prove.</strong> No scouting homework.</p>
+        <p class="apex-mob-one-line">See who matters in the 2027 draft—and why.</p>
+        <div class="hero-meta">
+          <span>201 prospects</span>
+          <span id="heroCoverage">104 of 201 with context profiles</span>
+          <span>Live 2026 evidence + topology history through 2025</span>
+        </div>
+        <div class="hero-actions">
+          <button id="openBoard" class="primary-button hero-team-button" type="button">Explore the 2027 Board ↓</button>
+          <button id="openTeamMode" class="text-button" type="button">Team Mode →</button>
+          <button id="openPlayerDNA" class="text-button" type="button">Player DNA →</button>
+        </div>
+      </div>
+      <div class="hero-guide" aria-label="How to read APEX">
+        <div class="guide-step">
+          <span class="guide-num">1</span>
+          <div><strong>Market</strong><span>Where the 2027 board starts.</span></div>
+        </div>
+        <div class="guide-step">
+          <span class="guide-num">2</span>
+          <div><strong>APEX View</strong><span>Aligned, possible upside, or market caution.</span></div>
+        </div>
+        <div class="guide-step">
+          <span class="guide-num">3</span>
+          <div><strong>2026 Snapshot</strong><span>Real season totals, with clear limits on what they measure.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-key" aria-label="Confidence key">
+      <span class="key-title">Confidence key</span>
+      <span class="status status-green">GREEN</span><span class="key-copy">projection is comparatively stable</span>
+      <span class="status status-amber">AMBER</span><span class="key-copy">one major uncertainty signal</span>
+      <span class="status status-red">RED</span><span class="key-copy">multiple uncertainty signals</span>
+      <span class="key-copy muted">GREEN describes forecast stability, not complete scouting evidence. New third-party research is reviewed before use in player conclusions.</span>
+    </div>
+
+    <section class="war-room" aria-labelledby="warRoomTitle">
+      <div class="war-room-head">
+        <div>
+          <div class="eyebrow">2027 board highlights</div>
+          <h2 id="warRoomTitle">Four stories shaping the 2027 board</h2>
+          <p>Possible risers, market disagreements, uncertainty, and actual 2026 production — open any player to learn why.</p>
+        </div>
+      </div>
+      <div class="war-room-grid" id="warRoomGrid"></div>
+    </section>
+
+    <div id="boardCompareHost"><section class="compare-strip" id="sharedCompare" aria-labelledby="compareTitle">
+      <div class="compare-copy">
+        <div class="eyebrow">Head-to-head</div>
+        <h2 id="compareTitle">Compare two prospects</h2>
+        <p>See each player’s 2026 numbers, APEX market view, and assessment limits side-by-side.</p>
+      </div>
+      <div class="compare-controls">
+        <label><span>Prospect 1</span><select id="compareA" aria-label="First prospect"></select></label>
+        <span class="compare-vs">vs</span>
+        <label><span>Prospect 2</span><select id="compareB" aria-label="Second prospect"></select></label>
+        <button id="compareButton" class="primary-button" type="button" disabled>Compare</button>
+      </div>
+    </section></div>
+
+    <div class="controls">
+      <div class="control grow">
+        <span class="control-label">Position</span>
+        <div class="pills" id="posPills" role="group" aria-label="Position filter"></div>
+      </div>
+      <label class="control">
+        <span class="control-label">Show</span>
+        <select id="attentionSelect" aria-label="Attention filter">
+          <option value="all">All prospects</option>
+          <option value="attention">Notable APEX signals</option>
+          <option value="season">2026 production available</option>
+          <option value="limited">Limited 2026 public stats</option>
+          <option value="red">RED confidence only</option>
+          <option value="topology">Context profile available</option>
+        </select>
+      </label>
+      <label class="control search-control">
+        <span class="control-label">Search</span>
+        <input id="searchBox" type="search" placeholder="Player or school…" aria-label="Search 2027 prospects">
+      </label>
+    </div>
+
+    <div class="tiles" id="boardTiles"></div>
+
+    <div class="board-shell">
+      <div class="board-headline">
+        <div>
+          <h2>2027 Board</h2>
+          <p>2027 market order with APEX’s frozen view and 2026 college production. Season numbers are observations, not new NFL success projections.</p>
+        </div>
+        <button class="text-button" id="plainEnglishButton" type="button">What do these labels mean?</button>
+      </div>
+      <div class="table-wrap">
+        <table class="board" id="boardTable">
+          <thead>
+            <tr>
+              <th class="num sortable" data-sort="r"><span class="th-label">Rank <button class="column-help" data-help="rank" type="button" aria-label="What does Rank mean?" title="What does Rank mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="n"><span class="th-label">Player <button class="column-help" data-help="player" type="button" aria-label="What does Player mean?" title="What does Player mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="a"><span class="th-label">APEX Take <button class="column-help" data-help="take" type="button" aria-label="What does APEX Take mean?" title="What does APEX Take mean?">ⓘ</button></span></th>
+              <th class="sortable" data-sort="ta"><span class="th-label">Confidence <button class="column-help" data-help="confidence" type="button" aria-label="What does Confidence mean?" title="What does Confidence mean?">ⓘ</button></span></th>
+              <th><span class="th-label">2026 Snapshot <button class="column-help" data-help="evidence" type="button" aria-label="What does 2026 Snapshot mean?" title="What does 2026 Snapshot mean?">ⓘ</button></span></th>
+              <th><span class="th-label">APEX Summary <button class="column-help" data-help="why" type="button" aria-label="What does APEX Summary mean?" title="What does APEX Summary mean?">ⓘ</button></span></th>
+            </tr>
+          </thead>
+          <tbody id="boardBody"></tbody>
+        </table>
+      </div>
+      <p class="table-hint">Select a player for actual season statistics, APEX’s market view, and an explanation of what the available data can and cannot establish.</p>
+    </div>
+  </section>
+
+  <section id="tab-dna" class="tab-panel" aria-label="Player DNA scouting evidence experience">
+    <div id="playerDNAApp" class="dna-app intel-app"></div>
+  </section>
+
+  <section id="tab-team" class="tab-panel">
+    <div class="team-mode">
+      <div class="team-hero">
+        <div>
+          <div class="eyebrow">APEX Team Mode</div>
+          <h1>Build your draft room.</h1>
+          <p>Turn the generic 2027 board into a team-specific decision board using <strong>your picks, roster needs, draft philosophy, and risk tolerance</strong>.</p>
+        </div>
+        <div class="team-rule">
+          <strong>Team context is downstream.</strong>
+          <span>These settings change recommendations — never the underlying APEX prospect evidence.</span>
+        </div>
+      </div>
+
+      <div class="team-config">
+        <label class="team-field">
+          <span>Team</span>
+          <select id="teamSelect" aria-label="NFL team"></select>
+        </label>
+        <label class="team-field team-picks-field">
+          <span>2027 picks</span>
+          <input id="teamPicks" type="text" inputmode="numeric" placeholder="e.g. 12, 44, 76" aria-label="Draft picks">
+          <small>Enter overall pick numbers, separated by commas. This board ranks 201 prospects; picks beyond #201 do not have a complete candidate pool.</small>
+        </label>
+        <label class="team-field">
+          <span>Draft philosophy</span>
+          <select id="teamPhilosophy" aria-label="Draft philosophy">
+            <option value="balanced">Balanced</option>
+            <option value="bpa">Best player available</option>
+            <option value="need">Need-forward</option>
+          </select>
+        </label>
+        <label class="team-field">
+          <span>Risk tolerance</span>
+          <select id="teamRisk" aria-label="Risk tolerance">
+            <option value="balanced">Balanced</option>
+            <option value="conservative">Conservative</option>
+            <option value="aggressive">Aggressive</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="fine">Team name labels your draft room. It does not automatically load that team’s real 2027 picks or roster needs; your picks, selected needs, philosophy, and risk tolerance control the recommendation.</p>
+
+      <div class="team-needs-shell">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Roster needs</div>
+            <h2>Where does this team need help?</h2>
+            <p>Select as many positions as you want. No selection means APEX treats need as neutral.</p>
+          </div>
+          <button id="clearNeeds" class="text-button" type="button">Clear needs</button>
+        </div>
+        <div id="teamNeedPills" class="team-need-pills" role="group" aria-label="Team needs"></div>
+      </div>
+
+      <div class="team-summary" id="teamSummary"></div>
+
+      <section class="pick-plan" aria-labelledby="pickPlanTitle">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Pick plan</div>
+            <h2 id="pickPlanTitle">Who should be in the conversation?</h2>
+            <p>APEX builds a candidate set around each pick and explains the tradeoff instead of pretending to know who will definitely be available.</p>
+          </div>
+        </div>
+        <div id="pickPlanGrid" class="pick-plan-grid"></div>
+      </section>
+
+      <section class="team-board-shell" aria-labelledby="teamBoardTitle">
+        <div class="team-section-head">
+          <div>
+            <div class="eyebrow">Team board</div>
+            <h2 id="teamBoardTitle">Best fits for your settings</h2>
+            <p><strong>Team Fit is not a talent grade.</strong> It is a transparent downstream decision score using pick fit, need, APEX take, and confidence.</p>
+          </div>
+          <button id="teamFormulaButton" class="text-button" type="button">How Team Fit works</button>
+        </div>
+        <div class="table-wrap">
+          <table class="board team-board">
+            <thead>
+              <tr>
+                <th class="num">Team Fit</th>
+                <th>Player</th>
+                <th>Need</th>
+                <th>Pick fit</th>
+                <th>APEX Take</th>
+                <th>Confidence</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody id="teamBoardBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section id="tab-lab" class="tab-panel" aria-labelledby="fanTitle">
+    <div class="lab-hero fan-hero">
+      <div>
+        <div class="eyebrow">APEX Draft Advisor · 2027</div>
+        <h1 id="fanTitle">You follow football.<br>APEX does the homework.</h1>
+        <p>No scouting assignments. No film to grade. Choose what you're curious about and see the players APEX has already flagged, why they matter, and where the evidence is still uncertain.</p>
+        <div class="fan-hero-actions">
+          <button id="fanTeamMode" class="lab-primary" type="button">Build my team's draft board →</button>
+          <span class="fine">Team Mode uses your selected needs and picks—not a claimed live NFL roster feed.</span>
+        </div>
+      </div>
+      <div class="lab-rules">
+        <strong>The fan-friendly version</strong>
+        <span><em>Get an answer:</em> Players worth watching, market disagreements and red flags.</span>
+        <span><em>See why:</em> Existing APEX evidence and what is or isn't verified.</span>
+        <span><em>Make it yours:</em> Follow favorites and compare any two players.</span>
+        <span class="fine">Current 2027 analysis is a frozen research snapshot, not a guaranteed NFL prediction.</span>
+      </div>
+    </div>
+
+    <section class="lab-shell" aria-labelledby="fanDiscoverTitle">
+      <div class="lab-head">
+        <div>
+          <div class="eyebrow">01 / What are you curious about?</div>
+          <h2 id="fanDiscoverTitle">APEX found the storylines. Pick one.</h2>
+          <p>These lists are assembled automatically from the existing 2027 board. You don't need to do any scouting.</p>
+        </div>
+        <span id="labMatchCount" class="lab-count">2027 board</span>
+      </div>
+      <div class="lab-controls fan-controls">
+        <label>Show me
+          <select id="labFocus" aria-label="What to explore">
+            <option value="sleepers">Potential sleepers</option>
+            <option value="alerts">Big names APEX questions</option>
+            <option value="uncertain">Forecast uncertainty</option>
+            <option value="updates">2026 season numbers</option>
+            <option value="top">Top names on the board</option>
+          </select>
+        </label>
+        <label>Position
+          <select id="labPosition" aria-label="Position to explore"></select>
+        </label>
+      </div>
+      <p id="labContext" class="lab-explainer" aria-live="polite"></p>
+      <div id="labStats" class="lab-stats" aria-live="polite"></div>
+      <div id="labQueue" class="lab-queue" aria-label="APEX prospect storylines"></div>
+    </section>
+
+    <section class="lab-shell lab-case-file" id="fanPlayerFile" aria-labelledby="fanPlayerTitle">
+      <div class="lab-head">
+        <div>
+          <div class="eyebrow">02 / Get the full picture</div>
+          <h2 id="fanPlayerTitle">What does APEX think of this player?</h2>
+          <p>A clear summary drawn from the current APEX record—not an invented scouting report or another statistic to decode.</p>
+        </div>
+      </div>
+      <div class="lab-case-topline">
+        <h3 id="labSelectedName">Select a player</h3>
+        <label class="lab-case-select">2027 prospect
+          <select id="labPlayer" aria-label="Choose a prospect"></select>
+        </label>
+      </div>
+      <div class="lab-insight-grid">
+        <div><span>APEX's current take</span><strong id="labCurrentTake"></strong></div>
+        <div><span>How stable is the assessment?</span><strong id="labCurrentStatus"></strong></div>
+        <div><span>What evidence exists?</span><strong id="labCurrentSource"></strong></div>
+      </div>
+      <div class="lab-test fan-explanation">
+        <div><h4>Why APEX says this</h4><p id="labCurrentWhy"></p></div>
+        <div><h4>What could change the outlook?</h4><p id="labQuestion"></p></div>
+      </div>
+      <div class="lab-actions fan-actions">
+        <button id="labViewDossier" class="lab-secondary" type="button">See detailed player breakdown →</button>
+        <button id="fanFollow" class="lab-primary" type="button">Follow this player</button>
+      </div>
+      <p class="lab-disclaimer">GREEN/AMBER/RED measures historical projection stability, not player talent. A pending or missing source never means a player performed poorly.</p>
+    </section>
+
+    <section class="lab-shell" aria-labelledby="fanCompareTitle">
+      <div class="lab-head">
+        <div>
+          <div class="eyebrow">03 / Settle a draft debate</div>
+          <h2 id="fanCompareTitle">Compare any two prospects.</h2>
+          <p>APEX puts their recorded season stats and market assessments side by side. It won't invent a winner or pretend different positions are directly comparable.</p>
+        </div>
+      </div>
+      <div id="advisorCompareHost" aria-label="Shared prospect comparison controls"></div>
+      <p class="fine">This is the same comparison tool used on the 2027 Board.</p>
+    </section>
+
+    <section class="lab-shell" aria-labelledby="fanWatchlistTitle">
+      <div class="lab-head">
+        <div>
+          <div class="eyebrow">04 / Your draft watchlist</div>
+          <h2 id="fanWatchlistTitle">Keep track of your guys.</h2>
+          <p>Follow prospects you care about. Open their APEX breakdowns whenever you return to this device.</p>
+        </div>
+        <span id="fanFavoriteCount" class="lab-count">0 followed</span>
+      </div>
+      <div id="fanFavorites" class="fan-favorites" aria-live="polite"></div>
+      <div class="watchlist-actions">
+        <button type="button" id="fanExportWatchlist" class="lab-secondary">Export watchlist JSON ↓</button>
+        <button type="button" id="fanImportWatchlist" class="lab-secondary">Import watchlist JSON ↑</button>
+        <input id="fanImportFile" type="file" accept=".json,application/json" hidden aria-label="Import an APEX watchlist JSON">
+      </div>
+      <p id="watchlistMessage" class="fine" role="status" aria-live="polite">Move your list between devices. Import replaces your current list after validation.</p>
+      <p class="lab-disclaimer">Saved only in this browser. Following a player doesn't trigger future alerts or live news updates.</p>
+    </section>
+  </section>
+
+  <section id="tab-how" class="tab-panel">
+    <div class="prose wide">
+      <div class="eyebrow">The simple version</div>
+      <h2>APEX is a decision system, not one magic score.</h2>
+      <p class="lead">Most draft boards collapse everything into a rank. APEX keeps the important questions separate so users can see <strong>what we believe, how sure we are, and what evidence could change the call.</strong></p>
+
+      <div class="layer-grid">
+        <article class="layer-card">
+          <span class="layer-kicker">Layer 1</span>
+          <h3>Consensus starting point</h3>
+          <p>The consensus board is the starting point. APEX does not pretend the market is useless.</p>
+        </article>
+        <article class="layer-card">
+          <span class="layer-kicker">Layer 2</span>
+          <h3>Current evidence</h3>
+          <p>Live production and football evidence show where the player is running above or below the current prior.</p>
+        </article>
+        <article class="layer-card">
+          <span class="layer-kicker">Layer 3</span>
+          <h3>Playing context</h3>
+          <p>APEX asks whether performance survives different roles and environments — pressure, depth, alignment, blocking context, and more.</p>
+        </article>
+        <article class="layer-card">
+          <span class="layer-kicker">Layer 4</span>
+          <h3>Decision layer</h3>
+          <p>Instead of forcing a new rank, APEX can say: hold, review up, review down, or acquire more evidence.</p>
+        </article>
+      </div>
+
+      <div class="explainer-card">
+        <h3>What the confidence colors mean</h3>
+        <p><strong>GREEN</strong> means the projection is comparatively stable across the validated uncertainty signals. <strong>AMBER</strong> means one important uncertainty dimension is elevated. <strong>RED</strong> means multiple uncertainty signals are elevated.</p>
+        <p>They are <strong>not talent grades</strong>. A top prospect can be RED because the decision is expensive and important evidence is missing.</p>
+      </div>
+
+      <div class="explainer-card">
+        <h3>What “What would change our mind?” means</h3>
+        <p>For each covered prospect, APEX simulates the missing or low-confidence football context under a weak-evidence and strong-evidence scenario. The context that can move the projection most becomes the next scouting question.</p>
+        <p>That turns uncertainty into something actionable instead of hiding it inside one score.</p>
+      </div>
+
+      <div class="callout">
+        <strong>Important:</strong> The 2027 Translation Topology snapshot uses private PFF college history through 2025. Live 2026 evidence is a separate current-season sensor. APEX shows that freshness limit instead of implying 2026 topology data exists when it does not.
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-validation" class="tab-panel">
+    <div id="modelLabApp" class="intel-model-lab"></div>
+    <div class="prose wide intel-legacy-research">
+      <div class="eyebrow">Why trust the framework?</div>
+      <h2>Older classes are validation data now — not the product.</h2>
+      <p class="lead">We intentionally removed historical draft-class navigation from the main experience. Those classes are used to test whether each APEX component does the job it claims to do.</p>
+
+      <div class="validation-grid">
+        <article class="validation-card">
+          <span class="validation-label">Broad career ranking</span>
+          <strong class="validation-number">0.630 <small>APEX</small></strong>
+          <span>Mean rank correlation across four historical classes</span>
+          <small>Consensus mean: 0.586. Class sizes and uncertainty intervals are not in the published research payload; this is descriptive, not demonstrated superiority.</small>
+        </article>
+        <article class="validation-card">
+          <span class="validation-label">Information gap</span>
+          <strong class="validation-number">3 / 4</strong>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
+        </article>
+        <article class="validation-card">
+          <span class="validation-label">Fragility</span>
+          <strong class="validation-number">3 / 4</strong>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
+        </article>
+        <article class="validation-card">
+          <span class="validation-label">Role sensitivity</span>
+          <strong class="validation-number">3 / 4</strong>
+          <span>Directional association in 3 of 4 classes; statistical uncertainty not reported</span>
+        </article>
+      </div>
+
+      <h3>What passed—and what did not pass—historical research tests</h3>
+      <div class="decision-list">
+        <div><span class="decision keep">KEEP</span><strong>F2 Talent / Expected Value</strong><p>Useful broad ranking signal.</p></div>
+        <div><span class="decision keep">KEEP</span><strong>Career-path distributions</strong><p>Useful for floor, median, upside and path uncertainty.</p></div>
+        <div><span class="decision keep">KEEP</span><strong>Topology uncertainty</strong><p>Fragility, information gap and role sensitivity survived their frozen tests.</p></div>
+        <div><span class="decision kill">KILL</span><strong>Topology as an upside rank</strong><p>It did not beat the existing F2 surfaces.</p></div>
+        <div><span class="decision kill">KILL</span><strong>Generic Capital Protection score</strong><p>It failed its frozen historical test and is no longer shown as a validated downside prediction.</p></div>
+      </div>
+
+      <div class="callout">
+        Historical results are directional. Per-class correlations, sample sizes and confidence intervals require independent verification before stronger claims. The 2027 cohort is prospective.
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName" id="modal"></div>
+</div>
+
+<div class="modal-backdrop" id="compareBackdrop" hidden>
+  <div class="modal compare-modal" role="dialog" aria-modal="true" aria-labelledby="compareModalTitle" id="compareModal"></div>
+</div>
+
+<div class="sheet-backdrop" id="plainEnglishSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="plainTitle">
+    <div class="sheet-head">
+      <div><div class="eyebrow">Plain English</div><h2 id="plainTitle">How to read the board</h2></div>
+      <button class="modal-close" data-close-sheet aria-label="Close">×</button>
+    </div>
+    <div class="plain-list">
+      <div><strong>In line with consensus</strong><span>APEX sees no compelling current reason to depart from the market view.</span></div>
+      <div><strong>Possible upside</strong><span>APEX flags a positive difference from consensus, not a proven star.</span></div>
+      <div><strong>Market caution</strong><span>APEX is more cautious than consensus. It is not a bust prediction.</span></div>
+      <div><strong>2026 grade unavailable</strong><span>Box scores, injury or incomplete data do not support an individual verdict. Missing is not poor performance.</span></div>
+      <div><strong>Sleeper watch</strong><span>A positive signal for a prospect outside the top 32 consensus ranks; not a guaranteed breakout.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="columnHelpSheet" hidden>
+  <div class="sheet column-help-sheet" role="dialog" aria-modal="true" aria-labelledby="columnHelpTitle">
+    <div class="sheet-head">
+      <div><div class="eyebrow">Board column</div><h2 id="columnHelpTitle">Column help</h2></div>
+      <button class="modal-close" data-close-column-help aria-label="Close">×</button>
+    </div>
+    <div id="columnHelpBody" class="column-help-body"></div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="teamFormulaSheet" hidden>
+  <div class="sheet team-formula-sheet" role="dialog" aria-modal="true" aria-labelledby="teamFormulaTitle">
+    <div class="sheet-head">
+      <div><div class="eyebrow">Team Mode</div><h2 id="teamFormulaTitle">How Team Fit works</h2></div>
+      <button class="modal-close" data-close-team-formula aria-label="Close">×</button>
+    </div>
+    <div class="team-formula-copy">
+      <p><strong>Team Fit is a decision aid, not an APEX talent score.</strong> The underlying prospect evidence stays unchanged.</p>
+      <div><strong>Pick fit</strong><span>How close the prospect's market rank is to the selected pick window.</span></div>
+      <div><strong>Roster need</strong><span>Selected needs receive more decision weight; unselected positions are still eligible.</span></div>
+      <div><strong>APEX take</strong><span>Review-up / sleeper signals help; review-down / data-gap signals reduce confidence.</span></div>
+      <div><strong>Projection confidence</strong><span>Risk tolerance controls how much RED/AMBER uncertainty matters.</span></div>
+      <p class="fine">Changing team, picks, needs, philosophy, or risk tolerance changes Team Fit only. It never changes market rank, APEX Take, evidence edge, or topology.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>APEX 2027 Draft Intelligence · prospective research</span>
+  <span>Built for decision clarity, not false precision.</span>
+</footer>
+
+<script src="data2027.js?v=20261007-data7"></script>
+<script src="data2026.js?v=20261007-data7"></script>
+<script src="pffqb2026.js?v=20261007-pff5"></script>
+<script src="data2027-context.js?v=20261008-verify2"></script>
+<script src="scouting-stories.js?v=20261008-verify2"></script>
+<script src="app.js?v=20261008-verify2"></script>
+<script src="decision-lab.js?v=20261008-recover1"></script>
+<script src="historical-physical-reference.js?v=20261009-history1"></script>
+<script src="apex-historical-context.js?v=20261009-coh1"></script>
+<script src="historical-workload.js?v=20261009-coh1"></script>
+<script src="apex-player-season-history.js?v=20261009-season1"></script>
+<script src="player-trends.js?v=20261009-trend2"></script>
+<script src="player-development.js?v=20261009-coh1"></script>
+<script src="player-intel.js?v=20261009-ux3"></script>
+<script src="fan-ux-polish.js?v=20261009-polish1"></script>
+<script src="mobile-app.js?v=20261009-mobile1"></script>
+</body>
+</html>
