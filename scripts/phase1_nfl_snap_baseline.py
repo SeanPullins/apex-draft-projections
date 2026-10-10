@@ -33,7 +33,7 @@ LAST_DRAFT = 2022
 LAST_SNAP = 2025
 SNAP_FIELDS = {"game_id","season","game_type","pfr_player_id","offense_snaps",
                "defense_snaps","st_snaps","offense_pct","defense_pct"}
-PICK_FIELDS = {"season","pick","position","pfr_player_id"}
+PICK_FIELDS = {"season","pick","position","pfr_player_id","gsis_id"}
 BANDS = [(1,16),(17,32),(33,64),(65,100),(101,150),(151,200),(201,300)]
 POSITIONS = {"QB","RB","WR","TE","OL","IDL","EDGE","LB","CB","S"}
 POSITION_MAP = {
@@ -145,7 +145,8 @@ def parse_sources(cache):
         rawid=(r.get("pfr_player_id") or "").strip()
         pg=position_group(r.get("position"),r.get("category"),r.get("side"))
         picks.append({"year":season,"pick":pick,"position_group":pg,
-                     "pfr_id":rawid,"position":r.get("position"),
+                     "pfr_id":rawid,"gsis_id":(r.get("gsis_id") or "").strip(),
+                     "position":r.get("position"),
                      "source_is_drafted":True})
     if any(x["year"]==2010 for x in picks):
         ensure(len([x for x in picks if x["year"]==2022])>=200,
