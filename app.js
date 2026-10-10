@@ -1,4 +1,4 @@
-/* APEX 2.0 front-end — 2027 decision intelligence. */
+/* APEX 2027 Draft Intelligence front-end — 2027 decision intelligence. */
 (function () {
   "use strict";
   const D = window.APEX2027;
@@ -770,7 +770,7 @@
              (prof.research.source==="official"?
                 'Checked against a school athletics source for this particular dated fact.':
                 'Checked against independent reporting for this particular dated fact.'):
-             'Supplied Muse research summary; role/source details have not been independently cross-checked.')+
+             'Supplied external research summary; role/source details have not been independently cross-checked.')+
           ' This does not verify licensed blocking metrics or make the prospect model-ready. No restricted grades are published.'+
           (prof.contextVerified&&prof.sourceUrl?' <a href="'+esc(prof.sourceUrl)+'" target="_blank" rel="noopener noreferrer">College source ↗</a>':'')+
           '</p></section>' : '') +
