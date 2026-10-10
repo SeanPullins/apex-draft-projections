@@ -1,0 +1,36 @@
+name: APEX Phase 1 NFL Snap Source Audit
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/phase1_nfl_snap_baseline.py'
+      - 'tests/test_phase1_nfl_snap_baseline.py'
+      - '.github/workflows/phase1-nfl-source-audit.yml'
+permissions:
+  contents: read
+jobs:
+  nfl-phase1-aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Phase 1 synthetic tests first
+        run: python3 -m unittest discover -s tests -p 'test_phase1_nfl_snap_baseline.py' -v
+      - name: Retrieve verified nflverse source files and generate AGGREGATE audit
+        run: |
+          python3 scripts/phase1_nfl_snap_baseline.py \
+            --cache "${RUNNER_TEMP}/apex_nfl_raw" \
+            --out "${RUNNER_TEMP}/apex_nfl_aggregate" \
+            --fetch \
+            --bootstrap 400
+      - name: Upload AGGREGATE report only — no source CSVs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-phase1-nfl-aggregate-audit
+          path: "${{ runner.temp }}/apex_nfl_aggregate/APEX_phase1_nfl_snap_aggregate.json"
+          retention-days: 7
+          if-no-files-found: error
