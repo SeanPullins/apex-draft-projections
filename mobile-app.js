@@ -383,6 +383,7 @@
       closeTop:()=>closeLayer(topLayer()),
       openProspect
     };
+    window.dispatchEvent(new Event("apex:mobile-ready"));
   }
   if(mq.matches)init();
   if(mq.addEventListener)mq.addEventListener("change",e=>{if(e.matches)init();});
