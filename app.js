@@ -185,7 +185,7 @@
   });
 
   const openBoard=$("#openBoard");
-  if(openBoard)openBoard.addEventListener("click",()=>$("#boardTable").scrollIntoView?.({behavior:"smooth",block:"start"}));
+  if(openBoard)openBoard.addEventListener("click",()=>{const board=window.matchMedia?.("(max-width:480px)").matches&&$("#apexMobBoard")||$("#boardTable");board?.scrollIntoView?.({behavior:"smooth",block:"start"});});
   const teamLauncher = $("#openTeamMode");
   if (teamLauncher) teamLauncher.addEventListener("click", () => setTab("team"));
   const labLauncher = $("#openDecisionLab");
@@ -310,6 +310,10 @@
     if(coverage)coverage.textContent=D.summary.topology+" of "+D.summary.board+" with context profiles";
     renderTiles(rows);
     const body = $("#boardBody");
+    // On initialized phone UI, 25 visible cards replace the redundant 201-row hidden table.
+    // Desktop, tablets and phones without the mobile shell keep the original table.
+    const phone=window.matchMedia?.("(max-width:480px)").matches;
+    if(phone&&window.APEX_MOBILE?.active()){body.replaceChildren();return;}
     body.innerHTML = rows.map(p => {
       const [take, takeClass] = takeMeta(p.a,p);
       const [conf, confClass] = confidenceMeta(p);
@@ -848,4 +852,6 @@
   initTeamMode();
   renderTeamMode();
   render();
+  window.addEventListener("apex:mobile-ready",render);
+  window.matchMedia?.("(max-width:480px)").addEventListener?.("change",render);
 })();

@@ -8,6 +8,8 @@ on:
       - 'index.html'
       - 'fan-ux-polish.js'
       - 'fan-ux-polish.css'
+      - 'mobile-app.js'
+      - 'mobile-app.css'
       - 'app.js'
       - 'decision-lab.js'
       - 'scouting-stories.js'
@@ -31,6 +33,9 @@ jobs:
             index.html
             fan-ux-polish.js
             fan-ux-polish.css
+            mobile-app.js
+            mobile-app.css
+            docs/MOBILE_APP_SHELL_AUDIT.md
             docs/FAN_UX_PUBLIC_AUDIT_2026-10-09.md
             styles.css
             decision-lab.css
