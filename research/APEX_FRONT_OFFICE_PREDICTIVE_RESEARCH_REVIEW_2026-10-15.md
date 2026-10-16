@@ -96,3 +96,36 @@ Exact bootstrap enumerates 4^4 = 256 ways to draw four entire draft classes with
 **Legal gate:** PFF consumer access is not blanket permission for public/commercial competitor models or redistributing raw/derived datasets. PFF terms updated October 12, 2026 must be reviewed for rights of historical training and existing published PFF-derived content: https://www.pff.com/terms . Other nflverse/CFBD/PFR/ESPN/RAS rights separately require a source registry. Do not scrape/repackage protected film/charting.
 
 **Ultimate gate not yet met:** Demonstrated prospect forecasting improvement versus honest, contemporaneous consensus and recruiting baselines for an untouched future cohort, with reproducible evidence and estimated real-team selection-value gains.
+
+
+## October 15 amendment: private APEX v19 is available and separately replayed
+
+After the first audit, the connected **private** repository SeanPullins/nfl-prospect-dataset-private proved accessible. Its V19 source script, model metadata, frozen summaries and saved compressed predictions ARE present there. This upgrades the status from "public-only model unavailable" to **private saved V19 predictions independently replayed, but source-to-model fitting and contemporaneous source availability not independently replayed**.
+
+A read-only independently implemented private audit was merged in PR #46 (separate private repo). It validates:
+- SHA256 of the original compressed private V19 predictions against frozen summary.
+- 3,638 unique draft pick/outcome prediction records: **1,826 hit4** and **1,812 starter4**.
+- 16 declared mature training-window folds, 2011–2018 test drafts, four-year label training cap <= test year − 4.
+- Recomputed Brier, log loss and AUC for market, existing_features, logistic, boost, blend, no_pick; all matches to saved summary within 1e−9.
+- Fresh 10,000-replicate **paired class-block uncertainty** on identical rows, separately all positions and QBs. All results remain previously inspected historical classes, not untouched validation.
+- NO change in production APEX scores. No raw or player-level private PFF input released.
+
+**V19 hit4, all positions (n1,826):** market Brier **.155680**, existing feature model **.155218**, market/boost blend **.154621**, no actual-draft-pick model **.187600**. Reproduced blend−market Brier delta **−.001059**, 95% class-bootstrap **[−.002073, −.000097]**; corresponding log-loss improvement CI also below zero. A *small historical improvement on the already-explored outcome*, NOT independent validation that pre-draft APEX is superior.
+
+**V19 hit4, QBs only (n78):** market **.144594** Brier, existing features **.153289**, market/boost blend **.155051**, no-pick **.194380**. Reproduced blend−market delta **+.010457**, 95% class-bootstrap **[+.001355, +.020764]**. The draft-market baseline wins this historical QB comparison.
+
+**V19 starter4, all positions (n1,812):** market **.165220**, blend **.163594**, Brier delta **−.001627** with class CI **[−.003308, +.000053]**, including zero. No established advantage.
+
+**Crucial information-set distinction:** V19 explicitly uses actual draft slot/round, pick-value curves and draft-market priors in market and blend model features. Those are valid for a POST-DRAFT expectation and may predict team opportunity; they are **not available as actual selections before the NFL Draft** and must not be presented as a fully independent pre-draft Talent Engine. The no_pick challenger uses a different information set and cannot be presented as a pure algorithmic defect just because it loses to draft-market information.
+
+V19's versioned target definitions also differ sharply from Muse's A/B/C:
+- hit4 = top quartile of first-four-year Approximate Value within draft class and position, with AV >= 1.
+- starter4 = two of first four seasons with at least eight NFL starts.
+Neither is a licensed position-specific snap/rep quality label. V19's archived features include market, combine/RAS, college production and private PFF-derived inputs; **data-use rights require explicit review**.
+
+Links (private permission required):
+- https://github.com/SeanPullins/nfl-prospect-dataset-private/pull/46
+- https://github.com/SeanPullins/nfl-prospect-dataset-private/blob/main/scripts/independent_replay_apex_v19.py
+- https://github.com/SeanPullins/nfl-prospect-dataset-private/blob/main/reports/apex_v19/protocol.json
+
+**Scientific implication:** Two different model families are now empirically documented: (1) APEX V19 post-draft market-conditioned 4Y AV/starter predictions; (2) Muse slot-blind recruiting-based role/workload predictions. Their numbers cannot be compared or blended without a matched common outcome, age/as-of horizon, universe and information set. The best immediate challenger is a **legally clear slot-blind talent model evaluated separately from the strong market baseline**. No market simulation/decision optimizer should be promoted before this has demonstrated incremental decision utility.
