@@ -1,0 +1,20 @@
+name: APEX Independent Talent Signal Research Gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/audit_muse_signal.py'
+      - 'tests/test_audit_muse_signal.py'
+      - '.github/workflows/talent-signal-audit.yml'
+permissions:
+  contents: read
+jobs:
+  research-code-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify predictions, paired-bootstrap, and future-test exclusion
+        run: python3 -m unittest discover -s tests -p 'test_audit_muse_signal.py' -v
