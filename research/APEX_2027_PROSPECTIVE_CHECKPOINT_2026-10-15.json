@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "registry_name": "APEX 2027 prospective research snapshots",
+  "registry_status": "CHECKPOINT_ONLY_NOT_UNTOUCHED_TEST_AND_NOT_MODEL_PROMOTION",
+  "freeze_as_of_date": "2026-10-15",
+  "explanation": "This October 15 checkpoint locks the precise current published APEX 2027 score payload as a prospective artifact before the 2027 NFL Draft. Earlier 2027 model iteration and developer inspection mean this is NOT an untouched model-development holdout. Subsequent revisions must be appended as separate records, never overwrite this entry.",
+  "apx_site_projection": {
+    "repository": "SeanPullins/apex-draft-projections",
+    "git_commit_sha": "0021a5b24f80a94cf747d1ff15e69a33af482414",
+    "frozen_files": [
+      {
+        "path": "data2027.js",
+        "git_blob_sha1": "3571fa3a89a57b3ad8042262ab2b2ddc3f026c15"
+      },
+      {
+        "path": "data2027-context.js",
+        "git_blob_sha1": "6e73b26df1f6c65e17104b51cdc748c1c2dd1d1c"
+      }
+    ],
+    "authenticated_training_to_source_replay": false,
+    "independently_established_accuracy": false,
+    "no_actual_2027_draft_slot_available": true,
+    "source_available_at_consistency_verified": false
+  },
+  "comparator_snapshots": [
+    {
+      "source": "BigBoard.cc",
+      "source_page": "https://bigboard.cc/",
+      "frozen_at_utc": "2026-10-07T07:34:28.587279+00:00",
+      "repository": "SeanPullins/nfl-prospect-dataset-private",
+      "manifest_path": "data/external/apex2_bigboard_consensus/2027/bigboard_2027_20261007T073428Z.manifest.json",
+      "csv_path": "data/external/apex2_bigboard_consensus/2027/bigboard_2027_20261007T073428Z.csv.gz",
+      "csv_sha256": "82e506e19d7440bd2851653f872734cf45eca43da1e05480a128d6184dc98f07",
+      "raw_html_sha256": "67c53a78d10a1bde6a86c49c09f6e9045bee3155b535a395ea7474f5c7d52c26",
+      "rows": 201,
+      "source_rights_clearance": "PENDING"
+    },
+    {
+      "source": "BigBoard.cc",
+      "source_page": "https://bigboard.cc/",
+      "frozen_at_utc": "2026-10-12T21:17:07.728543+00:00",
+      "repository": "SeanPullins/nfl-prospect-dataset-private",
+      "manifest_path": "data/external/apex2_bigboard_consensus/2027/bigboard_2027_20261012T211707Z.manifest.json",
+      "csv_path": "data/external/apex2_bigboard_consensus/2027/bigboard_2027_20261012T211707Z.csv.gz",
+      "csv_sha256": "69ee1ca5b8edb64999233b10133f3e506fb27a871abb591fb6b1bf74e7b84bfe",
+      "raw_html_sha256": "27ec96b55f33cc7d8eeb52773c609857aaf31e0e80eb6ce77e39957b5e5e764c",
+      "rows": 201,
+      "source_rights_clearance": "PENDING"
+    }
+  ],
+  "historic_consensus_receipt": {
+    "draft_year": 2022,
+    "available_snapshot_date": "2022-04-27",
+    "rows": 644,
+    "private_path": "data/external/consensus_2022.manifest.json",
+    "historical_git_commit": "49a1d72dfe1721637b624470963b2069c0786099",
+    "historical_commit_time_utc": "2022-04-27T18:01:05Z",
+    "note": "Single genuinely pre-draft vintage, retrospectively retrieved 2026. Cannot train or validate an accurate multi-class market model alone. 2022 is an already inspected development class."
+  },
+  "outcome_protocol": {
+    "definitions_not_yet_frozen_for_2027_research": true,
+    "full_four_nfl_season_maturation": "after_2030_NFL_regular_season_completes",
+    "acceptable_interim_metrics": "only separately versioned one-year role and calibrated performance",
+    "model_families_to_keep_separate": [
+      "slot_blind_talent",
+      "dated_pre_draft_market",
+      "team_decision_utility"
+    ],
+    "benchmark_requirement": "same eligible players, same prospect forecast timestamp/as-of evidence, same mature outcome, paired uncertainty",
+    "user_review_gate": "Phase 1 source rights and outcome-label validation still required; do not auto-deploy"
+  }
+}
