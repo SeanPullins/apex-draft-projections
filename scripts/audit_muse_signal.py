@@ -218,6 +218,8 @@ def run(phase3_zip,phase1_zip=None):
                     brier(group,f"{t}_M1G2",t)-brier(group,f"{t}_M1",t),8)}
         for pos in POSITIONS:
             subset=[r for r in rows if r["position"]==pos]
+            if not subset:
+                continue
             outcome["by_position"][pos]={
                 "n":len(subset),
                 "delta_g34_vs_recruiting":round(
