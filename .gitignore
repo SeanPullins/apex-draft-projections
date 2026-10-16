@@ -1,0 +1,18 @@
+node_modules/
+
+# Private research inputs and generated player-level outputs must never enter Pages.
+private/
+research/private/
+data/private/
+*.parquet
+*.sqlite
+APEX_phase*.zip
+*PRIVATE*.zip
+*_PRIVATE.csv
+*_PRIVATE.csv.gz
+*_PRIVATE.json
+*_private_output.json
+.env
+.env.*
+__pycache__/
+*.pyc

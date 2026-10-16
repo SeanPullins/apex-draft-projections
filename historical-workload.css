@@ -1,0 +1,45 @@
+
+/* Historic draft-peer experience: grouped observations, NEVER individual prospect odds. */
+.intel-career-context{border-top:1px solid var(--line);padding-top:23px}
+.intel-career-cohort{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:17px 20px;margin:14px 0 18px;border:1px solid color-mix(in srgb,var(--blue) 20%,var(--line));background:color-mix(in srgb,var(--blue) 4%,var(--surface));border-radius:14px}
+.intel-career-cohort>div:first-child{min-width:0}
+.intel-career-cohort span{display:block;font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--muted)}
+.intel-career-cohort strong{display:block;line-height:1.35;font-size:16px;letter-spacing:-.02em;margin:5px 0}
+.intel-career-cohort small{color:var(--muted);font-size:11px;line-height:1.45;display:block}
+.intel-career-count{min-width:92px;text-align:right}
+.intel-career-count strong{font-size:29px;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.intel-career-count span{font-size:10px;letter-spacing:0;text-transform:none;font-weight:600;margin-top:7px}
+.intel-career-rows{display:grid;gap:1px}
+.intel-career-row{display:grid;grid-template-columns:minmax(135px,.85fr) minmax(150px,1.4fr) 90px;gap:15px;align-items:center;border-bottom:1px solid var(--line);padding:13px 2px}
+.intel-career-row:last-child{border-bottom:0}
+.intel-career-name strong{display:block;font-size:12.5px;color:var(--ink)}
+.intel-career-name small{display:block;font-size:10.5px;line-height:1.5;color:var(--muted);margin-top:3px}
+.intel-career-chart{min-width:0;display:flex;align-items:center;gap:10px}
+.intel-career-track{display:block;flex:1;height:11px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.intel-career-track i{display:block;height:100%;border-radius:999px;background:var(--blue)}
+.intel-career-values{text-align:right;min-width:76px}
+.intel-career-values strong{display:block;font-size:15px;line-height:1.1;font-weight:900;font-variant-numeric:tabular-nums}
+.intel-career-values span{display:block;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:4px}
+.intel-career-position{color:var(--muted);font-size:10.5px;text-align:right;line-height:1.45}
+.intel-career-explain{margin-top:19px;padding:15px 18px;border-left:3px solid var(--blue);background:var(--surface-2);border-radius:0 12px 12px 0}
+.intel-career-explain strong{font-size:12.5px}
+.intel-career-explain p{font-size:11.5px;line-height:1.65;color:var(--muted);margin:7px 0 0}
+.intel-career-method{border-bottom:1px solid var(--line);padding:13px 0;font-size:12px}
+.intel-career-method summary{cursor:pointer;color:var(--blue);font-weight:850}
+.intel-career-method p{color:var(--muted);line-height:1.7}
+@media(max-width:850px){
+ .intel-career-row{grid-template-columns:minmax(110px,.75fr) minmax(155px,1.35fr)}
+ .intel-career-position{grid-column:2;font-size:10px;text-align:left;margin-top:-8px}
+}
+@media(max-width:650px){
+ .intel-career-cohort{padding:14px;align-items:flex-start}
+ .intel-career-cohort strong{font-size:14px}
+ .intel-career-count strong{font-size:24px}
+ .intel-career-row{display:grid;grid-template-columns:1fr;gap:8px;padding:14px 0}
+ .intel-career-name strong{font-size:13px}
+ .intel-career-chart{grid-column:1}
+ .intel-career-position{grid-column:1;margin:0;text-align:left}
+ .intel-career-values{min-width:100px}
+ .intel-career-explain{padding:12px 14px}
+}
+@media(prefers-reduced-motion:reduce){.intel-career-context *{scroll-behavior:auto!important;transition:none!important}}
